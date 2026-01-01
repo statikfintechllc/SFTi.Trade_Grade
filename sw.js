@@ -44,8 +44,13 @@ self.addEventListener('fetch', function(event) {
           return response;
         }
         return fetch(event.request).then(function(response) {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+          // Don't cache non-successful responses or opaque responses
+          if (!response || response.status !== 200) {
+            return response;
+          }
+          
+          // Only cache basic and cors responses (not opaque)
+          if (response.type !== 'basic' && response.type !== 'cors') {
             return response;
           }
           

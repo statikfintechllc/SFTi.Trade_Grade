@@ -767,6 +767,13 @@
     let currentScreenshot = null;
     let chatHistory = [];
 
+    // Security: HTML escape function to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function toggleMenu() {
         const menu = document.getElementById('sideMenu');
         const overlay = document.getElementById('overlay');
@@ -917,11 +924,11 @@
         }
 
         container.innerHTML = grades.map((grade, index) => `
-            <div class="history-item">
-                ${grade.screenshot ? `<img src="${grade.screenshot}" style="width: 100%; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333;" onclick="viewScreenshot('${grade.id}')">` : ''}
+            <div class="history-item" data-index="${index}">
+                ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `<img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333;" onclick="viewScreenshot('${encodeURIComponent(grade.id || '')}')">` : ''}
                 <div class="history-header">
                     <div>
-                        <div class="history-ticker">${grade.ticker}</div>
+                        <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
                         <div class="history-date">${new Date(grade.date).toLocaleString()}</div>
                     </div>
                     <div class="history-score">
@@ -1000,7 +1007,7 @@
         const token = document.getElementById('githubToken').value.trim();
         if (token) {
             localStorage.setItem('githubToken', token);
-            alert('Token saved securely');
+            alert('Token saved to browser storage');
         }
     }
 
@@ -1079,7 +1086,16 @@
         const chatMessages = document.getElementById('chatMessages');
         const msgDiv = document.createElement('div');
         msgDiv.style.cssText = `padding: 6px 8px; margin-bottom: 6px; border-radius: 6px; ${role === 'user' ? 'background: #333; margin-left: 20%;' : 'background: #1a1a1a; margin-right: 20%;'}`;
-        msgDiv.innerHTML = `<strong style="color: ${role === 'user' ? '#cc0000' : '#00ff00'};">${role === 'user' ? 'You' : 'AI'}:</strong> ${content.substring(0, 200)}${content.length > 200 ? '...' : ''}`;
+        
+        // Security: Use DOM methods instead of innerHTML to prevent XSS
+        const strong = document.createElement('strong');
+        strong.style.color = role === 'user' ? '#cc0000' : '#00ff00';
+        strong.textContent = role === 'user' ? 'You: ' : 'AI: ';
+        msgDiv.appendChild(strong);
+        
+        const textNode = document.createTextNode(content.substring(0, 200) + (content.length > 200 ? '...' : ''));
+        msgDiv.appendChild(textNode);
+        
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         chatHistory.push({ role, content });
