@@ -508,6 +508,103 @@
         width: 16px;
         height: 16px;
     }
+
+    /* iOS 26 Liquid Glass Style Modal */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.98) 100%);
+        border-radius: 20px;
+        padding: 24px;
+        width: 100%;
+        max-width: 320px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        text-align: center;
+        margin-bottom: 16px;
+    }
+
+    .modal-input {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        color: white;
+        font-size: 16px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .modal-input:focus {
+        border-color: rgba(204, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-input::placeholder {
+        color: #666;
+        text-transform: none;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .modal-btn {
+        flex: 1;
+        padding: 14px;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .modal-btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        color: #999;
+    }
+
+    .modal-btn-confirm {
+        background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+        color: white;
+    }
+
+    .modal-btn:active {
+        transform: scale(0.98);
+    }
+
+    .btn-icon {
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+        margin-right: 4px;
+    }
 </style>
 
 </head>
@@ -678,12 +775,12 @@
 
         <div class="card">
             <label class="label-text">Pattern Screenshot (optional)</label>
-            <input type="file" id="screenshotInput" accept="image/*" capture="environment" style="display: none;" onchange="handleScreenshot(this)">
+            <input type="file" id="screenshotInput" accept="image/*" style="display: none;">
             <div id="screenshotPreview" style="display: none; margin-bottom: 8px; position: relative;">
                 <img id="previewImg" style="width: 100%; border-radius: 6px; border: 1px solid #333;">
-                <button onclick="clearScreenshot()" style="position: absolute; top: 4px; right: 4px; background: rgba(204,0,0,0.9); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 14px;">×</button>
+                <button id="clearScreenshotBtn" style="position: absolute; top: 4px; right: 4px; background: rgba(204,0,0,0.9); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 14px;">×</button>
             </div>
-            <button class="save-btn" style="padding: 8px; background: linear-gradient(135deg, #333 0%, #222 100%);" onclick="document.getElementById('screenshotInput').click()">
+            <button id="addScreenshotBtn" class="save-btn" style="padding: 8px; background: linear-gradient(135deg, #333 0%, #222 100%);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -724,10 +821,22 @@
         <div class="card">
             <label class="label-text">Quick Actions</label>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="reviewGrades()">📊 Review Grades</button>
-                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="findPatterns()">🔍 Find Patterns</button>
-                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="getSentiment()">📈 Market Sentiment</button>
-                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="analyzeTicker()">💹 Analyze Ticker</button>
+                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="reviewGrades()" aria-label="Review grades">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    Review Grades
+                </button>
+                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="findPatterns()" aria-label="Find trading patterns">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    Find Patterns
+                </button>
+                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="getSentiment()" aria-label="Get market sentiment">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    Market Sentiment
+                </button>
+                <button class="save-btn" style="flex: 1; min-width: 45%; padding: 6px; font-size: 10px;" onclick="showTickerModal()" aria-label="Analyze ticker">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Analyze Ticker
+                </button>
             </div>
         </div>
 
@@ -753,7 +862,31 @@
     </div>
 </div>
 
+<!-- iOS Liquid Glass Style Ticker Modal -->
+<div class="modal-overlay" id="tickerModal">
+    <div class="modal-content">
+        <div class="modal-title">Analyze Ticker</div>
+        <input type="text" class="modal-input" id="tickerModalInput" placeholder="Enter symbol (e.g., AAPL)" maxlength="10">
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="hideTickerModal()">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" onclick="confirmTickerAnalysis()">Analyze</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Configuration constants
+    const CONFIG = {
+        MAX_SCREENSHOT_SIZE: 2 * 1024 * 1024, // 2MB max for screenshots
+        MAX_GRADES_FOR_REVIEW: 10,
+        MAX_GRADES_FOR_PATTERNS: 20,
+        CHAT_MESSAGE_PREVIEW_LENGTH: 200,
+        AI_MODEL: 'gpt-4o-mini',
+        AI_MAX_TOKENS: 500,
+        AI_TEMPERATURE: 0.7,
+        API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions'
+    };
+
     const state = {
         pattern: 10,
         risk: 10,
@@ -832,10 +965,17 @@
         document.getElementById('progressFill').style.width = `${(total / 100) * 100}%`;
     }
 
-    // Screenshot handling functions
+    // Screenshot handling functions with size validation
     function handleScreenshot(input) {
         const file = input.files[0];
         if (file) {
+            // Validate file size
+            if (file.size > CONFIG.MAX_SCREENSHOT_SIZE) {
+                alert(`Screenshot is too large. Maximum size is ${CONFIG.MAX_SCREENSHOT_SIZE / (1024 * 1024)}MB. Please choose a smaller image.`);
+                input.value = '';
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 currentScreenshot = e.target.result;
@@ -844,7 +984,6 @@
                 document.getElementById('screenshotBtnText').textContent = 'Change Screenshot';
             };
             reader.onerror = function() {
-                // Notify the user and reset screenshot state on read failure
                 alert('Failed to read the selected file. Please try again with a different screenshot.');
                 clearScreenshot();
             };
@@ -920,7 +1059,12 @@
         if (grades.length === 0) {
             container.innerHTML = `
                 <div class="card empty-state">
-                    <div class="empty-icon">📈</div>
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                            <polyline points="17 6 23 6 23 12"/>
+                        </svg>
+                    </div>
                     <div class="empty-text">No grades saved yet</div>
                     <div class="empty-subtext">Start grading stocks to build your history</div>
                 </div>
@@ -972,8 +1116,14 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">🤖 Analyze</button>
-                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}">🗑️ Delete</button>
+                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>
+                        Analyze
+                    </button>
+                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Delete
+                    </button>
                 </div>
             </div>
         `).join('');
@@ -998,9 +1148,17 @@
             }
         });
     }
-    function viewScreenshot(gradeId) {
+    
+    function viewScreenshot(gradeIdOrIndex) {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
-        const grade = grades.find(g => g.id === gradeId);
+        // Try to find by ID first, then fall back to index for legacy grades
+        let grade = grades.find(g => g.id === gradeIdOrIndex);
+        if (!grade) {
+            const index = parseInt(gradeIdOrIndex, 10);
+            if (!isNaN(index) && index >= 0 && index < grades.length) {
+                grade = grades[index];
+            }
+        }
         if (grade && grade.screenshot) {
             window.open(grade.screenshot, '_blank');
         }
@@ -1010,10 +1168,12 @@
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         const grade = grades[index];
         if (grade) {
+            // Set the prompt value directly since DOM is already loaded
+            const aiPrompt = document.getElementById('aiPrompt');
+            if (aiPrompt) {
+                aiPrompt.value = `Analyze this trade grade for ${grade.ticker}:\nTotal Score: ${grade.total}/100\nPattern: ${grade.scores.pattern}/20\nRisk/Reward: ${grade.scores.risk}/20\nEntry/Exit: ${grade.scores.entry}/10\nPast Performance: ${grade.scores.performance}/10\nTiming: ${grade.scores.time}/20\nCatalyst: ${grade.scores.catalyst}/10\nEnvironment: ${grade.scores.environment}/10\n\nProvide insights and suggestions for improvement.`;
+            }
             switchView('ai');
-            setTimeout(() => {
-                document.getElementById('aiPrompt').value = `Analyze this trade grade for ${grade.ticker}:\nTotal Score: ${grade.total}/100\nPattern: ${grade.scores.pattern}/20\nRisk/Reward: ${grade.scores.risk}/20\nEntry/Exit: ${grade.scores.entry}/10\nPast Performance: ${grade.scores.performance}/10\nTiming: ${grade.scores.time}/20\nCatalyst: ${grade.scores.catalyst}/10\nEnvironment: ${grade.scores.environment}/10\n\nProvide insights and suggestions for improvement.`;
-            }, 100);
         }
     }
 
@@ -1024,6 +1184,25 @@
         grades.splice(index, 1);
         localStorage.setItem('prepareGrades', JSON.stringify(grades));
         loadHistory();
+    }
+
+    // Ticker Modal functions
+    function showTickerModal() {
+        document.getElementById('tickerModal').classList.add('active');
+        document.getElementById('tickerModalInput').value = '';
+        document.getElementById('tickerModalInput').focus();
+    }
+
+    function hideTickerModal() {
+        document.getElementById('tickerModal').classList.remove('active');
+    }
+
+    function confirmTickerAnalysis() {
+        const ticker = document.getElementById('tickerModalInput').value.trim().toUpperCase();
+        if (ticker) {
+            document.getElementById('aiPrompt').value = `Analyze ${ticker} for trading:\n- Technical setup quality\n- Key support/resistance levels\n- Recent price action\n- Volume analysis\n- Risk/reward for entry today\n\nProvide a PREPARE score estimate.`;
+            hideTickerModal();
+        }
     }
 
     // AI Assistant functions
@@ -1063,14 +1242,14 @@
         responseDiv.textContent = 'Thinking...';
 
         try {
-            const response = await fetch('https://models.inference.ai.azure.com/chat/completions', {
+            const response = await fetch(CONFIG.API_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini',
+                    model: CONFIG.AI_MODEL,
                     messages: [
                         {
                             role: 'system',
@@ -1081,8 +1260,8 @@
                             content: prompt
                         }
                     ],
-                    max_tokens: 500,
-                    temperature: 0.7
+                    max_tokens: CONFIG.AI_MAX_TOKENS,
+                    temperature: CONFIG.AI_TEMPERATURE
                 })
             });
 
@@ -1118,7 +1297,8 @@
         strong.textContent = role === 'user' ? 'You: ' : 'AI: ';
         msgDiv.appendChild(strong);
         
-        const textNode = document.createTextNode(content.substring(0, 200) + (content.length > 200 ? '...' : ''));
+        const previewLength = CONFIG.CHAT_MESSAGE_PREVIEW_LENGTH;
+        const textNode = document.createTextNode(content.substring(0, previewLength) + (content.length > previewLength ? '...' : ''));
         msgDiv.appendChild(textNode);
         
         chatMessages.appendChild(msgDiv);
@@ -1142,7 +1322,7 @@
             return;
         }
         
-        const summary = grades.slice(0, 10).map(g => `${g.ticker}: ${g.total}/100`).join(', ');
+        const summary = grades.slice(0, CONFIG.MAX_GRADES_FOR_REVIEW).map(g => `${g.ticker}: ${g.total}/100`).join(', ');
         document.getElementById('aiPrompt').value = `Review my recent trades and provide insights:\n${summary}\n\nAnalyze patterns, identify strengths/weaknesses, and suggest improvements.`;
     }
 
@@ -1153,7 +1333,7 @@
             return;
         }
         
-        const data = grades.slice(0, 20).map(g => ({
+        const data = grades.slice(0, CONFIG.MAX_GRADES_FOR_PATTERNS).map(g => ({
             ticker: g.ticker,
             total: g.total,
             pattern: g.scores.pattern,
@@ -1168,15 +1348,9 @@
         document.getElementById('aiPrompt').value = `What is the current market sentiment? Consider:\n- Major indices (SPY, QQQ, DIA)\n- VIX levels\n- Sector rotation\n- Recent market news\n\nProvide a brief actionable summary for day trading.`;
     }
 
-    function analyzeTicker() {
-        const ticker = prompt('Enter ticker symbol to analyze:');
-        if (ticker) {
-            document.getElementById('aiPrompt').value = `Analyze ${ticker.toUpperCase()} for trading:\n- Technical setup quality\n- Key support/resistance levels\n- Recent price action\n- Volume analysis\n- Risk/reward for entry today\n\nProvide a PREPARE score estimate.`;
-        }
-    }
-
-    // Initialize on load
+    // Initialize on load - set up all event listeners and initialize UI
     window.onload = function() {
+        // Initialize sliders
         updateSlider('pattern', 10, 20);
         updateSlider('risk', 10, 20);
         updateSlider('entry', 5, 10);
@@ -1184,6 +1358,47 @@
         updateSlider('time', 10, 20);
         updateSlider('catalyst', 5, 10);
         updateSlider('environment', 5, 10);
+        
+        // Set up screenshot event listeners
+        const screenshotInput = document.getElementById('screenshotInput');
+        const addScreenshotBtn = document.getElementById('addScreenshotBtn');
+        const clearScreenshotBtn = document.getElementById('clearScreenshotBtn');
+        
+        if (screenshotInput) {
+            screenshotInput.addEventListener('change', function() {
+                handleScreenshot(this);
+            });
+        }
+        
+        if (addScreenshotBtn) {
+            addScreenshotBtn.addEventListener('click', function() {
+                screenshotInput.click();
+            });
+        }
+        
+        if (clearScreenshotBtn) {
+            clearScreenshotBtn.addEventListener('click', clearScreenshot);
+        }
+        
+        // Set up ticker modal keyboard handling
+        const tickerModalInput = document.getElementById('tickerModalInput');
+        if (tickerModalInput) {
+            tickerModalInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmTickerAnalysis();
+                }
+            });
+        }
+        
+        // Close modal on overlay click
+        const tickerModal = document.getElementById('tickerModal');
+        if (tickerModal) {
+            tickerModal.addEventListener('click', function(e) {
+                if (e.target === tickerModal) {
+                    hideTickerModal();
+                }
+            });
+        }
         
         // Register service worker for PWA functionality
         if ('serviceWorker' in navigator) {
