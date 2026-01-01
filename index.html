@@ -220,6 +220,13 @@
         padding-bottom: 8px;
     }
 
+    /* PWA mode: Remove extra bottom padding when running as standalone app */
+    @media all and (display-mode: standalone) {
+        .container {
+            padding-bottom: 0;
+        }
+    }
+
     .card {
         background: linear-gradient(135deg, #262626 0%, #1a1a1a 100%);
         border-radius: 8px;
