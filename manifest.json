@@ -2,7 +2,7 @@
   "name": "PREPARE Trading Journal",
   "short_name": "PREPARE",
   "description": "Trading journal for grading stocks using the PREPARE methodology",
-  "start_url": "/",
+  "start_url": "/SFTi.Trade_Grade",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
