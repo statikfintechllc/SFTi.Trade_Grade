@@ -843,6 +843,11 @@
                 document.getElementById('screenshotPreview').style.display = 'block';
                 document.getElementById('screenshotBtnText').textContent = 'Change Screenshot';
             };
+            reader.onerror = function() {
+                // Notify the user and reset screenshot state on read failure
+                alert('Failed to read the selected file. Please try again with a different screenshot.');
+                clearScreenshot();
+            };
             reader.readAsDataURL(file);
         }
     }
