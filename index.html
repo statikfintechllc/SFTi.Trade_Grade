@@ -1097,7 +1097,8 @@
             responseDiv.textContent = aiMessage;
             document.getElementById('aiPrompt').value = '';
         } catch (error) {
-            responseDiv.textContent = `Error: ${error.message}\n\nMake sure your GitHub token has access to GitHub Models.`;
+            console.error('AI request failed:', error);
+            responseDiv.textContent = 'An error occurred while contacting the AI service. Make sure your GitHub token has access to GitHub Models and try again.';
         }
     }
 
