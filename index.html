@@ -219,7 +219,7 @@
         padding: 10px;
         max-width: 480px;
         margin: 0 auto;
-        padding-bottom: 10px;
+        padding-bottom: 4px;
     }
 
     .card {
@@ -670,6 +670,14 @@
             </svg>
             <span>AI Assistant</span>
         </button>
+        <button class="menu-btn" onclick="refreshServiceWorker()">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span>Refresh</span>
+        </button>
     </div>
 </div>
 
@@ -678,22 +686,17 @@
 <div class="container">
     <div id="gradeView">
         <div class="card compact-card">
-            <label class="label-text">Ticker Symbol</label>
             <input type="text" class="ticker-input" id="tickerInput" placeholder="ENTER TICKER" maxlength="10">
         </div>
 
         <div class="card score-display compact-card">
-            <div class="score-label">Total Score</div>
-            <div class="score-value" id="totalScore">50</div>
-            <div class="score-max">out of 100</div>
+            <div class="score-value"><span id="totalScore">50</span>/100</div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill" style="width: 50%"></div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-title">PREPARE Indicators</div>
-            
             <div class="slider-group">
                 <div class="slider-header">
                     <div class="slider-label">
@@ -780,7 +783,6 @@
         </div>
 
         <div class="card">
-            <label class="label-text">Pattern Screenshot (optional)</label>
             <input type="file" id="screenshotInput" accept="image/*" style="display: none;">
             <div id="screenshotPreview" style="display: none; margin-bottom: 8px; position: relative;">
                 <img id="previewImg" style="width: 100%; border-radius: 6px; border: 1px solid #333;">
@@ -1352,6 +1354,41 @@
 
     function getSentiment() {
         document.getElementById('aiPrompt').value = `What is the current market sentiment? Consider:\n- Major indices (SPY, QQQ, DIA)\n- VIX levels\n- Sector rotation\n- Recent market news\n\nProvide a brief actionable summary for day trading.`;
+    }
+
+    // Refresh service worker only (not local storage or settings)
+    function refreshServiceWorker() {
+        toggleMenu();
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(function(registration) {
+                if (registration) {
+                    registration.update().then(function() {
+                        // Force the waiting service worker to become active
+                        if (registration.waiting) {
+                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                        // Clear caches to get fresh frontend assets
+                        caches.keys().then(function(cacheNames) {
+                            return Promise.all(
+                                cacheNames.map(function(cacheName) {
+                                    return caches.delete(cacheName);
+                                })
+                            );
+                        }).then(function() {
+                            window.location.reload();
+                        }).catch(function() {
+                            window.location.reload();
+                        });
+                    });
+                } else {
+                    window.location.reload();
+                }
+            }).catch(function() {
+                window.location.reload();
+            });
+        } else {
+            window.location.reload();
+        }
     }
 
     // Initialize on load - set up all event listeners and initialize UI
