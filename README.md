@@ -1,2 +1,2 @@
-# SFti.Trade_Grade
+# SFTi.Trade_Grade
 For Grading Trades
