@@ -925,7 +925,7 @@
 
         container.innerHTML = grades.map((grade, index) => `
             <div class="history-item" data-index="${index}">
-                ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `<img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333;" onclick="viewScreenshot('${encodeURIComponent(grade.id || '')}')">` : ''}
+                ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `<img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333;" onclick="viewScreenshot('${encodeURIComponent(grade.id != null ? grade.id : index)}')">` : ''}
                 <div class="history-header">
                     <div>
                         <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
