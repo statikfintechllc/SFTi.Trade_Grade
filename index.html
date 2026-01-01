@@ -144,7 +144,7 @@
     }
 
     .menu-header {
-        padding: 16px;
+        padding: 12px 12px;
         position: sticky;
         top: 0;
         border-bottom: 1px solid #333;
@@ -226,7 +226,7 @@
         background: linear-gradient(135deg, #262626 0%, #1a1a1a 100%);
         border-radius: 8px;
         padding: 12px 14px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
         border: 1px solid #333;
     }
@@ -607,6 +607,14 @@
         vertical-align: middle;
         margin-right: 4px;
     }
+
+    .compact-card {
+        padding: 10px 12px;
+    }
+
+    .score-display.compact-card {
+        padding: 14px;
+    }
 </style>
 
 </head>
@@ -622,7 +630,7 @@
                 <circle cx="22" cy="12" r="4" fill="#00ff00"/>
                 <path d="M22 10v4m-2-2h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
-            <h1>PREPARE</h1>
+            <h1>P.R.E.P</h1>
         </div>
         <div style="width: 40px;"></div>
     </div>
@@ -673,12 +681,12 @@
 
 <div class="container">
     <div id="gradeView">
-        <div class="card">
+        <div class="card compact-card">
             <label class="label-text">Ticker Symbol</label>
             <input type="text" class="ticker-input" id="tickerInput" placeholder="ENTER TICKER" maxlength="10">
         </div>
 
-        <div class="card score-display">
+        <div class="card score-display compact-card">
             <div class="score-label">Total Score</div>
             <div class="score-value" id="totalScore">50</div>
             <div class="score-max">out of 100</div>
