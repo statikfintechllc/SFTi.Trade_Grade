@@ -967,13 +967,32 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 6px;">
-                    <button class="delete-btn" style="flex: 1;" onclick="analyzeGradeWithAI(${index})">🤖 Analyze</button>
-                    <button class="delete-btn" style="flex: 1;" onclick="deleteGrade(${index})">🗑️ Delete</button>
+                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">🤖 Analyze</button>
+                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}">🗑️ Delete</button>
                 </div>
             </div>
         `).join('');
     }
 
+    const historyContainer = document.getElementById('historyContainer');
+    if (historyContainer) {
+        historyContainer.addEventListener('click', function (event) {
+            const analyzeButton = event.target.closest('button.history-analyze-btn');
+            const deleteButton = event.target.closest('button.history-delete-btn');
+
+            if (analyzeButton && historyContainer.contains(analyzeButton)) {
+                const index = parseInt(analyzeButton.getAttribute('data-index'), 10);
+                if (!Number.isNaN(index)) {
+                    analyzeGradeWithAI(index);
+                }
+            } else if (deleteButton && historyContainer.contains(deleteButton)) {
+                const index = parseInt(deleteButton.getAttribute('data-index'), 10);
+                if (!Number.isNaN(index)) {
+                    deleteGrade(index);
+                }
+            }
+        });
+    }
     function viewScreenshot(gradeId) {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         const grade = grades.find(g => g.id === gradeId);
