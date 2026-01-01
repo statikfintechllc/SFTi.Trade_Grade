@@ -1102,7 +1102,10 @@
     }
 
     function clearChat() {
-        document.getElementById('chatMessages').innerHTML = '';
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.textContent = '';
+        }
         chatHistory = [];
     }
 
