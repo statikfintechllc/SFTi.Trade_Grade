@@ -1168,6 +1168,7 @@
                 })
                 .catch(function(error) {
                     console.log('Service Worker registration failed:', error);
+                    alert('Some offline and installation features may not be available because the app could not complete its installation. You can continue using the app online.');
                 });
         }
     };
