@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23cc0000'/%3E%3Cpath d='M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z' fill='%23ff6666'/%3E%3Ccircle cx='22' cy='12' r='4' fill='%2300ff00'/%3E%3Cpath d='M22 10v4m-2-2h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
+    <title>PREPARE Trading Journal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        min-height: 100vh;
+        color: #e0e0e0;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        color: white;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        border-bottom: 2px solid #cc0000;
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .logo {
+        width: 36px;
+        height: 36px;
+    }
+
+    .header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .hamburger {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .hamburger:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .hamburger-icon {
+        width: 24px;
+        height: 2px;
+        background: white;
+        display: block;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+    .hamburger-icon::before,
+    .hamburger-icon::after {
+        content: '';
+        width: 24px;
+        height: 2px;
+        background: white;
+        position: absolute;
+        left: 0;
+        transition: all 0.3s;
+    }
+
+    .hamburger-icon::before {
+        top: -8px;
+    }
+
+    .hamburger-icon::after {
+        top: 8px;
+    }
+
+    .hamburger.active .hamburger-icon {
+        background: transparent;
+    }
+
+    .hamburger.active .hamburger-icon::before {
+        transform: rotate(45deg);
+        top: 0;
+    }
+
+    .hamburger.active .hamburger-icon::after {
+        transform: rotate(-45deg);
+        top: 0;
+    }
+
+    .side-menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 60;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.8);
+        border-right: 2px solid #cc0000;
+    }
+
+    .side-menu.active {
+        transform: translateX(0);
+    }
+
+    .menu-header {
+        padding: 24px;
+        border-bottom: 1px solid #333;
+    }
+
+    .menu-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .menu-title {
+        font-weight: 700;
+        font-size: 18px;
+        color: white;
+    }
+
+    .menu-subtitle {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .menu-nav {
+        padding: 24px 16px;
+    }
+
+    .menu-btn {
+        width: 100%;
+        padding: 14px 16px;
+        background: none;
+        border: none;
+        color: #b0b0b0;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .menu-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+    }
+
+    .menu-btn.active {
+        background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+        color: white;
+    }
+
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 55;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    }
+
+    .overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .container {
+        padding: 20px;
+        max-width: 480px;
+        margin: 0 auto;
+        padding-bottom: 40px;
+    }
+
+    .card {
+        background: linear-gradient(135deg, #262626 0%, #1a1a1a 100%);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        border: 1px solid #333;
+    }
+
+    .ticker-input {
+        width: 100%;
+        padding: 16px;
+        background: #1a1a1a;
+        border: 2px solid #333;
+        border-radius: 12px;
+        color: white;
+        font-size: 18px;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition: all 0.2s;
+    }
+
+    .ticker-input:focus {
+        outline: none;
+        border-color: #cc0000;
+        background: #0d0d0d;
+    }
+
+    .ticker-input::placeholder {
+        color: #555;
+    }
+
+    .score-display {
+        background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+        border-radius: 16px;
+        padding: 32px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 8px 24px rgba(204, 0, 0, 0.3);
+    }
+
+    .score-label {
+        font-size: 13px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+
+    .score-value {
+        font-size: 56px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .score-max {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-top: 4px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: white;
+        border-radius: 12px;
+        transition: width 0.3s ease;
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #333;
+    }
+
+    .slider-group {
+        margin-bottom: 28px;
+    }
+
+    .slider-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .slider-label {
+        flex: 1;
+    }
+
+    .slider-title {
+        font-weight: 600;
+        color: #e0e0e0;
+        font-size: 15px;
+        margin-bottom: 4px;
+    }
+
+    .slider-subtitle {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .slider-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #cc0000;
+        min-width: 50px;
+        text-align: right;
+    }
+
+    .slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 8px;
+        background: #1a1a1a;
+        outline: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #cc0000 0%, #ff3333 100%);
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(204, 0, 0, 0.4);
+    }
+
+    .slider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #cc0000 0%, #ff3333 100%);
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 8px rgba(204, 0, 0, 0.4);
+    }
+
+    .slider-range {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #666;
+        margin-top: 4px;
+    }
+
+    .save-btn {
+        width: 100%;
+        padding: 18px;
+        background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(204, 0, 0, 0.3);
+    }
+
+    .save-btn:active {
+        transform: scale(0.98);
+    }
+
+    .history-item {
+        background: linear-gradient(135deg, #262626 0%, #1a1a1a 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 12px;
+        border: 1px solid #333;
+    }
+
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .history-ticker {
+        font-size: 24px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .history-date {
+        font-size: 11px;
+        color: #888;
+        margin-top: 4px;
+    }
+
+    .history-score {
+        text-align: right;
+    }
+
+    .history-score-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #cc0000;
+    }
+
+    .history-score-max {
+        font-size: 11px;
+        color: #666;
+    }
+
+    .history-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        font-size: 12px;
+        margin-bottom: 16px;
+    }
+
+    .history-detail {
+        display: flex;
+        justify-content: space-between;
+        color: #b0b0b0;
+    }
+
+    .history-detail span:last-child {
+        font-weight: 600;
+        color: #e0e0e0;
+    }
+
+    .delete-btn {
+        width: 100%;
+        padding: 12px;
+        background: rgba(204, 0, 0, 0.1);
+        color: #cc0000;
+        border: 1px solid rgba(204, 0, 0, 0.3);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .delete-btn:hover {
+        background: rgba(204, 0, 0, 0.2);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+    .empty-text {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .empty-subtext {
+        color: #555;
+        font-size: 13px;
+    }
+
+    .label-text {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #b0b0b0;
+        margin-bottom: 8px;
+    }
+
+    .icon-svg {
+        width: 20px;
+        height: 20px;
+    }
+</style>
+
+</head>
+<body>
+    <div class="header">
+        <button class="hamburger" onclick="toggleMenu()">
+            <span class="hamburger-icon"></span>
+        </button>
+        <div class="header-title">
+            <svg class="logo" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="6" fill="#cc0000"/>
+                <path d="M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z" fill="#ff6666"/>
+                <circle cx="22" cy="12" r="4" fill="#00ff00"/>
+                <path d="M22 10v4m-2-2h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <h1>PREPARE</h1>
+        </div>
+        <div style="width: 40px;"></div>
+    </div>
+
+<div class="side-menu" id="sideMenu">
+    <div class="menu-header">
+        <div class="menu-logo">
+            <svg class="logo" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="6" fill="#cc0000"/>
+                <path d="M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z" fill="#ff6666"/>
+                <circle cx="22" cy="12" r="4" fill="#00ff00"/>
+                <path d="M22 10v4m-2-2h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <div class="menu-title">PREPARE</div>
+                <div class="menu-subtitle">Trading Journal</div>
+            </div>
+        </div>
+    </div>
+    <div class="menu-nav">
+        <button class="menu-btn active" onclick="switchView('grade')" id="gradeBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <span>Grade Stock</span>
+        </button>
+        <button class="menu-btn" onclick="switchView('history')" id="historyBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>History</span>
+        </button>
+    </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="container">
+    <div id="gradeView">
+        <div class="card">
+            <label class="label-text">Ticker Symbol</label>
+            <input type="text" class="ticker-input" id="tickerInput" placeholder="ENTER TICKER" maxlength="10">
+        </div>
+
+        <div class="card score-display">
+            <div class="score-label">Total Score</div>
+            <div class="score-value" id="totalScore">50</div>
+            <div class="score-max">out of 100</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 50%"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">PREPARE Indicators</div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title">P - Pattern/Price</div>
+                        <div class="slider-subtitle">Technical setup quality</div>
+                    </div>
+                    <div class="slider-value" id="pattern-value">10</div>
+                </div>  
+                <input type="range" class="slider" min="1" max="20" value="10" id="pattern-slider" oninput="updateSlider('pattern', this.value, 20)">
+                <div class="slider-range"><span>1</span><span>20</span></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title">R - Risk/Reward</div>
+                        <div class="slider-subtitle">Trade R:R ratio</div>
+                    </div>
+                    <div class="slider-value" id="risk-value">10</div>
+                </div>
+                <input type="range" class="slider" min="1" max="20" value="10" id="risk-slider" oninput="updateSlider('risk', this.value, 20)">
+                <div class="slider-range"><span>1</span><span>20</span></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title">E - Ease of Entry/Exit</div>
+                        <div class="slider-subtitle">Liquidity & execution</div>
+                    </div>
+                    <div class="slider-value" id="entry-value">5</div>
+                </div>
+                <input type="range" class="slider" min="1" max="10" value="5" id="entry-slider" oninput="updateSlider('entry', this.value, 10)">
+                <div class="slider-range"><span>1</span><span>10</span></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title">P - Past Performance</div>
+                        <div class="slider-subtitle">History of spiking</div>
+                    </div>
+                    <div class="slider-value" id="performance-value">5</div>
+                </div>
+                <input type="range" class="slider" min="1" max="10" value="5" id="performance-slider" oninput="updateSlider('performance', this.value, 10)">
+                <div class="slider-range"><span>1</span><span>10</span></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title">A - At What Time Is It?</div>
+                        <div class="slider-subtitle">Personal schedule fit</div>
+                    </div>
+                    <div class="slider-value" id="time-value">10</div>
+                </div>
+                <input type="range" class="slider" min="1" max="20" value="10" id="time-slider" oninput="updateSlider('time', this.value, 20)">
+                <div class="slider-range"><span>1</span><span>20</span></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title">R - Reason/Catalyst</div>
+                        <div class="slider-subtitle">News or event driver</div>
+                    </div>
+                    <div class="slider-value" id="catalyst-value">5</div>
+                </div>
+                <input type="range" class="slider" min="1" max="10" value="5" id="catalyst-slider" oninput="updateSlider('catalyst', this.value, 10)">
+                <div class="slider-range"><span>1</span><span>10</span></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title">E - Market Environment</div>
+                        <div class="slider-subtitle">Overall market conditions</div>
+                    </div>
+                    <div class="slider-value" id="environment-value">5</div>
+                </div>
+                <input type="range" class="slider" min="1" max="10" value="5" id="environment-slider" oninput="updateSlider('environment', this.value, 10)">
+                <div class="slider-range"><span>1</span><span>10</span></div>
+            </div>
+        </div>
+
+        <button class="save-btn" onclick="saveGrade()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Save Grade
+        </button>
+    </div>
+
+    <div id="historyView" style="display: none;">
+        <h2 style="font-size: 24px; font-weight: 700; color: white; margin-bottom: 20px;">Trade History</h2>
+        <div id="historyContainer"></div>
+    </div>
+</div>
+
+<script>
+    const state = {
+        pattern: 10,
+        risk: 10,
+        entry: 5,
+        performance: 5,
+        time: 10,
+        catalyst: 5,
+        environment: 5
+    };
+
+    function toggleMenu() {
+        const menu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        const hamburger = document.querySelector('.hamburger');
+        
+        menu.classList.toggle('active');
+        overlay.classList.toggle('active');
+        hamburger.classList.toggle('active');
+    }
+
+    function switchView(view) {
+        const gradeView = document.getElementById('gradeView');
+        const historyView = document.getElementById('historyView');
+        const gradeBtn = document.getElementById('gradeBtn');
+        const historyBtn = document.getElementById('historyBtn');
+
+        if (view === 'grade') {
+            gradeView.style.display = 'block';
+            historyView.style.display = 'none';
+            gradeBtn.classList.add('active');
+            historyBtn.classList.remove('active');
+        } else {
+            gradeView.style.display = 'none';
+            historyView.style.display = 'block';
+            gradeBtn.classList.remove('active');
+            historyBtn.classList.add('active');
+            loadHistory();
+        }
+        toggleMenu();
+    }
+
+    function updateSlider(name, value, max) {
+        state[name] = parseInt(value);
+        document.getElementById(`${name}-value`).textContent = value;
+        
+        const slider = document.getElementById(`${name}-slider`);
+        const percent = ((value - 1) / (max - 1)) * 100;
+        slider.style.background = `linear-gradient(to right, #cc0000 0%, #cc0000 ${percent}%, #1a1a1a ${percent}%, #1a1a1a 100%)`;
+        
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const total = Object.values(state).reduce((a, b) => a + b, 0);
+        document.getElementById('totalScore').textContent = total;
+        document.getElementById('progressFill').style.width = `${(total / 100) * 100}%`;
+    }
+
+    function saveGrade() {
+        const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+        
+        if (!ticker) {
+            alert('Please enter a ticker symbol');
+            return;
+        }
+
+        const grade = {
+            ticker: ticker,
+            date: new Date().toISOString(),
+            scores: { ...state },
+            total: Object.values(state).reduce((a, b) => a + b, 0)
+        };
+
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        grades.unshift(grade);
+        localStorage.setItem('prepareGrades', JSON.stringify(grades));
+
+        alert(`${ticker} saved with score: ${grade.total}/100`);
+        
+        document.getElementById('tickerInput').value = '';
+        resetSliders();
+    }
+
+    function resetSliders() {
+        state.pattern = 10;
+        state.risk = 10;
+        state.entry = 5;
+        state.performance = 5;
+        state.time = 10;
+        state.catalyst = 5;
+        state.environment = 5;
+
+        document.getElementById('pattern-slider').value = 10;
+        document.getElementById('risk-slider').value = 10;
+        document.getElementById('entry-slider').value = 5;
+        document.getElementById('performance-slider').value = 5;
+        document.getElementById('time-slider').value = 10;
+        document.getElementById('catalyst-slider').value = 5;
+        document.getElementById('environment-slider').value = 5;
+
+        updateSlider('pattern', 10, 20);
+        updateSlider('risk', 10, 20);
+        updateSlider('entry', 5, 10);
+        updateSlider('performance', 5, 10);
+        updateSlider('time', 10, 20);
+        updateSlider('catalyst', 5, 10);
+        updateSlider('environment', 5, 10);
+    }
+
+    function loadHistory() {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const container = document.getElementById('historyContainer');
+
+        if (grades.length === 0) {
+            container.innerHTML = `
+                <div class="card empty-state">
+                    <div class="empty-icon">📈</div>
+                    <div class="empty-text">No grades saved yet</div>
+                    <div class="empty-subtext">Start grading stocks to build your history</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = grades.map((grade, index) => `
+            <div class="history-item">
+                <div class="history-header">
+                    <div>
+                        <div class="history-ticker">${grade.ticker}</div>
+                        <div class="history-date">${new Date(grade.date).toLocaleString()}</div>
+                    </div>
+                    <div class="history-score">
+                        <div class="history-score-value">${grade.total}</div>
+                        <div class="history-score-max">/ 100</div>
+                    </div>
+                </div>
+                <div class="history-details">
+                    <div class="history-detail">
+                        <span>Pattern:</span>
+                        <span>${grade.scores.pattern}/20</span>
+                    </div>
+                    <div class="history-detail">
+                        <span>Risk/Reward:</span>
+                        <span>${grade.scores.risk}/20</span>
+                    </div>
+                    <div class="history-detail">
+                        <span>Entry/Exit:</span>
+                        <span>${grade.scores.entry}/10</span>
+                    </div>
+                    <div class="history-detail">
+                        <span>Performance:</span>
+                        <span>${grade.scores.performance}/10</span>
+                    </div>
+                    <div class="history-detail">
+                        <span>Timing:</span>
+                        <span>${grade.scores.time}/20</span>
+                    </div>
+                    <div class="history-detail">
+                        <span>Catalyst:</span>
+                        <span>${grade.scores.catalyst}/10</span>
+                    </div>
+                    <div class="history-detail" style="grid-column: 1 / -1;">
+                        <span>Environment:</span>
+                        <span>${grade.scores.environment}/10</span>
+                    </div>
+                </div>
+                <button class="delete-btn" onclick="deleteGrade(${index})">Delete</button>
+            </div>
+        `).join('');
+    }
+
+    function deleteGrade(index) {
+        if (!confirm('Delete this grade?')) return;
+        
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        grades.splice(index, 1);
+        localStorage.setItem('prepareGrades', JSON.stringify(grades));
+        loadHistory();
+    }
+
+    // Initialize on load
+    window.onload = function() {
+        updateSlider('pattern', 10, 20);
+        updateSlider('risk', 10, 20);
+        updateSlider('entry', 5, 10);
+        updateSlider('performance', 5, 10);
+        updateSlider('time', 10, 20);
+        updateSlider('catalyst', 5, 10);
+        updateSlider('environment', 5, 10);
+    };
+</script>
+</body>
+</html>
