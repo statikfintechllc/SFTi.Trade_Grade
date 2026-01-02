@@ -405,13 +405,16 @@
         padding: 12px;
         margin-bottom: 8px;
         border: 1px solid #333;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 12px;
+        align-items: center;
     }
 
-    .history-header {
+    .history-left {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 10px;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .history-ticker {
@@ -420,44 +423,83 @@
         color: white;
     }
 
-    .history-date {
-        font-size: 10px;
-        color: #888;
-        margin-top: 2px;
-    }
-
-    .history-score {
-        text-align: right;
-    }
-
-    .history-score-value {
-        font-size: 20px;
-        font-weight: 700;
-        color: #cc0000;
-    }
-
-    .history-score-max {
-        font-size: 10px;
-        color: #666;
-    }
-
-    .history-details {
+    .history-grades-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(4, 1fr);
         gap: 4px;
-        font-size: 10px;
-        margin-bottom: 10px;
+        font-size: 11px;
     }
 
-    .history-detail {
+    .history-grade-item {
         display: flex;
-        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
         color: #b0b0b0;
     }
 
-    .history-detail span:last-child {
-        font-weight: 600;
+    .history-grade-letter {
+        font-weight: 700;
+        color: #cc0000;
+        font-size: 12px;
+    }
+
+    .history-grade-value {
         color: #e0e0e0;
+        font-weight: 600;
+    }
+
+    .history-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+    }
+
+    .history-score-value {
+        font-size: 48px;
+        font-weight: 700;
+        color: white;
+        line-height: 1;
+    }
+
+    .history-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .history-screenshot {
+        width: 100%;
+        max-width: 120px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .history-screenshot:hover {
+        border-color: #cc0000;
+        transform: scale(1.05);
+    }
+
+    .history-no-screenshot {
+        width: 100%;
+        max-width: 120px;
+        height: 80px;
+        border-radius: 6px;
+        border: 1px dashed #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        font-size: 10px;
+    }
+
+    .history-footer {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
     }
 
     .delete-btn {
@@ -1083,48 +1125,51 @@
 
         container.innerHTML = grades.map((grade, index) => `
             <div class="history-item" data-index="${index}">
-                ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `<img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333;" onclick="viewScreenshot('${encodeURIComponent(grade.id != null ? grade.id : index)}')">` : ''}
-                <div class="history-header">
-                    <div>
-                        <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
-                        <div class="history-date">${new Date(grade.date).toLocaleString()}</div>
-                    </div>
-                    <div class="history-score">
-                        <div class="history-score-value">${grade.total}</div>
-                        <div class="history-score-max">/ 100</div>
-                    </div>
-                </div>
-                <div class="history-details">
-                    <div class="history-detail">
-                        <span>Pattern:</span>
-                        <span>${grade.scores.pattern}/20</span>
-                    </div>
-                    <div class="history-detail">
-                        <span>Risk/Reward:</span>
-                        <span>${grade.scores.risk}/20</span>
-                    </div>
-                    <div class="history-detail">
-                        <span>Entry/Exit:</span>
-                        <span>${grade.scores.entry}/10</span>
-                    </div>
-                    <div class="history-detail">
-                        <span>Performance:</span>
-                        <span>${grade.scores.performance}/10</span>
-                    </div>
-                    <div class="history-detail">
-                        <span>Timing:</span>
-                        <span>${grade.scores.time}/20</span>
-                    </div>
-                    <div class="history-detail">
-                        <span>Catalyst:</span>
-                        <span>${grade.scores.catalyst}/10</span>
-                    </div>
-                    <div class="history-detail" style="grid-column: 1 / -1;">
-                        <span>Environment:</span>
-                        <span>${grade.scores.environment}/10</span>
+                <div class="history-left">
+                    <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
+                    <div class="history-grades-grid">
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">P</span>
+                            <span class="history-grade-value">${grade.scores.pattern}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">R</span>
+                            <span class="history-grade-value">${grade.scores.risk}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">E</span>
+                            <span class="history-grade-value">${grade.scores.entry}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">P</span>
+                            <span class="history-grade-value">${grade.scores.performance}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">A</span>
+                            <span class="history-grade-value">${grade.scores.time}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">R</span>
+                            <span class="history-grade-value">${grade.scores.catalyst}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">E</span>
+                            <span class="history-grade-value">${grade.scores.environment}</span>
+                        </div>
+                        <div class="history-grade-item" style="visibility: hidden;"></div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 6px;">
+                <div class="history-center">
+                    <div class="history-score-value">${grade.total}</div>
+                </div>
+                <div class="history-right">
+                    ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `
+                        <img src="${encodeURI(grade.screenshot)}" class="history-screenshot" onclick="viewScreenshot('${encodeURIComponent(grade.id != null ? grade.id : index)}')" alt="Trade screenshot">
+                    ` : `
+                        <div class="history-no-screenshot">No screenshot</div>
+                    `}
+                </div>
+                <div class="history-footer">
                     <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>
                         Analyze
