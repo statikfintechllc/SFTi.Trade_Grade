@@ -655,7 +655,7 @@
         padding: 10px 12px;
     }
 
-    /* Tracker slider styles */
+    /* Trade plan slider styles */
     #stopLoss-slider::-webkit-slider-thumb {
         background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
         box-shadow: 0 2px 6px rgba(255, 68, 68, 0.4) !important;
@@ -1350,7 +1350,7 @@
         environment: 5
     };
 
-    // Trade tracker state
+    // Trade plan state
     const trackerState = {
         ticker: '',
         scores: null,
@@ -1549,7 +1549,7 @@
         document.getElementById('progressFill').style.width = `${(total / 100) * 100}%`;
     }
 
-    // Trade Tracker Functions
+    // Trade Plan Functions
     function continueToTracker() {
         const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
         
@@ -1558,13 +1558,13 @@
             return;
         }
 
-        // Store grade data in tracker state
+        // Store grade data in trade plan state
         trackerState.ticker = ticker;
         trackerState.scores = { ...state };
         trackerState.total = Object.values(state).reduce((a, b) => a + b, 0);
         trackerState.screenshot = currentScreenshot;
         
-        // Navigate to tracker view
+        // Navigate to trade plan view
         switchView('tracker');
     }
 
