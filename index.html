@@ -1576,7 +1576,7 @@
         MAX_GRADES_FOR_PATTERNS: 20,
         CHAT_MESSAGE_PREVIEW_LENGTH: 200,
         AI_MODEL: 'gpt-4o-mini',
-        AI_MAX_TOKENS: 500,
+        AI_MAX_TOKENS: 1500,  // Increased for more detailed responses
         AI_TEMPERATURE: 0.7,
         API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions'
     };
@@ -2240,12 +2240,12 @@
                         <div class="history-no-screenshot">No screenshot</div>
                     `}
                 </div>
-                <div class="history-footer" onclick="event.stopPropagation()">
-                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">
+                <div class="history-footer">
+                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}" onclick="event.stopPropagation();">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>
                         Analyze
                     </button>
-                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}">
+                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}" onclick="event.stopPropagation();">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Delete
                     </button>
@@ -2818,11 +2818,12 @@
     }
 
     // AI Assistant functions
-    function saveToken() {
+    async function saveToken() {
         const token = document.getElementById('githubToken').value.trim();
         if (token) {
             localStorage.setItem('githubToken', token);
-            showToast('Token saved to browser storage', 'success', 'Token Saved');
+            showToast('Token saved, fetching available models...', 'success', 'Token Saved');
+            await fetchAvailableModels(token);
         }
     }
 
@@ -2830,6 +2831,34 @@
         const token = localStorage.getItem('githubToken');
         if (token) {
             document.getElementById('githubToken').value = token;
+            // Fetch models on load if token exists
+            fetchAvailableModels(token);
+        }
+    }
+
+    async function fetchAvailableModels(token) {
+        try {
+            const response = await fetch('https://api.github.com/models', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (response.ok) {
+                const models = await response.json();
+                const modelNames = models.map(m => m.name || m.id).join(', ');
+                console.log('Available models:', modelNames);
+                showToast(`${models.length} models available: ${modelNames.substring(0, 100)}...`, 'info', 'Models Loaded', 8000);
+                localStorage.setItem('availableModels', JSON.stringify(models));
+            } else {
+                console.warn('Could not fetch models:', response.status);
+                showToast('Token saved, but could not fetch models list', 'warning', 'Limited Access');
+            }
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            // Don't show error to user, token still works for chat
         }
     }
 
@@ -2865,7 +2894,30 @@
                     messages: [
                         {
                             role: 'system',
-                            content: 'You are a helpful trading assistant. Provide concise analysis and advice for stock trading. Focus on technical analysis, risk management, and trading psychology. Keep responses brief and actionable.'
+                            content: `You are an expert trading analyst with deep knowledge of technical analysis, fundamental analysis, and market dynamics. 
+
+Your expertise includes:
+- Technical patterns (breakouts, reversals, support/resistance)
+- Risk management and position sizing
+- Entry/exit timing and strategy development
+- Market psychology and sentiment analysis
+- Current market conditions and sector rotation
+- Real-time news impact on stock movements
+
+When analyzing trades:
+1. Be specific and actionable - provide exact levels, percentages, and concrete steps
+2. Consider current market environment and sentiment
+3. Reference relevant technical indicators and patterns
+4. Suggest specific risk management rules
+5. Provide both bullish and bearish scenarios
+6. Keep responses detailed but organized with clear sections
+
+Format your responses with:
+- Key findings at the top
+- Detailed analysis in the middle
+- Actionable recommendations at the bottom
+
+Be direct, professional, and avoid generic advice. Treat this as real money at stake.`
                         },
                         {
                             role: 'user',
