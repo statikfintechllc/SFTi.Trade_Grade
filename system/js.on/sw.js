@@ -1,5 +1,5 @@
 // IMPORTANT: Bump this version whenever you deploy changes to any of the cached assets below.
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `prepare-trading-journal-${CACHE_VERSION}`;
 
 // Base path for the repo (GitHub Pages serves from /SFTi.Trade_Grade/)
