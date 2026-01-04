@@ -1,11 +1,41 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M256 48C150 48 80 90 60 210C40 380 256 464 256 464C256 464 472 380 452 210C432 90 362 48 256 48Z" fill="#121212"/>
+  <rect x="48" y="48" width="416" height="416" rx="80" fill="#C0392B"/>
   
-  <path d="M180 180H220V320H180V180Z" fill="#E53935" opacity="0.8"/>
-  <path d="M240 140H280V360H240V140Z" fill="#FF5252"/>
-  <path d="M300 220H340V300H300V220Z" fill="#B71C1C"/>
+  <path d="M256 120L160 168L256 216L352 168L256 120Z" fill="white"/>
+  <path d="M352 168V208C352 208 320 224 256 224C192 224 160 208 160 208V168" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="352" y1="168" x2="352" y2="240" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="352" cy="240" r="8" fill="white"/>
 
-  <path d="M160 140V372H200V280H280C330 280 360 250 360 210C360 170 330 140 280 140H160ZM200 180H280C300 180 320 190 320 210C320 230 300 240 280 240H200V180Z" fill="white"/>
+  <rect x="144" y="232" width="24" height="64" fill="#212121"/> <line x1="156" y1="208" x2="156" y2="232" stroke="#212121" stroke-width="4"/>
+  <line x1="156" y1="296" x2="156" y2="312" stroke="#212121" stroke-width="4"/>
+
+  <rect x="192" y="264" width="24" height="32" fill="white"/> <line x1="204" y1="248" x2="204" y2="264" stroke="white" stroke-width="4"/>
+  <line x1="204" y1="296" x2="204" y2="320" stroke="white" stroke-width="4"/>
+
+  <rect x="240" y="216" width="24" height="80" fill="#212121"/> <line x1="252" y1="200" x2="252" y2="216" stroke="#212121" stroke-width="4"/>
+  <line x1="252" y1="296" x2="252" y2="312" stroke="#212121" stroke-width="4"/>
+
+  <rect x="288" y="272" width="24" height="24" fill="white"/> <line x1="300" y1="256" x2="300" y2="272" stroke="white" stroke-width="4"/>
+  <line x1="300" y1="296" x2="300" y2="320" stroke="white" stroke-width="4"/>
+
+  <rect x="336" y="248" width="24" height="48" fill="#212121"/> <line x1="348" y1="224" x2="348" y2="248" stroke="#212121" stroke-width="4"/>
+  <line x1="348" y1="296" x2="348" y2="312" stroke="#212121" stroke-width="4"/>
+
+  <path d="M128 336H384" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M160 336V360L144 376V392" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="144" cy="392" r="6" fill="white"/>
+  <path d="M200 336V376L184 392V408" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="184" cy="408" r="6" fill="white"/>
+  <path d="M240 336V392" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="240" cy="392" r="6" fill="white"/>
+  <path d="M272 336V376L288 392V408" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="288" cy="408" r="6" fill="white"/>
+  <path d="M312 336V360L328 376V392" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="328" cy="392" r="6" fill="white"/>
+  <path d="M352 336V352L368 368V384" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="368" cy="384" r="6" fill="white"/>
   
-  <circle cx="360" cy="210" r="12" fill="#FF5252" stroke="#121212" stroke-width="4"/>
+  <circle cx="400" cy="160" r="40" fill="#76FF5C"/>
+  <rect x="384" y="152" width="32" height="16" rx="4" fill="white"/>
+  <rect x="392" y="144" width="16" height="32" rx="4" fill="white"/>
 </svg>
