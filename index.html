@@ -1144,6 +1144,31 @@
     let historyFilterTicker = '';
     let historyFilterGrade = '';
 
+    /**
+     * Reset all history filter state variables to their default (unfiltered) values.
+     * Intended to be called whenever the user clears history filters in the UI.
+     */
+    function resetHistoryFilters() {
+        historyFilterTicker = '';
+        historyFilterGrade = '';
+    }
+
+    /**
+     * Convenience helper: clear filters and, if available, trigger a history refresh.
+     * This can be wired to a "Clear Filters" button or similar UI control.
+     */
+    function clearHistoryFiltersAndRefreshHistory() {
+        resetHistoryFilters();
+
+        // If a global history-rendering function exists, call it to refresh the view.
+        if (typeof renderHistory === 'function') {
+            renderHistory();
+        }
+    }
+
+    // Expose helpers globally so they can be used from inline handlers or other scripts.
+    window.resetHistoryFilters = resetHistoryFilters;
+    window.clearHistoryFiltersAndRefreshHistory = clearHistoryFiltersAndRefreshHistory;
     // Security: HTML escape function to prevent XSS
     function escapeHtml(text) {
         const div = document.createElement('div');
