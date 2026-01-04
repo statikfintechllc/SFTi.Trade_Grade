@@ -1,5 +1,5 @@
 <svg width="440" height="440" viewBox="0 36 440 440" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="88" y="96" width="336" height="320" rx="64" fill="#C0392B"/>
+<rect x="88" y="96" width="336" height="285" rx="64" fill="#C0392B"/>
   
   <!-- VWAP Line -->
   <path d="M120 180 L160 190 L200 185 L240 175 L280 195 L320 190 L360 185 L400 180" stroke="#FFA500" stroke-width="3" stroke-dasharray="6 4" fill="none" opacity="0.8"/>
