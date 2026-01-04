@@ -175,7 +175,7 @@
 
     .menu-btn {
         width: 100%;
-        padding: 10px 12px;
+        padding: 12px 14px;
         background: none;
         border: none;
         color: #b0b0b0;
@@ -184,21 +184,43 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        border-radius: 6px;
+        border-radius: 10px;
         margin-bottom: 6px;
         font-size: 13px;
         font-weight: 500;
-        transition: all 0.2s;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
     }
-
+    
+    .menu-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
     .menu-btn:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.08);
         color: white;
+        transform: translateX(4px);
+        box-shadow: inset 3px 0 0 rgba(204, 0, 0, 0.5);
     }
-
+    
+    .menu-btn:hover::before {
+        left: 100%;
+    }
+    
     .menu-btn.active {
         background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
         color: white;
+        box-shadow: 0 4px 16px rgba(204, 0, 0, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transform: translateX(6px);
     }
 
     .overlay {
@@ -224,44 +246,109 @@
     }
 
     .card {
-        background: linear-gradient(135deg, #262626 0%, #1a1a1a 100%);
-        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+        border-radius: 12px;
         padding: 12px 14px;
         margin-bottom: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-        border: 1px solid #333;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+                    0 2px 8px rgba(204, 0, 0, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 
+                    0 4px 16px rgba(204, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border-color: rgba(204, 0, 0, 0.3);
+    }
+    
+    .card:hover::before {
+        left: 100%;
     }
 
     .ticker-input {
         width: 100%;
-        padding: 12px;
-        background: #1a1a1a;
-        border: 2px solid #333;
-        border-radius: 6px;
+        padding: 14px 16px;
+        background: rgba(26, 26, 26, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
         color: white;
         font-size: 16px;
         font-weight: 700;
         text-transform: uppercase;
-        transition: all 0.2s;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
     }
-
+    
     .ticker-input:focus {
         outline: none;
         border-color: #cc0000;
-        background: #0d0d0d;
+        background: rgba(13, 13, 13, 0.9);
+        box-shadow: 0 0 0 4px rgba(204, 0, 0, 0.15),
+                    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                    0 4px 16px rgba(204, 0, 0, 0.3);
+        transform: scale(1.02);
     }
-
+    
     .ticker-input::placeholder {
         color: #555;
     }
 
     .score-display {
         background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
-        border-radius: 8px;
-        padding: 16px;
+        border-radius: 16px;
+        padding: 20px;
         text-align: center;
         color: white;
-        box-shadow: 0 4px 16px rgba(204, 0, 0, 0.3);
+        box-shadow: 0 8px 32px rgba(204, 0, 0, 0.5),
+                    0 0 40px rgba(204, 0, 0, 0.2),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .score-display::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+        animation: scoreGlow 8s ease-in-out infinite;
+    }
+    
+    @keyframes scoreGlow {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-20%, -20%) scale(1.2); }
+    }
+    
+    .score-display:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 48px rgba(204, 0, 0, 0.7),
+                    0 0 60px rgba(204, 0, 0, 0.3),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.3);
     }
 
     .score-label {
@@ -383,7 +470,7 @@
         background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
         color: white;
         border: none;
-        border-radius: 6px;
+        border-radius: 12px;
         font-size: 16px;
         font-weight: 700;
         cursor: pointer;
@@ -391,24 +478,94 @@
         align-items: center;
         justify-content: center;
         gap: 6px;
-        transition: all 0.2s;
-        box-shadow: 0 2px 10px rgba(204, 0, 0, 0.3);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(204, 0, 0, 0.4), 
+                    0 2px 8px rgba(204, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
     }
-
+    
+    .save-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+    }
+    
+    .save-btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 32px rgba(204, 0, 0, 0.6),
+                    0 4px 16px rgba(204, 0, 0, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        filter: brightness(1.1);
+    }
+    
+    .save-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
     .save-btn:active {
-        transform: scale(0.98);
+        transform: scale(0.97);
+        box-shadow: 0 2px 12px rgba(204, 0, 0, 0.4);
     }
 
     .history-item {
-        background: linear-gradient(135deg, #262626 0%, #1a1a1a 100%);
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 8px;
-        border: 1px solid #333;
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         display: grid;
         grid-template-columns: 1fr auto 1fr;
         gap: 12px;
         align-items: center;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                    0 2px 8px rgba(204, 0, 0, 0.08),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .history-item::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(204, 0, 0, 0.08) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.6s ease, transform 0.6s ease;
+        pointer-events: none;
+    }
+    
+    .history-item:hover {
+        transform: translateY(-6px) scale(1.02);
+        border-color: rgba(204, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+                    0 8px 20px rgba(204, 0, 0, 0.25),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.1),
+                    0 0 40px rgba(204, 0, 0, 0.15);
+    }
+    
+    .history-item:hover::before {
+        opacity: 1;
+        transform: scale(1.1) rotate(45deg);
+    }
+    
+    .history-item:active {
+        transform: translateY(-2px) scale(0.99);
     }
 
     .history-left {
@@ -471,15 +628,35 @@
     .history-screenshot {
         width: 100%;
         max-width: 120px;
-        border-radius: 6px;
-        border: 1px solid #333;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-
+    
+    .history-screenshot::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(204, 0, 0, 0.05));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+    
     .history-screenshot:hover {
-        border-color: #cc0000;
-        transform: scale(1.05);
+        border-color: rgba(204, 0, 0, 0.5);
+        transform: scale(1.1) rotate(2deg);
+        box-shadow: 0 12px 32px rgba(204, 0, 0, 0.4),
+                    0 0 20px rgba(204, 0, 0, 0.2);
+        filter: brightness(1.1) saturate(1.2);
+    }
+    
+    .history-screenshot:hover::after {
+        opacity: 1;
     }
 
     .history-no-screenshot {
@@ -574,12 +751,48 @@
 
     .modal-content {
         background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.98) 100%);
-        border-radius: 20px;
-        padding: 24px;
+        border-radius: 24px;
+        padding: 28px;
         width: 100%;
         max-width: 320px;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), 
+                    0 8px 24px rgba(204, 0, 0, 0.2),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.1),
+                    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .modal-content::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.5), transparent);
+        animation: modalShimmer 2s ease-in-out infinite;
+        pointer-events: none;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    @keyframes modalShimmer {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.8; }
     }
 
     .modal-title {
@@ -655,7 +868,7 @@
         padding: 10px 12px;
     }
 
-    /* Tracker slider styles */
+    /* Trade plan slider styles */
     #stopLoss-slider::-webkit-slider-thumb {
         background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
         box-shadow: 0 2px 6px rgba(255, 68, 68, 0.4) !important;
@@ -725,17 +938,48 @@
 
     .toast {
         background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.98) 100%);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 16px;
-        padding: 16px 20px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border-radius: 18px;
+        padding: 18px 22px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 
+                    0 5px 15px rgba(204, 0, 0, 0.2),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         pointer-events: auto;
-        animation: toastSlideIn 0.3s ease-out;
+        animation: toastSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: flex-start;
-        gap: 12px;
+        gap: 14px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .toast::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at top right, rgba(204, 0, 0, 0.1), transparent 70%);
+        pointer-events: none;
+    }
+    
+    .toast::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.6), transparent);
+        animation: toastShimmer 2s ease-in-out infinite;
+    }
+    
+    @keyframes toastShimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
     }
 
     .toast.toast-exit {
@@ -842,11 +1086,55 @@
             <span class="hamburger-icon"></span>
         </button>
         <div class="header-title">
-            <svg class="logo" viewBox="0 0 32 32" fill="none">
-                <rect width="32" height="32" rx="6" fill="#cc0000"/>
-                <path d="M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z" fill="#ff6666"/>
-                <circle cx="22" cy="12" r="4" fill="#00ff00"/>
-                <path d="M22 10v4m-2-2h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            <svg class="logo" viewBox="0 36 440 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="110" y="96" width="285" height="285" rx="64" fill="#C0392B"/>
+                <path d="M140 180 L170 190 L200 185 L230 175 L260 195 L290 190 L320 185 L350 180 L365 182" stroke="#FFA500" stroke-width="3" stroke-dasharray="6 4" fill="none" opacity="0.8"/>
+                <rect x="143" y="200" width="12" height="36" fill="white"/>
+                <line x1="149" y1="190" x2="149" y2="200" stroke="white" stroke-width="2.5"/>
+                <line x1="149" y1="236" x2="149" y2="246" stroke="white" stroke-width="2.5"/>
+                <rect x="168" y="210" width="12" height="28" fill="#212121"/>
+                <line x1="174" y1="198" x2="174" y2="210" stroke="#212121" stroke-width="2.5"/>
+                <line x1="174" y1="238" x2="174" y2="250" stroke="#212121" stroke-width="2.5"/>
+                <rect x="193" y="195" width="12" height="42" fill="white"/>
+                <line x1="199" y1="184" x2="199" y2="195" stroke="white" stroke-width="2.5"/>
+                <line x1="199" y1="237" x2="199" y2="248" stroke="white" stroke-width="2.5"/>
+                <rect x="218" y="170" width="12" height="52" fill="white"/>
+                <line x1="224" y1="158" x2="224" y2="170" stroke="white" stroke-width="2.5"/>
+                <line x1="224" y1="222" x2="224" y2="234" stroke="white" stroke-width="2.5"/>
+                <rect x="243" y="190" width="12" height="38" fill="#212121"/>
+                <line x1="249" y1="178" x2="249" y2="190" stroke="#212121" stroke-width="2.5"/>
+                <line x1="249" y1="228" x2="249" y2="240" stroke="#212121" stroke-width="2.5"/>
+                <rect x="268" y="205" width="12" height="30" fill="#212121"/>
+                <line x1="274" y1="193" x2="274" y2="205" stroke="#212121" stroke-width="2.5"/>
+                <line x1="274" y1="235" x2="274" y2="247" stroke="#212121" stroke-width="2.5"/>
+                <rect x="293" y="198" width="12" height="34" fill="white"/>
+                <line x1="299" y1="186" x2="299" y2="198" stroke="white" stroke-width="2.5"/>
+                <line x1="299" y1="232" x2="299" y2="244" stroke="white" stroke-width="2.5"/>
+                <rect x="318" y="176" width="12" height="48" fill="white"/>
+                <line x1="324" y1="164" x2="324" y2="176" stroke="white" stroke-width="2.5"/>
+                <line x1="324" y1="224" x2="324" y2="244" stroke="white" stroke-width="2.5"/>
+                <rect x="343" y="156" width="12" height="44" fill="white"/>
+                <line x1="349" y1="142" x2="349" y2="156" stroke="white" stroke-width="2.5"/>
+                <line x1="349" y1="200" x2="349" y2="206" stroke="white" stroke-width="2.5"/>
+                <path d="M125 270H380" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                <path d="M149 270V286L134 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="134" cy="301" r="4" fill="white"/>
+                <path d="M174 270V294L159 309" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="159" cy="309" r="4" fill="white"/>
+                <path d="M199 270V301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="199" cy="301" r="4" fill="white"/>
+                <path d="M224 270V294L239 309" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="239" cy="309" r="4" fill="white"/>
+                <path d="M249 270V286L264 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="264" cy="301" r="4" fill="white"/>
+                <path d="M274 270V301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="274" cy="301" r="4" fill="white"/>
+                <path d="M299 270V286L314 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="314" cy="301" r="4" fill="white"/>
+                <path d="M324 270V294L339 309" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="339" cy="309" r="4" fill="white"/>
+                <path d="M349 270V286L364 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="364" cy="301" r="4" fill="white"/>
             </svg>
             <h1>P.R.E.P</h1>
         </div>
@@ -856,11 +1144,55 @@
 <div class="side-menu" id="sideMenu">
     <div class="menu-header">
         <div class="menu-logo">
-            <svg class="logo" viewBox="0 0 32 32" fill="none">
-                <rect width="32" height="32" rx="6" fill="#cc0000"/>
-                <path d="M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z" fill="#ff6666"/>
-                <circle cx="22" cy="12" r="4" fill="#00ff00"/>
-                <path d="M22 10v4m-2-2h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+            <svg class="logo" viewBox="0 36 440 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="110" y="96" width="285" height="285" rx="64" fill="#C0392B"/>
+                <path d="M140 180 L170 190 L200 185 L230 175 L260 195 L290 190 L320 185 L350 180 L365 182" stroke="#FFA500" stroke-width="3" stroke-dasharray="6 4" fill="none" opacity="0.8"/>
+                <rect x="143" y="200" width="12" height="36" fill="white"/>
+                <line x1="149" y1="190" x2="149" y2="200" stroke="white" stroke-width="2.5"/>
+                <line x1="149" y1="236" x2="149" y2="246" stroke="white" stroke-width="2.5"/>
+                <rect x="168" y="210" width="12" height="28" fill="#212121"/>
+                <line x1="174" y1="198" x2="174" y2="210" stroke="#212121" stroke-width="2.5"/>
+                <line x1="174" y1="238" x2="174" y2="250" stroke="#212121" stroke-width="2.5"/>
+                <rect x="193" y="195" width="12" height="42" fill="white"/>
+                <line x1="199" y1="184" x2="199" y2="195" stroke="white" stroke-width="2.5"/>
+                <line x1="199" y1="237" x2="199" y2="248" stroke="white" stroke-width="2.5"/>
+                <rect x="218" y="170" width="12" height="52" fill="white"/>
+                <line x1="224" y1="158" x2="224" y2="170" stroke="white" stroke-width="2.5"/>
+                <line x1="224" y1="222" x2="224" y2="234" stroke="white" stroke-width="2.5"/>
+                <rect x="243" y="190" width="12" height="38" fill="#212121"/>
+                <line x1="249" y1="178" x2="249" y2="190" stroke="#212121" stroke-width="2.5"/>
+                <line x1="249" y1="228" x2="249" y2="240" stroke="#212121" stroke-width="2.5"/>
+                <rect x="268" y="205" width="12" height="30" fill="#212121"/>
+                <line x1="274" y1="193" x2="274" y2="205" stroke="#212121" stroke-width="2.5"/>
+                <line x1="274" y1="235" x2="274" y2="247" stroke="#212121" stroke-width="2.5"/>
+                <rect x="293" y="198" width="12" height="34" fill="white"/>
+                <line x1="299" y1="186" x2="299" y2="198" stroke="white" stroke-width="2.5"/>
+                <line x1="299" y1="232" x2="299" y2="244" stroke="white" stroke-width="2.5"/>
+                <rect x="318" y="176" width="12" height="48" fill="white"/>
+                <line x1="324" y1="164" x2="324" y2="176" stroke="white" stroke-width="2.5"/>
+                <line x1="324" y1="224" x2="324" y2="244" stroke="white" stroke-width="2.5"/>
+                <rect x="343" y="156" width="12" height="44" fill="white"/>
+                <line x1="349" y1="142" x2="349" y2="156" stroke="white" stroke-width="2.5"/>
+                <line x1="349" y1="200" x2="349" y2="206" stroke="white" stroke-width="2.5"/>
+                <path d="M125 270H380" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                <path d="M149 270V286L134 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="134" cy="301" r="4" fill="white"/>
+                <path d="M174 270V294L159 309" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="159" cy="309" r="4" fill="white"/>
+                <path d="M199 270V301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="199" cy="301" r="4" fill="white"/>
+                <path d="M224 270V294L239 309" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="239" cy="309" r="4" fill="white"/>
+                <path d="M249 270V286L264 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="264" cy="301" r="4" fill="white"/>
+                <path d="M274 270V301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="274" cy="301" r="4" fill="white"/>
+                <path d="M299 270V286L314 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="314" cy="301" r="4" fill="white"/>
+                <path d="M324 270V294L339 309" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="339" cy="309" r="4" fill="white"/>
+                <path d="M349 270V286L364 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <circle cx="364" cy="301" r="4" fill="white"/>
             </svg>
             <div>
                 <div class="menu-title">PREPARE</div>
@@ -880,7 +1212,14 @@
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            <span>Trade Tracker</span>
+            <span>Trade Plan</span>
+        </button>
+        <button class="menu-btn" onclick="switchView('finalize')" id="finalizeBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <span>Finalize Trades</span>
         </button>
         <button class="menu-btn" onclick="switchView('history')" id="historyBtn">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1064,7 +1403,14 @@
             <div class="slider-group">
                 <div class="slider-header">
                     <div class="slider-label">
-                        <div class="slider-title" style="color: #ff4444;">🛑 Stop Loss</div>
+                        <div class="slider-title" style="color: #ff4444;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                            Stop Loss
+                        </div>
                         <div class="slider-subtitle" style="display: block;">Protect your capital</div>
                     </div>
                     <div class="slider-value" style="color: #ff4444;" id="stopLoss-value">7%</div>
@@ -1080,7 +1426,13 @@
             <div class="slider-group">
                 <div class="slider-header">
                     <div class="slider-label">
-                        <div class="slider-title" style="color: #00ff00;">🎯 Profit Target</div>
+                        <div class="slider-title" style="color: #00ff00;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 8v8m-4-4h8"></path>
+                            </svg>
+                            Profit Target
+                        </div>
                         <div class="slider-subtitle" style="display: block;">Set your goal</div>
                     </div>
                     <div class="slider-value" style="color: #00ff00;" id="profitTarget-value">20%</div>
@@ -1152,25 +1504,47 @@
         </button>
     </div>
 
+    <div id="finalizeView" style="display: none;">
+        <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 12px;">Finalize Trades</h2>
+        
+        <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+            <div style="font-size: 11px; color: #888; line-height: 1.5;">
+                <p>Review and finalize your planned trades. Mark trades as <span style="color: #ff4444; font-weight: 600;">Rejected</span> (not taken) or <span style="color: #00ff00; font-weight: 600;">Accepted</span> (executed) to track your results.</p>
+            </div>
+        </div>
+        
+        <div id="finalizeContainer"></div>
+    </div>
+
     <div id="historyView" style="display: none;">
         <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 12px;">Trade History</h2>
         
-        <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <input type="text" class="ticker-input" id="historySearchInput" placeholder="Search ticker..." style="flex: 1; min-width: 100px; padding: 8px; font-size: 12px;">
-                <select id="historyGradeFilter" class="ticker-input" style="flex: 0 0 auto; width: auto; padding: 8px; font-size: 12px; text-transform: none;">
-                    <option value="">All Grades</option>
-                    <option value="A">A (90+)</option>
-                    <option value="B">B (75-89)</option>
-                    <option value="C">C (60-74)</option>
-                    <option value="D">D (Below 60)</option>
-                </select>
-                <button class="save-btn" onclick="filterHistory()" style="flex: 0 0 auto; padding: 8px 12px; font-size: 12px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                </button>
+        <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 8px;">
+            <div style="background: rgba(26, 26, 26, 0.8); border: 2px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 8px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+                <input type="text" class="ticker-input" id="historySearchInput" placeholder="Search ticker..." style="width: 100%; padding: 12px 14px; font-size: 14px; border: none; background: transparent; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <select id="historyGradeFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 13px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); height: 38px;">
+                        <option value="">All Grades</option>
+                        <option value="A">A (90+)</option>
+                        <option value="B">B (75-89)</option>
+                        <option value="C">C (60-74)</option>
+                        <option value="D">D (Below 60)</option>
+                    </select>
+                    <select id="historyStatusFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 13px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); height: 38px;">
+                        <option value="">All Status</option>
+                        <option value="finalized">Finalized</option>
+                        <option value="non-finalized">Non-Finalized</option>
+                    </select>
+                    <select id="historyStrategyFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 13px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); height: 38px;">
+                        <option value="">All Strategies</option>
+                    </select>
+                    <button class="save-btn" onclick="filterHistory()" aria-label="Search" style="flex: 0 0 auto; padding: 8px; font-size: 12px; border-radius: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -1259,6 +1633,30 @@
     </div>
 </div>
 
+<!-- Finalize Trade Modal -->
+<div class="modal-overlay" id="finalizeTradeModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-title">Finalize Trade: <span id="finalizeModalTicker"></span></div>
+        <div id="finalizeModalContent" style="font-size: 12px; color: #e0e0e0; margin-bottom: 16px;">
+            <!-- Initial choice or detailed finalization form -->
+        </div>
+        <div id="finalizeModalButtons" class="modal-buttons">
+            <!-- Buttons will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Full Screen Image Viewer Modal -->
+<div class="modal-overlay" id="imageViewerModal" style="background: rgba(0, 0, 0, 0.95); cursor: pointer;">
+    <button onclick="hideImageViewer()" aria-label="Close image viewer" style="position: fixed; top: 60px; right: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 24px; z-index: 101; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </button>
+    <img id="fullScreenImage" src="" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; cursor: default;" onclick="event.stopPropagation();" alt="Full screen view">
+</div>
+
 <script>
     // Configuration constants
     const CONFIG = {
@@ -1267,7 +1665,7 @@
         MAX_GRADES_FOR_PATTERNS: 20,
         CHAT_MESSAGE_PREVIEW_LENGTH: 200,
         AI_MODEL: 'gpt-4o-mini',
-        AI_MAX_TOKENS: 500,
+        AI_MAX_TOKENS: 1500,  // Increased for more detailed responses
         AI_TEMPERATURE: 0.7,
         API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions'
     };
@@ -1282,7 +1680,7 @@
         environment: 5
     };
 
-    // Trade tracker state
+    // Trade plan state
     const trackerState = {
         ticker: '',
         scores: null,
@@ -1298,6 +1696,9 @@
     let chatHistory = [];
     let historyFilterTicker = '';
     let historyFilterGrade = '';
+    let historyFilterStatus = '';
+    let historyFilterStrategy = '';
+    let currentFinalizeTradeIndex = null;
 
     /**
      * Reset all history filter state variables to their default (unfiltered) values.
@@ -1306,6 +1707,8 @@
     function resetHistoryFilters() {
         historyFilterTicker = '';
         historyFilterGrade = '';
+        historyFilterStatus = '';
+        historyFilterStrategy = '';
     }
 
     /**
@@ -1326,16 +1729,28 @@
     window.clearHistoryFiltersAndRefreshHistory = clearHistoryFiltersAndRefreshHistory;
 
     // Toast Notification System
-    function showToast(message, type = 'info', title = null, duration = 4000) {
+    function showToast(message, type = 'info', title = null, duration = 4000, navigationView = null) {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
         toast.className = 'toast';
         
+        // Make toast clickable if navigation is provided
+        if (navigationView) {
+            toast.style.cursor = 'pointer';
+            toast.addEventListener('click', function(e) {
+                // Don't navigate if clicking the close button
+                if (!e.target.closest('.toast-close')) {
+                    switchView(navigationView);
+                    closeToast();
+                }
+            });
+        }
+        
         const icons = {
-            success: '✓',
-            error: '✕',
-            warning: '⚠',
-            info: 'ℹ'
+            success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+            error: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+            warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+            info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
         };
         
         const defaultTitles = {
@@ -1357,9 +1772,10 @@
             <div class="toast-icon ${type}">${icons[type] || icons.info}</div>
             <div class="toast-content">
                 <div class="toast-title">${escapeHtml(displayTitle)}</div>
-                <div class="toast-message">${escapeHtml(message)}</div>
+                <div class="toast-message">${message}</div>
+                ${navigationView ? '<div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 4px;">Click to view</div>' : ''}
             </div>
-            <button class="toast-close">×</button>
+            <button class="toast-close" aria-label="Close notification">×</button>
         `;
         
         // Add click listener for close button
@@ -1397,20 +1813,24 @@
     function switchView(view) {
         const gradeView = document.getElementById('gradeView');
         const trackerView = document.getElementById('trackerView');
+        const finalizeView = document.getElementById('finalizeView');
         const historyView = document.getElementById('historyView');
         const aiView = document.getElementById('aiView');
         const gradeBtn = document.getElementById('gradeBtn');
         const trackerBtn = document.getElementById('trackerBtn');
+        const finalizeBtn = document.getElementById('finalizeBtn');
         const historyBtn = document.getElementById('historyBtn');
         const aiBtn = document.getElementById('aiBtn');
 
         // Hide all views and deactivate all buttons
         gradeView.style.display = 'none';
         trackerView.style.display = 'none';
+        finalizeView.style.display = 'none';
         historyView.style.display = 'none';
         aiView.style.display = 'none';
         gradeBtn.classList.remove('active');
         trackerBtn.classList.remove('active');
+        finalizeBtn.classList.remove('active');
         historyBtn.classList.remove('active');
         aiBtn.classList.remove('active');
 
@@ -1421,6 +1841,10 @@
             trackerView.style.display = 'block';
             trackerBtn.classList.add('active');
             initializeTracker();
+        } else if (view === 'finalize') {
+            finalizeView.style.display = 'block';
+            finalizeBtn.classList.add('active');
+            loadFinalizeView();
         } else if (view === 'history') {
             historyView.style.display = 'block';
             historyBtn.classList.add('active');
@@ -1455,7 +1879,7 @@
         document.getElementById('progressFill').style.width = `${(total / 100) * 100}%`;
     }
 
-    // Trade Tracker Functions
+    // Trade Plan Functions
     function continueToTracker() {
         const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
         
@@ -1464,13 +1888,13 @@
             return;
         }
 
-        // Store grade data in tracker state
+        // Store grade data in trade plan state
         trackerState.ticker = ticker;
         trackerState.scores = { ...state };
         trackerState.total = Object.values(state).reduce((a, b) => a + b, 0);
         trackerState.screenshot = currentScreenshot;
         
-        // Navigate to tracker view
+        // Navigate to trade plan view
         switchView('tracker');
     }
 
@@ -1640,7 +2064,7 @@
         grades.unshift(trade);
         localStorage.setItem('prepareGrades', JSON.stringify(grades));
         
-        showToast(`Entry: $${entry.toFixed(2)} | Stop: $${stopPrice.toFixed(2)} | Target: $${targetPrice.toFixed(2)}\nR:R Ratio: ${rrRatio}:1`, 'success', `${trade.ticker} Trade Plan Saved`, 5000);
+        showToast(`Entry: $${entry.toFixed(2)} | Stop: $${stopPrice.toFixed(2)} | Target: $${targetPrice.toFixed(2)}<br>R:R Ratio: ${rrRatio}:1`, 'success', `${trade.ticker} Trade Plan Saved`, 5000, 'history');
         
         // Reset for next trade
         document.getElementById('tickerInput').value = '';
@@ -1666,6 +2090,8 @@
     function filterHistory() {
         historyFilterTicker = document.getElementById('historySearchInput').value.trim().toUpperCase();
         historyFilterGrade = document.getElementById('historyGradeFilter').value;
+        historyFilterStatus = document.getElementById('historyStatusFilter').value;
+        historyFilterStrategy = document.getElementById('historyStrategyFilter').value;
         loadHistory();
     }
 
@@ -1760,6 +2186,22 @@
         let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         const container = document.getElementById('historyContainer');
 
+        // Populate strategy filter dropdown with unique strategies
+        const strategySet = new Set();
+        for (const g of grades) {
+            if (g && g.outcome && g.outcome.strategy) {
+                strategySet.add(g.outcome.strategy);
+            }
+        }
+        const strategies = Array.from(strategySet);
+        const strategyFilter = document.getElementById('historyStrategyFilter');
+        if (strategyFilter) {
+            const currentValue = strategyFilter.value;
+            strategyFilter.innerHTML = '<option value="">All Strategies</option>' + 
+                strategies.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+            strategyFilter.value = currentValue;
+        }
+
         // Apply filters
         if (historyFilterTicker) {
             grades = grades.filter(g => g.ticker === historyFilterTicker);
@@ -1771,9 +2213,19 @@
                 return letter === historyFilterGrade;
             });
         }
+        if (historyFilterStatus) {
+            if (historyFilterStatus === 'finalized') {
+                grades = grades.filter(g => g.finalized === true);
+            } else if (historyFilterStatus === 'non-finalized') {
+                grades = grades.filter(g => !g.finalized);
+            }
+        }
+        if (historyFilterStrategy) {
+            grades = grades.filter(g => g.outcome && g.outcome.strategy === historyFilterStrategy);
+        }
 
         if (grades.length === 0) {
-            const hasFilters = historyFilterTicker || historyFilterGrade;
+            const hasFilters = historyFilterTicker || historyFilterGrade || historyFilterStatus || historyFilterStrategy;
             container.innerHTML = `
                 <div class="card empty-state" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
                     <div class="empty-icon">
@@ -1794,8 +2246,23 @@
             const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
             const total = grade.total || (grade.grade ? grade.grade.total : 0);
             const hasPlan = grade.plan && grade.plan.entry;
+            const isFinalized = grade.finalized === true;
             const gradeLetter = getGradeLetter(total);
             const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
+            
+            // Finalized status badge
+            let statusBadge = '';
+            let outcomeDisplay = '';
+            if (isFinalized && grade.outcome) {
+                const isWin = grade.outcome.result === 'target';
+                const pnl = grade.outcome.pnlPercent;
+                const pnlColor = isWin ? '#00ff00' : '#ff4444';
+                const pnlIcon = isWin ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                statusBadge = `<span style="color: ${pnlColor}; font-size: 16px; margin-left: 4px;">${pnlIcon}</span>`;
+                outcomeDisplay = `<span style="color: ${pnlColor}; font-weight: 600; font-size: 12px;">${isWin ? '+' : ''}${pnl.toFixed(1)}%</span>`;
+            } else if (hasPlan && !isFinalized) {
+                statusBadge = '<span style="color: #888; font-size: 16px; margin-left: 4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>';
+            }
             
             return `
             <div class="history-item" data-index="${index}" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer;" onclick="showTradeDetailsModal(${index})">
@@ -1803,6 +2270,8 @@
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
                         <span style="background: ${gradeColor}22; color: ${gradeColor}; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;">${gradeLetter}</span>
+                        ${statusBadge}
+                        ${outcomeDisplay}
                     </div>
                     ${hasPlan ? `
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; font-size: 10px;">
@@ -1810,11 +2279,11 @@
                             <div style="color: #ffcc00;">ENTRY</div>
                             <div style="color: white; font-weight: 600;">$${grade.plan.entry.toFixed(2)}</div>
                         </div>
-                        <div style="text-align: center; padding: 4px; background: rgba(255, 68, 68, 0.15); border-radius: 4px;">
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 68, 68, 0.15); border-radius: 4px; ${isFinalized && grade.outcome && grade.outcome.result === 'stop' ? 'border: 2px solid #ff4444;' : ''}">
                             <div style="color: #ff4444;">STOP</div>
                             <div style="color: white; font-weight: 600;">$${grade.plan.stopLoss.toFixed(2)}</div>
                         </div>
-                        <div style="text-align: center; padding: 4px; background: rgba(0, 255, 0, 0.15); border-radius: 4px;">
+                        <div style="text-align: center; padding: 4px; background: rgba(0, 255, 0, 0.15); border-radius: 4px; ${isFinalized && grade.outcome && grade.outcome.result === 'target' ? 'border: 2px solid #00ff00;' : ''}">
                             <div style="color: #00ff00;">TARGET</div>
                             <div style="color: white; font-weight: 600;">$${grade.plan.target.toFixed(2)}</div>
                         </div>
@@ -1823,6 +2292,12 @@
                         R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
                         ${grade.plan.thoughts ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6495ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' : ''}
                     </div>
+                    ${isFinalized && grade.outcome ? `
+                        <div style="margin-top: 4px; text-align: center; font-size: 10px;">
+                            ${grade.outcome.strategy ? `<span style="color: #6495ed;">Strategy: ${escapeHtml(grade.outcome.strategy)}</span>` : ''}
+                            ${grade.outcome.positionSize ? `<span style="color: #888; margin-left: 8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 2px;"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg><span role="img" aria-label="Position size">${grade.outcome.positionSize} ${grade.outcome.positionUnit ?? 'shares'}</span></span>` : ''}
+                        </div>
+                    ` : ''}
                     ` : `
                     <div class="history-grades-grid" style="margin-top: 8px;">
                         <div class="history-grade-item">
@@ -1849,17 +2324,17 @@
                 </div>
                 <div class="history-right">
                     ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `
-                        <img src="${encodeURI(grade.screenshot)}" class="history-screenshot" onclick="event.stopPropagation(); viewScreenshot('${encodeURIComponent(grade.id != null ? grade.id : index)}')" alt="Trade screenshot">
+                        <img src="${encodeURI(grade.screenshot)}" class="history-screenshot" onclick="event.stopPropagation(); showImageViewer('${encodeURI(grade.screenshot).replace(/'/g, "\\'")}');" alt="Trade screenshot for ${escapeHtml(grade.ticker)}">
                     ` : `
                         <div class="history-no-screenshot">No screenshot</div>
                     `}
                 </div>
-                <div class="history-footer" onclick="event.stopPropagation()">
-                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">
+                <div class="history-footer">
+                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}" onclick="event.stopPropagation();">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>
                         Analyze
                     </button>
-                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}">
+                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}" onclick="event.stopPropagation();">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Delete
                     </button>
@@ -1900,9 +2375,314 @@
             }
         }
         if (grade && grade.screenshot) {
-            window.open(grade.screenshot, '_blank');
+            showImageViewer(grade.screenshot);
         }
     }
+
+    function showImageViewer(imageData) {
+        const modal = document.getElementById('imageViewerModal');
+        const img = document.getElementById('fullScreenImage');
+        img.src = imageData;
+        modal.classList.add('active');
+    }
+
+    function hideImageViewer() {
+        const modal = document.getElementById('imageViewerModal');
+        modal.classList.remove('active');
+        document.getElementById('fullScreenImage').src = '';
+    }
+
+    // Load non-finalized trades for finalization
+    function loadFinalizeView() {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const container = document.getElementById('finalizeContainer');
+
+        // Filter for non-finalized trades that have plans
+        const nonFinalizedTrades = grades.filter(g => {
+            const hasPlan = g.plan && g.plan.entry;
+            const isFinalized = g.finalized === true;
+            return hasPlan && !isFinalized;
+        });
+
+        if (nonFinalizedTrades.length === 0) {
+            container.innerHTML = `
+                <div class="card empty-state" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                    </div>
+                    <div class="empty-text">No trades to finalize</div>
+                    <div class="empty-subtext">Create and save trade plans to track their outcomes</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = nonFinalizedTrades.map(grade => {
+            const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
+            const total = grade.total || (grade.grade ? grade.grade.total : 0);
+            const gradeLetter = getGradeLetter(total);
+            const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
+            const originalIndex = grades.indexOf(grade);
+            
+            return `
+            <div class="history-item" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer;" onclick="showFinalizeModal(${originalIndex})">
+                <div class="history-left">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
+                        <span style="background: ${gradeColor}22; color: ${gradeColor}; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;">${gradeLetter}</span>
+                        <span style="color: #ffcc00; font-size: 11px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 2px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span role="img" aria-label="Pending">Pending</span>
+                        </span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; font-size: 10px;">
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 204, 0, 0.15); border-radius: 4px;">
+                            <div style="color: #ffcc00;">ENTRY</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.entry.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 68, 68, 0.15); border-radius: 4px;">
+                            <div style="color: #ff4444;">STOP</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.stopLoss.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px; background: rgba(0, 255, 0, 0.15); border-radius: 4px;">
+                            <div style="color: #00ff00;">TARGET</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.target.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 6px; text-align: center; font-size: 11px; color: #888;">
+                        R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
+                    </div>
+                </div>
+                <div class="history-center">
+                    <div class="history-score-value">${total}</div>
+                </div>
+                <div class="history-right">
+                    ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `
+                        <img src="${encodeURI(grade.screenshot)}" class="history-screenshot" onclick="event.stopPropagation(); showImageViewer('${encodeURI(grade.screenshot).replace(/'/g, "\\'")}');" alt="Trade screenshot for ${escapeHtml(grade.ticker)}">
+                    ` : `
+                        <div class="history-no-screenshot">No screenshot</div>
+                    `}
+                </div>
+            </div>
+        `;
+        }).join('');
+    }
+
+    // Show finalize modal with reject/accept options
+    function showFinalizeModal(index) {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[index];
+        
+        if (!grade) return;
+        
+        currentFinalizeTradeIndex = index;
+        const modal = document.getElementById('finalizeTradeModal');
+        document.getElementById('finalizeModalTicker').textContent = grade.ticker;
+        
+        // Show initial choice: Reject or Accept
+        document.getElementById('finalizeModalContent').innerHTML = `
+            <div style="text-align: center; padding: 16px 0;">
+                <p style="margin-bottom: 16px; line-height: 1.5;">Did you execute this trade?</p>
+                <div style="background: rgba(40, 40, 40, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 11px; color: #888; margin-bottom: 4px;">TRADE PLAN</div>
+                    <div style="display: flex; justify-content: space-around; font-size: 12px;">
+                        <div><span style="color: #ffcc00;">Entry:</span> $${grade.plan.entry.toFixed(2)}</div>
+                        <div><span style="color: #ff4444;">Stop:</span> $${grade.plan.stopLoss.toFixed(2)}</div>
+                        <div><span style="color: #00ff00;">Target:</span> $${grade.plan.target.toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('finalizeModalButtons').innerHTML = `
+            <button class="modal-btn" onclick="rejectTrade()" style="flex: 1; background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                Rejected (Not Taken)
+            </button>
+            <button class="modal-btn modal-btn-confirm" onclick="showAcceptForm()" style="flex: 1;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Accepted (Executed)
+            </button>
+        `;
+        
+        modal.classList.add('active');
+    }
+
+    function hideFinalizeModal() {
+        document.getElementById('finalizeTradeModal').classList.remove('active');
+        currentFinalizeTradeIndex = null;
+    }
+
+    // Reject trade - delete it from the journal
+    function rejectTrade() {
+        if (currentFinalizeTradeIndex === null) return;
+        
+        if (!confirm('Are you sure you want to reject this trade? It will be deleted from your journal.')) {
+            return;
+        }
+        
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[currentFinalizeTradeIndex];
+        
+        grades.splice(currentFinalizeTradeIndex, 1);
+        localStorage.setItem('prepareGrades', JSON.stringify(grades));
+        
+        showToast(`Trade plan deleted`, 'info', `${grade.ticker} Rejected`, 4000, 'history');
+        hideFinalizeModal();
+        loadFinalizeView();
+    }
+
+    // Show form to accept trade and enter details
+    function showAcceptForm() {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[currentFinalizeTradeIndex];
+        
+        if (!grade) return;
+        
+        document.getElementById('finalizeModalContent').innerHTML = `
+            <div style="margin-bottom: 12px;">
+                <label class="label-text">Which target was satisfied?</label>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button id="stopLossBtn" class="modal-btn" onclick="selectOutcome('stop')" aria-label="Select Stop Loss" style="flex: 1; background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        Stop Loss<br>
+                        <span style="font-size: 10px;">$${grade.plan.stopLoss.toFixed(2)} (-${grade.plan.stopPercent}%)</span>
+                    </button>
+                    <button id="targetBtn" class="modal-btn modal-btn-confirm" onclick="selectOutcome('target')" aria-label="Select Profit Target" style="flex: 1;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 8v8m-4-4h8"></path>
+                        </svg>
+                        Profit Target<br>
+                        <span style="font-size: 10px;">$${grade.plan.target.toFixed(2)} (+${grade.plan.targetPercent}%)</span>
+                    </button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                    <label class="label-text">Position Size</label>
+                    <input type="number" id="positionSizeInput" class="ticker-input" placeholder="e.g., 100" min="1" style="text-transform: none; font-size: 12px; padding: 8px;">
+                </div>
+                <div>
+                    <label class="label-text">Unit</label>
+                    <select id="positionUnitSelect" class="ticker-input" style="text-transform: none; font-size: 12px; padding: 8px; cursor: pointer;">
+                        <option value="shares">Shares</option>
+                        <option value="contracts">Contracts</option>
+                        <option value="lots">Lots</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label class="label-text">Strategy Used</label>
+                <textarea id="strategyInput" class="ticker-input" placeholder="e.g., 52w High Breakout, Support Bounce, etc." style="text-transform: none; font-size: 12px; min-height: 60px; resize: vertical;"></textarea>
+            </div>
+            <input type="hidden" id="selectedOutcome" value="">
+        `;
+        
+        document.getElementById('finalizeModalButtons').innerHTML = `
+            <button class="modal-btn modal-btn-cancel" onclick="showFinalizeModal(${currentFinalizeTradeIndex})">
+                Back
+            </button>
+            <button class="modal-btn modal-btn-confirm" onclick="acceptTrade()">
+                Finalize Trade
+            </button>
+        `;
+    }
+
+    function selectOutcome(outcome) {
+        document.getElementById('selectedOutcome').value = outcome;
+        
+        // Visual feedback
+        const stopBtn = document.getElementById('stopLossBtn');
+        const targetBtn = document.getElementById('targetBtn');
+        
+        if (outcome === 'stop') {
+            stopBtn.style.border = '2px solid #ff4444';
+            stopBtn.style.background = 'rgba(255, 68, 68, 0.3)';
+            targetBtn.style.border = '1px solid rgba(0, 255, 0, 0.3)';
+            targetBtn.style.background = 'rgba(0, 255, 0, 0.2)';
+        } else {
+            targetBtn.style.border = '2px solid #00ff00';
+            targetBtn.style.background = 'rgba(0, 255, 0, 0.3)';
+            stopBtn.style.border = '1px solid rgba(255, 68, 68, 0.3)';
+            stopBtn.style.background = 'rgba(255, 68, 68, 0.2)';
+        }
+    }
+
+    // Accept trade and finalize with outcome
+    function acceptTrade() {
+        if (currentFinalizeTradeIndex === null) return;
+        
+        const outcome = document.getElementById('selectedOutcome').value;
+        const strategy = document.getElementById('strategyInput').value.trim();
+        const positionSize = document.getElementById('positionSizeInput').value.trim();
+        const positionUnit = document.getElementById('positionUnitSelect').value;
+        
+        if (!outcome) {
+            showToast('Please select which target was satisfied', 'warning', 'Missing Information');
+            return;
+        }
+        
+        if (!strategy) {
+            showToast('Please enter the strategy you used', 'warning', 'Missing Strategy');
+            return;
+        }
+        
+        const parsedPositionSize = parseFloat(positionSize);
+        if (!positionSize || isNaN(parsedPositionSize) || parsedPositionSize <= 0) {
+            showToast('Please enter a valid position size', 'warning', 'Missing Position Size');
+            return;
+        }
+        
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[currentFinalizeTradeIndex];
+        
+        // Calculate P&L
+        const entryPrice = grade.plan.entry;
+        const exitPrice = outcome === 'stop' ? grade.plan.stopLoss : grade.plan.target;
+        const pnlPercent = outcome === 'stop' ? -grade.plan.stopPercent : grade.plan.targetPercent;
+        
+        // Update grade with finalization data
+        grade.finalized = true;
+        grade.finalizedAt = new Date().toISOString();
+        grade.outcome = {
+            result: outcome,
+            exitPrice: exitPrice,
+            pnlPercent: pnlPercent,
+            strategy: strategy,
+            positionSize: parsedPositionSize,
+            positionUnit: positionUnit
+        };
+        
+        grades[currentFinalizeTradeIndex] = grade;
+        localStorage.setItem('prepareGrades', JSON.stringify(grades));
+        
+        const outcomeText = outcome === 'stop' ? `Loss: -${grade.plan.stopPercent}%` : `Win: +${grade.plan.targetPercent}%`;
+        showToast(`Exit: $${exitPrice.toFixed(2)} | ${outcomeText}<br>Strategy: ${strategy}<br>Position: ${parsedPositionSize} ${positionUnit}`, 'success', `${grade.ticker} Trade Finalized`, 5000, 'history');
+        
+        hideFinalizeModal();
+        loadFinalizeView();
+        if (typeof loadHistory === 'function') {
+            loadHistory();
+        }
+    }
+
 
     function analyzeGradeWithAI(index) {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
@@ -1967,6 +2747,7 @@
         const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
         const total = grade.total || (grade.grade ? grade.grade.total : 0);
         const hasPlan = grade.plan && grade.plan.entry;
+        const isFinalized = grade.finalized === true;
         const gradeLetter = getGradeLetter(total);
         const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
         
@@ -1982,6 +2763,39 @@
                 </div>
             </div>
         `;
+        
+        // Add finalized status if applicable
+        if (isFinalized && grade.outcome) {
+            const isWin = grade.outcome.result === 'target';
+            const pnl = grade.outcome.pnlPercent;
+            const pnlColor = isWin ? '#00ff00' : '#ff4444';
+            const statusText = isWin ? 'WIN' : 'LOSS';
+            
+            content += `
+                <div style="background: ${isWin ? 'rgba(0, 255, 0, 0.15)' : 'rgba(255, 68, 68, 0.15)'}; padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid ${pnlColor};">
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: ${pnlColor}; font-weight: 700; margin-bottom: 4px;">${statusText}: ${isWin ? '+' : ''}${pnl.toFixed(1)}%</div>
+                        <div style="font-size: 11px; color: #888;">Exit Price: $${grade.outcome.exitPrice.toFixed(2)}</div>
+                        <div style="font-size: 11px; color: #888;">Finalized: ${new Date(grade.finalizedAt).toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+        } else if (hasPlan && !isFinalized) {
+            content += `
+                <div style="background: rgba(255, 204, 0, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(255, 204, 0, 0.3);">
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #ffcc00; font-weight: 700;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span role="img" aria-label="Pending">PENDING FINALIZATION</span>
+                        </div>
+                        <div style="font-size: 11px; color: #888; margin-top: 4px;">Visit "Finalize Trades" to record the outcome</div>
+                    </div>
+                </div>
+            `;
+        }
         
         // Add PREPARE scores
         content += `
@@ -2009,12 +2823,12 @@
                             <div style="color: #ffcc00; font-size: 10px;">ENTRY</div>
                             <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.entry.toFixed(2)}</div>
                         </div>
-                        <div style="text-align: center; padding: 8px; background: rgba(255, 68, 68, 0.15); border-radius: 6px;">
+                        <div style="text-align: center; padding: 8px; background: rgba(255, 68, 68, 0.15); border-radius: 6px; ${isFinalized && grade.outcome && grade.outcome.result === 'stop' ? 'border: 2px solid #ff4444;' : ''}">
                             <div style="color: #ff4444; font-size: 10px;">STOP</div>
                             <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.stopLoss.toFixed(2)}</div>
                             <div style="color: #ff4444; font-size: 9px;">${grade.plan.stopPercent}%</div>
                         </div>
-                        <div style="text-align: center; padding: 8px; background: rgba(0, 255, 0, 0.15); border-radius: 6px;">
+                        <div style="text-align: center; padding: 8px; background: rgba(0, 255, 0, 0.15); border-radius: 6px; ${isFinalized && grade.outcome && grade.outcome.result === 'target' ? 'border: 2px solid #00ff00;' : ''}">
                             <div style="color: #00ff00; font-size: 10px;">TARGET</div>
                             <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.target.toFixed(2)}</div>
                             <div style="color: #00ff00; font-size: 9px;">${grade.plan.targetPercent}%</div>
@@ -2026,6 +2840,36 @@
                     </div>
                 </div>
             `;
+            
+            // Add strategy and position size if finalized
+            if (isFinalized && grade.outcome) {
+                if (grade.outcome.strategy || grade.outcome.positionSize) {
+                    content += `
+                        <div style="background: rgba(100, 149, 237, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            ${grade.outcome.strategy ? `
+                                <div style="margin-bottom: ${grade.outcome.positionSize ? '8px' : '0'};">
+                                    <div style="font-weight: 600; margin-bottom: 4px; color: #6495ed; font-size: 11px;">STRATEGY USED</div>
+                                    <div style="font-size: 12px; line-height: 1.5; color: #e0e0e0;">${escapeHtml(grade.outcome.strategy)}</div>
+                                </div>
+                            ` : ''}
+                            ${grade.outcome.positionSize ? `
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px; color: #6495ed; font-size: 11px;">POSITION SIZE</div>
+                                    <div style="font-size: 12px; line-height: 1.5; color: #e0e0e0;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                            <rect x="3" y="3" width="7" height="7"></rect>
+                                            <rect x="14" y="3" width="7" height="7"></rect>
+                                            <rect x="14" y="14" width="7" height="7"></rect>
+                                            <rect x="3" y="14" width="7" height="7"></rect>
+                                        </svg>
+                                        <span role="img" aria-label="Position size">${grade.outcome.positionSize} ${grade.outcome.positionUnit ?? 'shares'}</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+            }
             
             // Add trade thoughts if available
             if (grade.plan.thoughts) {
@@ -2048,7 +2892,7 @@
             content += `
                 <div style="background: rgba(40, 40, 40, 0.5); padding: 12px; border-radius: 8px;">
                     <div style="font-weight: 600; margin-bottom: 8px; color: #cc0000;">Screenshot</div>
-                    <img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; cursor: pointer;" onclick="window.open('${encodeURI(grade.screenshot)}', '_blank')" alt="Trade screenshot">
+                    <img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; cursor: pointer;" onclick="showImageViewer('${encodeURI(grade.screenshot).replace(/'/g, "\\'")}');" alt="Trade screenshot for ${escapeHtml(grade.ticker)}">
                 </div>
             `;
         }
@@ -2063,11 +2907,12 @@
     }
 
     // AI Assistant functions
-    function saveToken() {
+    async function saveToken() {
         const token = document.getElementById('githubToken').value.trim();
         if (token) {
             localStorage.setItem('githubToken', token);
-            showToast('Token saved to browser storage', 'success', 'Token Saved');
+            showToast('Token saved, fetching available models...', 'success', 'Token Saved');
+            await fetchAvailableModels(token);
         }
     }
 
@@ -2075,6 +2920,34 @@
         const token = localStorage.getItem('githubToken');
         if (token) {
             document.getElementById('githubToken').value = token;
+            // Fetch models on load if token exists
+            fetchAvailableModels(token);
+        }
+    }
+
+    async function fetchAvailableModels(token) {
+        try {
+            const response = await fetch('https://api.github.com/models', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (response.ok) {
+                const models = await response.json();
+                const modelNames = models.map(m => m.name || m.id).join(', ');
+                console.log('Available models:', modelNames);
+                showToast(`${models.length} models available: ${modelNames.substring(0, 100)}...`, 'info', 'Models Loaded', 8000);
+                localStorage.setItem('availableModels', JSON.stringify(models));
+            } else {
+                console.warn('Could not fetch models:', response.status);
+                showToast('Token saved, but could not fetch models list', 'warning', 'Limited Access');
+            }
+        } catch (error) {
+            console.error('Error fetching models:', error);
+            // Don't show error to user, token still works for chat
         }
     }
 
@@ -2110,7 +2983,30 @@
                     messages: [
                         {
                             role: 'system',
-                            content: 'You are a helpful trading assistant. Provide concise analysis and advice for stock trading. Focus on technical analysis, risk management, and trading psychology. Keep responses brief and actionable.'
+                            content: `You are an expert trading analyst with deep knowledge of technical analysis, fundamental analysis, and market dynamics. 
+
+Your expertise includes:
+- Technical patterns (breakouts, reversals, support/resistance)
+- Risk management and position sizing
+- Entry/exit timing and strategy development
+- Market psychology and sentiment analysis
+- Current market conditions and sector rotation
+- Real-time news impact on stock movements
+
+When analyzing trades:
+1. Be specific and actionable - provide exact levels, percentages, and concrete steps
+2. Consider current market environment and sentiment
+3. Reference relevant technical indicators and patterns
+4. Suggest specific risk management rules
+5. Provide both bullish and bearish scenarios
+6. Keep responses detailed but organized with clear sections
+
+Format your responses with:
+- Key findings at the top
+- Detailed analysis in the middle
+- Actionable recommendations at the bottom
+
+Be direct, professional, and avoid generic advice. Treat this as real money at stake.`
                         },
                         {
                             role: 'user',
@@ -2298,6 +3194,26 @@
             tradeDetailsModal.addEventListener('click', function(e) {
                 if (e.target === tradeDetailsModal) {
                     hideTradeDetailsModal();
+                }
+            });
+        }
+        
+        // Close finalize modal on overlay click
+        const finalizeTradeModal = document.getElementById('finalizeTradeModal');
+        if (finalizeTradeModal) {
+            finalizeTradeModal.addEventListener('click', function(e) {
+                if (e.target === finalizeTradeModal) {
+                    hideFinalizeModal();
+                }
+            });
+        }
+        
+        // Close image viewer on overlay click
+        const imageViewerModal = document.getElementById('imageViewerModal');
+        if (imageViewerModal) {
+            imageViewerModal.addEventListener('click', function(e) {
+                if (e.target === imageViewerModal) {
+                    hideImageViewer();
                 }
             });
         }
