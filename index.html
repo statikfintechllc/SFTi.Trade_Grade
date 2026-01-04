@@ -10,9 +10,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="msapplication-navbutton-color" content="#000000">
     <meta name="msapplication-TileColor" content="#000000">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="system/js.on/manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23cc0000'/%3E%3Cpath d='M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z' fill='%23ff6666'/%3E%3Ccircle cx='22' cy='12' r='4' fill='%2300ff00'/%3E%3Cpath d='M22 10v4m-2-2h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="system/img/icon-192.png">
     <title>PREPARE Trading Journal</title>
     <style>
         * {
@@ -654,10 +654,189 @@
     .compact-card {
         padding: 10px 12px;
     }
+
+    /* Tracker slider styles */
+    #stopLoss-slider::-webkit-slider-thumb {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+        box-shadow: 0 2px 6px rgba(255, 68, 68, 0.4) !important;
+    }
+
+    #profitTarget-slider::-webkit-slider-thumb {
+        background: linear-gradient(135deg, #00ff00 0%, #00aa00 100%) !important;
+        box-shadow: 0 2px 6px rgba(0, 255, 0, 0.4) !important;
+    }
+
+    #stopLoss-slider::-moz-range-thumb {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+        box-shadow: 0 2px 6px rgba(255, 68, 68, 0.4) !important;
+    }
+
+    #profitTarget-slider::-moz-range-thumb {
+        background: linear-gradient(135deg, #00ff00 0%, #00aa00 100%) !important;
+        box-shadow: 0 2px 6px rgba(0, 255, 0, 0.4) !important;
+    }
+
+    /* Glass card animation */
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Entry price input style */
+    #entryPriceInput {
+        background: rgba(255, 204, 0, 0.1);
+        border-color: rgba(255, 204, 0, 0.3);
+    }
+
+    #entryPriceInput:focus {
+        border-color: #ffcc00;
+        box-shadow: 0 0 10px rgba(255, 204, 0, 0.2);
+    }
+
+    /* History filter select */
+    #historyGradeFilter {
+        background: #1a1a1a;
+        cursor: pointer;
+    }
+
+    #historyGradeFilter option {
+        background: #1a1a1a;
+        color: #e0e0e0;
+    }
+
+    /* Toast Notification Styles */
+    .toast-container {
+        position: fixed;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+        width: 90%;
+        max-width: 400px;
+    }
+
+    .toast {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.98) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 16px 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        pointer-events: auto;
+        animation: toastSlideIn 0.3s ease-out;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .toast.toast-exit {
+        animation: toastSlideOut 0.3s ease-in forwards;
+    }
+
+    @keyframes toastSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes toastSlideOut {
+        from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+    }
+
+    .toast-icon {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 14px;
+    }
+
+    .toast-icon.success {
+        background: rgba(0, 255, 0, 0.2);
+        color: #00ff00;
+    }
+
+    .toast-icon.error {
+        background: rgba(255, 68, 68, 0.2);
+        color: #ff4444;
+    }
+
+    .toast-icon.warning {
+        background: rgba(255, 204, 0, 0.2);
+        color: #ffcc00;
+    }
+
+    .toast-icon.info {
+        background: rgba(100, 149, 237, 0.2);
+        color: #6495ed;
+    }
+
+    .toast-content {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 4px;
+    }
+
+    .toast-message {
+        font-size: 12px;
+        color: #b0b0b0;
+        line-height: 1.4;
+        white-space: pre-line;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 4px;
+        margin: -4px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    .toast-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #999;
+    }
 </style>
 
 </head>
 <body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="header">
         <button class="hamburger" onclick="toggleMenu()">
             <span class="hamburger-icon"></span>
@@ -695,6 +874,13 @@
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
             </svg>
             <span>Grade Stock</span>
+        </button>
+        <button class="menu-btn" onclick="switchView('tracker')" id="trackerBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Trade Tracker</span>
         </button>
         <button class="menu-btn" onclick="switchView('history')" id="historyBtn">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -841,18 +1027,138 @@
             </button>
         </div>
 
-        <button class="save-btn" onclick="saveGrade()">
+        <button class="save-btn" onclick="continueToTracker()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 16 16 12 12 8"></polyline>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            Continue
+        </button>
+    </div>
+
+    <div id="trackerView" style="display: none;">
+        <div class="card" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cc0000" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Trade Plan Builder
+            </div>
+            
+            <div id="trackerTickerDisplay" style="text-align: center; margin-bottom: 12px;">
+                <span style="font-size: 24px; font-weight: 700; color: white;" id="trackerTickerLabel">---</span>
+                <span style="font-size: 12px; color: #888; display: block;">Score: <span id="trackerScoreLabel">--</span>/100</span>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title" style="color: #ffcc00;">💰 Ideal Entry Price</div>
+                    </div>
+                </div>
+                <input type="number" class="ticker-input" id="entryPriceInput" placeholder="Enter price (e.g., 1.05)" step="0.01" min="0.01" max="10000" style="text-transform: none; font-size: 16px; text-align: center;">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title" style="color: #ff4444;">🛑 Stop Loss</div>
+                        <div class="slider-subtitle" style="display: block;">Protect your capital</div>
+                    </div>
+                    <div class="slider-value" style="color: #ff4444;" id="stopLoss-value">7%</div>
+                </div>
+                <input type="range" class="slider" min="5" max="10" value="7" step="0.5" id="stopLoss-slider" oninput="updateTrackerSlider('stopLoss', this.value)" style="background: linear-gradient(to right, #ff4444 0%, #ff4444 40%, #1a1a1a 40%, #1a1a1a 100%);">
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #666; margin-top: 2px;">
+                    <span>5%</span>
+                    <span id="stopPriceDisplay" style="color: #ff4444; font-weight: 600;">$0.00</span>
+                    <span>10%</span>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title" style="color: #00ff00;">🎯 Profit Target</div>
+                        <div class="slider-subtitle" style="display: block;">Set your goal</div>
+                    </div>
+                    <div class="slider-value" style="color: #00ff00;" id="profitTarget-value">20%</div>
+                </div>
+                <input type="range" class="slider" min="15" max="30" value="20" step="1" id="profitTarget-slider" oninput="updateTrackerSlider('profitTarget', this.value)" style="background: linear-gradient(to right, #00ff00 0%, #00ff00 33%, #1a1a1a 33%, #1a1a1a 100%);">
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #666; margin-top: 2px;">
+                    <span>15%</span>
+                    <span id="targetPriceDisplay" style="color: #00ff00; font-weight: 600;">$0.00</span>
+                    <span>30%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, rgba(0, 100, 0, 0.2) 0%, rgba(100, 0, 0, 0.2) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.15);">
+            <div style="text-align: center;">
+                <div style="font-size: 11px; color: #888; margin-bottom: 4px;">RISK / REWARD RATIO</div>
+                <div style="font-size: 36px; font-weight: 700; color: white;" id="rrRatioDisplay">
+                    <span id="rrRatioValue">0.0</span><span style="font-size: 18px; color: #888;">:1</span>
+                </div>
+                <div id="rrQuality" style="font-size: 12px; margin-top: 4px; padding: 4px 12px; border-radius: 12px; display: inline-block;">--</div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; text-align: center;">
+                <div style="background: rgba(255, 204, 0, 0.15); padding: 8px; border-radius: 8px; border: 1px solid rgba(255, 204, 0, 0.3);">
+                    <div style="font-size: 10px; color: #ffcc00; margin-bottom: 2px;">ENTRY</div>
+                    <div style="font-size: 14px; font-weight: 600; color: white;" id="summaryEntry">$0.00</div>
+                </div>
+                <div style="background: rgba(255, 68, 68, 0.15); padding: 8px; border-radius: 8px; border: 1px solid rgba(255, 68, 68, 0.3);">
+                    <div style="font-size: 10px; color: #ff4444; margin-bottom: 2px;">STOP</div>
+                    <div style="font-size: 14px; font-weight: 600; color: white;" id="summaryStop">$0.00</div>
+                </div>
+                <div style="background: rgba(0, 255, 0, 0.15); padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 255, 0, 0.3);">
+                    <div style="font-size: 10px; color: #00ff00; margin-bottom: 2px;">TARGET</div>
+                    <div style="font-size: 14px; font-weight: 600; color: white;" id="summaryTarget">$0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="save-btn" onclick="saveTradePlan()" style="background: linear-gradient(135deg, #00aa00 0%, #006600 100%); box-shadow: 0 4px 15px rgba(0, 170, 0, 0.3);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
                 <polyline points="7 3 7 8 15 8"></polyline>
             </svg>
-            Save Grade
+            Save Trade Plan
+        </button>
+
+        <button class="save-btn" onclick="switchView('grade')" style="margin-top: 8px; background: linear-gradient(135deg, #333 0%, #222 100%);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Grade
         </button>
     </div>
 
     <div id="historyView" style="display: none;">
         <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 12px;">Trade History</h2>
+        
+        <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="text" class="ticker-input" id="historySearchInput" placeholder="Search ticker..." style="flex: 1; min-width: 100px; padding: 8px; font-size: 12px;">
+                <select id="historyGradeFilter" class="ticker-input" style="flex: 0 0 auto; width: auto; padding: 8px; font-size: 12px; text-transform: none;">
+                    <option value="">All Grades</option>
+                    <option value="A">A (90+)</option>
+                    <option value="B">B (75-89)</option>
+                    <option value="C">C (60-74)</option>
+                    <option value="D">D (Below 60)</option>
+                </select>
+                <button class="save-btn" onclick="filterHistory()" style="flex: 0 0 auto; padding: 8px 12px; font-size: 12px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
         <div id="historyContainer"></div>
     </div>
 
@@ -948,8 +1254,99 @@
         environment: 5
     };
 
+    // Trade tracker state
+    const trackerState = {
+        ticker: '',
+        scores: null,
+        total: 0,
+        screenshot: null,
+        stopLossPercent: 7,
+        profitTargetPercent: 20,
+        entryPrice: 0
+    };
+
     let currentScreenshot = null;
     let chatHistory = [];
+    let historyFilterTicker = '';
+    let historyFilterGrade = '';
+
+    /**
+     * Reset all history filter state variables to their default (unfiltered) values.
+     * Intended to be called whenever the user clears history filters in the UI.
+     */
+    function resetHistoryFilters() {
+        historyFilterTicker = '';
+        historyFilterGrade = '';
+    }
+
+    /**
+     * Convenience helper: clear filters and, if available, trigger a history refresh.
+     * This can be wired to a "Clear Filters" button or similar UI control.
+     */
+    function clearHistoryFiltersAndRefreshHistory() {
+        resetHistoryFilters();
+
+        // If a global history-rendering function exists, call it to refresh the view.
+        if (typeof renderHistory === 'function') {
+            renderHistory();
+        }
+    }
+
+    // Expose helpers globally so they can be used from inline handlers or other scripts.
+    window.resetHistoryFilters = resetHistoryFilters;
+    window.clearHistoryFiltersAndRefreshHistory = clearHistoryFiltersAndRefreshHistory;
+
+    // Toast Notification System
+    function showToast(message, type = 'info', title = null, duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        
+        const icons = {
+            success: '✓',
+            error: '✕',
+            warning: '⚠',
+            info: 'ℹ'
+        };
+        
+        const defaultTitles = {
+            success: 'Success',
+            error: 'Error',
+            warning: 'Warning',
+            info: 'Info'
+        };
+        
+        const displayTitle = title || defaultTitles[type] || 'Notification';
+        
+        // Helper to close toast with animation
+        function closeToast() {
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }
+        
+        toast.innerHTML = `
+            <div class="toast-icon ${type}">${icons[type] || icons.info}</div>
+            <div class="toast-content">
+                <div class="toast-title">${escapeHtml(displayTitle)}</div>
+                <div class="toast-message">${escapeHtml(message)}</div>
+            </div>
+            <button class="toast-close">×</button>
+        `;
+        
+        // Add click listener for close button
+        toast.querySelector('.toast-close').addEventListener('click', closeToast);
+        
+        container.appendChild(toast);
+        
+        // Auto-remove after duration
+        setTimeout(() => {
+            if (toast.parentElement) {
+                closeToast();
+            }
+        }, duration);
+        
+        return toast;
+    }
 
     // Security: HTML escape function to prevent XSS
     function escapeHtml(text) {
@@ -970,23 +1367,31 @@
 
     function switchView(view) {
         const gradeView = document.getElementById('gradeView');
+        const trackerView = document.getElementById('trackerView');
         const historyView = document.getElementById('historyView');
         const aiView = document.getElementById('aiView');
         const gradeBtn = document.getElementById('gradeBtn');
+        const trackerBtn = document.getElementById('trackerBtn');
         const historyBtn = document.getElementById('historyBtn');
         const aiBtn = document.getElementById('aiBtn');
 
         // Hide all views and deactivate all buttons
         gradeView.style.display = 'none';
+        trackerView.style.display = 'none';
         historyView.style.display = 'none';
         aiView.style.display = 'none';
         gradeBtn.classList.remove('active');
+        trackerBtn.classList.remove('active');
         historyBtn.classList.remove('active');
         aiBtn.classList.remove('active');
 
         if (view === 'grade') {
             gradeView.style.display = 'block';
             gradeBtn.classList.add('active');
+        } else if (view === 'tracker') {
+            trackerView.style.display = 'block';
+            trackerBtn.classList.add('active');
+            initializeTracker();
         } else if (view === 'history') {
             historyView.style.display = 'block';
             historyBtn.classList.add('active');
@@ -996,7 +1401,12 @@
             aiBtn.classList.add('active');
             loadToken();
         }
-        toggleMenu();
+        
+        // Only toggle menu if it's open (for menu button clicks)
+        const menu = document.getElementById('sideMenu');
+        if (menu.classList.contains('active')) {
+            toggleMenu();
+        }
     }
 
     function updateSlider(name, value, max) {
@@ -1016,13 +1426,218 @@
         document.getElementById('progressFill').style.width = `${(total / 100) * 100}%`;
     }
 
+    // Trade Tracker Functions
+    function continueToTracker() {
+        const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+        
+        if (!ticker) {
+            showToast('Please enter a ticker symbol', 'warning', 'Missing Ticker');
+            return;
+        }
+
+        // Store grade data in tracker state
+        trackerState.ticker = ticker;
+        trackerState.scores = { ...state };
+        trackerState.total = Object.values(state).reduce((a, b) => a + b, 0);
+        trackerState.screenshot = currentScreenshot;
+        
+        // Navigate to tracker view
+        switchView('tracker');
+    }
+
+    function initializeTracker() {
+        // Display ticker and score
+        document.getElementById('trackerTickerLabel').textContent = trackerState.ticker || '---';
+        document.getElementById('trackerScoreLabel').textContent = trackerState.total || '--';
+        
+        // Reset entry price input
+        document.getElementById('entryPriceInput').value = '';
+        
+        // Initialize slider values and display
+        trackerState.stopLossPercent = 7;
+        trackerState.profitTargetPercent = 20;
+        trackerState.entryPrice = 0;
+        
+        document.getElementById('stopLoss-slider').value = 7;
+        document.getElementById('profitTarget-slider').value = 20;
+        
+        updateTrackerSlider('stopLoss', 7);
+        updateTrackerSlider('profitTarget', 20);
+        updateTrackerCalculations();
+        
+        // Add entry price input listener (only once)
+        const entryInput = document.getElementById('entryPriceInput');
+        if (entryInput && !entryInput._hasTrackerListener) {
+            entryInput.addEventListener('input', function() {
+                trackerState.entryPrice = parseFloat(this.value) || 0;
+                updateTrackerCalculations();
+            });
+            entryInput._hasTrackerListener = true;
+        }
+    }
+
+    function updateTrackerSlider(name, value) {
+        const floatValue = parseFloat(value);
+        
+        if (name === 'stopLoss') {
+            trackerState.stopLossPercent = floatValue;
+            document.getElementById('stopLoss-value').textContent = floatValue + '%';
+            
+            // Update slider background
+            const percent = ((floatValue - 5) / (10 - 5)) * 100;
+            document.getElementById('stopLoss-slider').style.background = 
+                `linear-gradient(to right, #ff4444 0%, #ff4444 ${percent}%, #1a1a1a ${percent}%, #1a1a1a 100%)`;
+        } else if (name === 'profitTarget') {
+            trackerState.profitTargetPercent = floatValue;
+            document.getElementById('profitTarget-value').textContent = floatValue + '%';
+            
+            // Update slider background
+            const percent = ((floatValue - 15) / (30 - 15)) * 100;
+            document.getElementById('profitTarget-slider').style.background = 
+                `linear-gradient(to right, #00ff00 0%, #00ff00 ${percent}%, #1a1a1a ${percent}%, #1a1a1a 100%)`;
+        }
+        
+        updateTrackerCalculations();
+    }
+
+    function updateTrackerCalculations() {
+        const entry = trackerState.entryPrice;
+        const stopPercent = trackerState.stopLossPercent;
+        const targetPercent = trackerState.profitTargetPercent;
+        
+        if (entry > 0) {
+            const stopPrice = entry * (1 - stopPercent / 100);
+            const targetPrice = entry * (1 + targetPercent / 100);
+            const riskAmount = entry - stopPrice;
+            const rewardAmount = targetPrice - entry;
+            const rrRatio = riskAmount > 0 ? (rewardAmount / riskAmount).toFixed(1) : 0;
+            
+            // Update displays
+            document.getElementById('stopPriceDisplay').textContent = '$' + stopPrice.toFixed(2);
+            document.getElementById('targetPriceDisplay').textContent = '$' + targetPrice.toFixed(2);
+            document.getElementById('summaryEntry').textContent = '$' + entry.toFixed(2);
+            document.getElementById('summaryStop').textContent = '$' + stopPrice.toFixed(2);
+            document.getElementById('summaryTarget').textContent = '$' + targetPrice.toFixed(2);
+            document.getElementById('rrRatioValue').textContent = rrRatio;
+            
+            // Update R:R quality indicator
+            const rrQualityEl = document.getElementById('rrQuality');
+            const rrNum = parseFloat(rrRatio);
+            if (rrNum >= 3) {
+                rrQualityEl.textContent = '🔥 Excellent';
+                rrQualityEl.style.background = 'rgba(0, 255, 0, 0.3)';
+                rrQualityEl.style.color = '#00ff00';
+            } else if (rrNum >= 2) {
+                rrQualityEl.textContent = '✅ Good';
+                rrQualityEl.style.background = 'rgba(0, 200, 0, 0.3)';
+                rrQualityEl.style.color = '#00cc00';
+            } else if (rrNum >= 1.5) {
+                rrQualityEl.textContent = '⚠️ Acceptable';
+                rrQualityEl.style.background = 'rgba(255, 204, 0, 0.3)';
+                rrQualityEl.style.color = '#ffcc00';
+            } else {
+                rrQualityEl.textContent = '❌ Poor';
+                rrQualityEl.style.background = 'rgba(255, 68, 68, 0.3)';
+                rrQualityEl.style.color = '#ff4444';
+            }
+        } else {
+            // Reset displays when no entry price
+            document.getElementById('stopPriceDisplay').textContent = '$0.00';
+            document.getElementById('targetPriceDisplay').textContent = '$0.00';
+            document.getElementById('summaryEntry').textContent = '$0.00';
+            document.getElementById('summaryStop').textContent = '$0.00';
+            document.getElementById('summaryTarget').textContent = '$0.00';
+            document.getElementById('rrRatioValue').textContent = '0.0';
+            
+            const rrQualityEl = document.getElementById('rrQuality');
+            rrQualityEl.textContent = 'Enter price';
+            rrQualityEl.style.background = 'rgba(136, 136, 136, 0.3)';
+            rrQualityEl.style.color = '#888';
+        }
+    }
+
+    function saveTradePlan() {
+        if (!trackerState.ticker) {
+            showToast('No trade to save. Please grade a stock first.', 'warning', 'Missing Data');
+            return;
+        }
+        
+        const entry = trackerState.entryPrice;
+        if (!entry || entry <= 0) {
+            showToast('Please enter a valid entry price', 'warning', 'Invalid Price');
+            return;
+        }
+        
+        const stopPrice = entry * (1 - trackerState.stopLossPercent / 100);
+        const targetPrice = entry * (1 + trackerState.profitTargetPercent / 100);
+        const riskAmount = entry - stopPrice;
+        const rewardAmount = targetPrice - entry;
+        const rrRatio = riskAmount > 0 ? parseFloat((rewardAmount / riskAmount).toFixed(1)) : 0;
+        
+        const trade = {
+            id: Date.now().toString(),
+            ticker: trackerState.ticker,
+            timestamp: new Date().toISOString(),
+            grade: {
+                scores: trackerState.scores,
+                total: trackerState.total
+            },
+            screenshot: trackerState.screenshot,
+            plan: {
+                entry: entry,
+                stopLoss: parseFloat(stopPrice.toFixed(2)),
+                stopPercent: trackerState.stopLossPercent,
+                target: parseFloat(targetPrice.toFixed(2)),
+                targetPercent: trackerState.profitTargetPercent,
+                riskReward: rrRatio
+            },
+            execution: {
+                actualEntry: null,
+                actualExit: null,
+                outcome: null,
+                pnl: null
+            }
+        };
+        
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        grades.unshift(trade);
+        localStorage.setItem('prepareGrades', JSON.stringify(grades));
+        
+        showToast(`Entry: $${entry.toFixed(2)} | Stop: $${stopPrice.toFixed(2)} | Target: $${targetPrice.toFixed(2)}\nR:R Ratio: ${rrRatio}:1`, 'success', `${trade.ticker} Trade Plan Saved`, 5000);
+        
+        // Reset for next trade
+        document.getElementById('tickerInput').value = '';
+        clearScreenshot();
+        resetSliders();
+        trackerState.ticker = '';
+        trackerState.scores = null;
+        trackerState.total = 0;
+        trackerState.screenshot = null;
+        
+        // Go back to grade view
+        switchView('grade');
+    }
+
+    function getGradeLetter(total) {
+        if (total >= 90) return 'A';
+        if (total >= 75) return 'B';
+        if (total >= 60) return 'C';
+        return 'D';
+    }
+
+    function filterHistory() {
+        historyFilterTicker = document.getElementById('historySearchInput').value.trim().toUpperCase();
+        historyFilterGrade = document.getElementById('historyGradeFilter').value;
+        loadHistory();
+    }
+
     // Screenshot handling functions with size validation
     function handleScreenshot(input) {
         const file = input.files[0];
         if (file) {
             // Validate file size
             if (file.size > CONFIG.MAX_SCREENSHOT_SIZE) {
-                alert(`Screenshot is too large. Maximum size is ${CONFIG.MAX_SCREENSHOT_SIZE / (1024 * 1024)}MB. Please choose a smaller image.`);
+                showToast(`Maximum size is ${CONFIG.MAX_SCREENSHOT_SIZE / (1024 * 1024)}MB. Please choose a smaller image.`, 'error', 'Screenshot Too Large');
                 input.value = '';
                 return;
             }
@@ -1035,7 +1650,7 @@
                 document.getElementById('screenshotBtnText').textContent = 'Change Screenshot';
             };
             reader.onerror = function() {
-                alert('Failed to read the selected file. Please try again with a different screenshot.');
+                showToast('Failed to read the selected file. Please try again with a different screenshot.', 'error', 'File Error');
                 clearScreenshot();
             };
             reader.readAsDataURL(file);
@@ -1053,14 +1668,14 @@
         const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
         
         if (!ticker) {
-            alert('Please enter a ticker symbol');
+            showToast('Please enter a ticker symbol', 'warning', 'Missing Ticker');
             return;
         }
 
         const grade = {
             id: Date.now().toString(),
             ticker: ticker,
-            date: new Date().toISOString(),
+            timestamp: new Date().toISOString(),
             scores: { ...state },
             total: Object.values(state).reduce((a, b) => a + b, 0),
             screenshot: currentScreenshot
@@ -1070,7 +1685,7 @@
         grades.unshift(grade);
         localStorage.setItem('prepareGrades', JSON.stringify(grades));
 
-        alert(`${ticker} saved with score: ${grade.total}/100`);
+        showToast(`Score: ${grade.total}/100`, 'success', `${ticker} Saved`);
         
         document.getElementById('tickerInput').value = '';
         clearScreenshot();
@@ -1104,63 +1719,94 @@
     }
 
     function loadHistory() {
-        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         const container = document.getElementById('historyContainer');
 
+        // Apply filters
+        if (historyFilterTicker) {
+            grades = grades.filter(g => g.ticker === historyFilterTicker);
+        }
+        if (historyFilterGrade) {
+            grades = grades.filter(g => {
+                const total = g.total || (g.grade ? g.grade.total : 0);
+                const letter = getGradeLetter(total);
+                return letter === historyFilterGrade;
+            });
+        }
+
         if (grades.length === 0) {
+            const hasFilters = historyFilterTicker || historyFilterGrade;
             container.innerHTML = `
-                <div class="card empty-state">
+                <div class="card empty-state" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
                     <div class="empty-icon">
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5">
                             <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                             <polyline points="17 6 23 6 23 12"/>
                         </svg>
                     </div>
-                    <div class="empty-text">No grades saved yet</div>
-                    <div class="empty-subtext">Start grading stocks to build your history</div>
+                    <div class="empty-text">${hasFilters ? 'No trades match your filters' : 'No trades saved yet'}</div>
+                    <div class="empty-subtext">${hasFilters ? 'Try adjusting your search criteria' : 'Start grading stocks to build your history'}</div>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = grades.map((grade, index) => `
-            <div class="history-item" data-index="${index}">
+        container.innerHTML = grades.map((grade, index) => {
+            // Handle both old format (scores at top level) and new format (grade.scores)
+            const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
+            const total = grade.total || (grade.grade ? grade.grade.total : 0);
+            const hasPlan = grade.plan && grade.plan.entry;
+            const gradeLetter = getGradeLetter(total);
+            const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
+            
+            return `
+            <div class="history-item" data-index="${index}" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1);">
                 <div class="history-left">
-                    <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
-                    <div class="history-grades-grid">
-                        <div class="history-grade-item">
-                            <span class="history-grade-letter">P</span>
-                            <span class="history-grade-value">${grade.scores.pattern}</span>
-                        </div>
-                        <div class="history-grade-item">
-                            <span class="history-grade-letter">R</span>
-                            <span class="history-grade-value">${grade.scores.risk}</span>
-                        </div>
-                        <div class="history-grade-item">
-                            <span class="history-grade-letter">E</span>
-                            <span class="history-grade-value">${grade.scores.entry}</span>
-                        </div>
-                        <div class="history-grade-item">
-                            <span class="history-grade-letter">P</span>
-                            <span class="history-grade-value">${grade.scores.performance}</span>
-                        </div>
-                        <div class="history-grade-item">
-                            <span class="history-grade-letter">A</span>
-                            <span class="history-grade-value">${grade.scores.time}</span>
-                        </div>
-                        <div class="history-grade-item">
-                            <span class="history-grade-letter">R</span>
-                            <span class="history-grade-value">${grade.scores.catalyst}</span>
-                        </div>
-                        <div class="history-grade-item">
-                            <span class="history-grade-letter">E</span>
-                            <span class="history-grade-value">${grade.scores.environment}</span>
-                        </div>
-                        <div class="history-grade-item" style="visibility: hidden;"></div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
+                        <span style="background: ${gradeColor}22; color: ${gradeColor}; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;">${gradeLetter}</span>
                     </div>
+                    ${hasPlan ? `
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; font-size: 10px;">
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 204, 0, 0.15); border-radius: 4px;">
+                            <div style="color: #ffcc00;">ENTRY</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.entry.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 68, 68, 0.15); border-radius: 4px;">
+                            <div style="color: #ff4444;">STOP</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.stopLoss.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px; background: rgba(0, 255, 0, 0.15); border-radius: 4px;">
+                            <div style="color: #00ff00;">TARGET</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.target.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 6px; text-align: center; font-size: 11px; color: #888;">
+                        R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
+                    </div>
+                    ` : `
+                    <div class="history-grades-grid" style="margin-top: 8px;">
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">P</span>
+                            <span class="history-grade-value">${scores.pattern || 0}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">R</span>
+                            <span class="history-grade-value">${scores.risk || 0}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">E</span>
+                            <span class="history-grade-value">${scores.entry || 0}</span>
+                        </div>
+                        <div class="history-grade-item">
+                            <span class="history-grade-letter">P</span>
+                            <span class="history-grade-value">${scores.performance || 0}</span>
+                        </div>
+                    </div>
+                    `}
                 </div>
                 <div class="history-center">
-                    <div class="history-score-value">${grade.total}</div>
+                    <div class="history-score-value">${total}</div>
                 </div>
                 <div class="history-right">
                     ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `
@@ -1180,7 +1826,8 @@
                     </button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     const historyContainer = document.getElementById('historyContainer');
@@ -1222,10 +1869,22 @@
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         const grade = grades[index];
         if (grade) {
+            // Handle both old format (scores at top level) and new format (grade.scores)
+            const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
+            const total = grade.total || (grade.grade ? grade.grade.total : 0);
+            const hasPlan = grade.plan && grade.plan.entry;
+            
             // Set the prompt value directly since DOM is already loaded
             const aiPrompt = document.getElementById('aiPrompt');
             if (aiPrompt) {
-                aiPrompt.value = `Analyze this trade grade for ${grade.ticker}:\nTotal Score: ${grade.total}/100\nPattern: ${grade.scores.pattern}/20\nRisk/Reward: ${grade.scores.risk}/20\nEntry/Exit: ${grade.scores.entry}/10\nPast Performance: ${grade.scores.performance}/10\nTiming: ${grade.scores.time}/20\nCatalyst: ${grade.scores.catalyst}/10\nEnvironment: ${grade.scores.environment}/10\n\nProvide insights and suggestions for improvement.`;
+                let prompt = `Analyze this trade grade for ${grade.ticker}:\nTotal Score: ${total}/100\nPattern: ${scores.pattern || 0}/20\nRisk/Reward: ${scores.risk || 0}/20\nEntry/Exit: ${scores.entry || 0}/10\nPast Performance: ${scores.performance || 0}/10\nTiming: ${scores.time || 0}/20\nCatalyst: ${scores.catalyst || 0}/10\nEnvironment: ${scores.environment || 0}/10`;
+                
+                if (hasPlan) {
+                    prompt += `\n\nTrade Plan:\nEntry: $${grade.plan.entry.toFixed(2)}\nStop Loss: $${grade.plan.stopLoss.toFixed(2)} (${grade.plan.stopPercent}%)\nTarget: $${grade.plan.target.toFixed(2)} (${grade.plan.targetPercent}%)\nRisk/Reward Ratio: ${grade.plan.riskReward}:1`;
+                }
+                
+                prompt += '\n\nProvide insights and suggestions for improvement.';
+                aiPrompt.value = prompt;
             }
             switchView('ai');
         }
@@ -1264,7 +1923,7 @@
         const token = document.getElementById('githubToken').value.trim();
         if (token) {
             localStorage.setItem('githubToken', token);
-            alert('Token saved to browser storage');
+            showToast('Token saved to browser storage', 'success', 'Token Saved');
         }
     }
 
@@ -1280,12 +1939,12 @@
         const prompt = document.getElementById('aiPrompt').value.trim();
         
         if (!token) {
-            alert('Please enter and save your GitHub token first');
+            showToast('Please enter and save your GitHub token first', 'warning', 'Token Required');
             return;
         }
         
         if (!prompt) {
-            alert('Please enter a question or prompt');
+            showToast('Please enter a question or prompt', 'warning', 'Missing Prompt');
             return;
         }
 
@@ -1372,7 +2031,7 @@
     function reviewGrades() {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         if (grades.length === 0) {
-            alert('No grades to review. Save some grades first!');
+            showToast('No grades to review. Save some grades first!', 'info', 'No Grades');
             return;
         }
         
@@ -1383,7 +2042,7 @@
     function findPatterns() {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         if (grades.length < 2) {
-            alert('Need at least 2 grades to find patterns. Keep grading!');
+            showToast('Need at least 2 grades to find patterns. Keep grading!', 'info', 'More Data Needed');
             return;
         }
         
@@ -1491,13 +2150,13 @@
         
         // Register service worker for PWA functionality
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
+            navigator.serviceWorker.register('system/js.on/sw.js')
                 .then(function(registration) {
                     console.log('Service Worker registered with scope:', registration.scope);
                 })
                 .catch(function(error) {
                     console.log('Service Worker registration failed:', error);
-                    alert('Some offline and installation features may not be available because the app could not complete its installation. You can continue using the app online.');
+                    showToast('Some offline features may not be available. You can continue using the app online.', 'warning', 'Offline Mode Limited');
                 });
         }
     };

@@ -1,12 +1,16 @@
 // IMPORTANT: Bump this version whenever you deploy changes to any of the cached assets below.
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `prepare-trading-journal-${CACHE_VERSION}`;
+
+// Base path for the repo (GitHub Pages serves from /SFTi.Trade_Grade/)
+const BASE_PATH = '/SFTi.Trade_Grade';
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/system/js.on/manifest.json`,
+  `${BASE_PATH}/system/img/icon-192.png`,
+  `${BASE_PATH}/system/img/icon-512.png`
 ];
 
 // API endpoints that should not be cached
@@ -99,7 +103,7 @@ self.addEventListener('fetch', function(event) {
             // If both cache and network fail, return the cached index.html for navigation requests
             // This allows the app to work offline
             if (event.request.mode === 'navigate') {
-              return caches.match('/index.html');
+              return caches.match(`${BASE_PATH}/index.html`);
             }
             // For other requests, return an offline response
             console.error('Fetch failed; returning offline response.', error);
