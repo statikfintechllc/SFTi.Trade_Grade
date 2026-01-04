@@ -10,9 +10,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="msapplication-navbutton-color" content="#000000">
     <meta name="msapplication-TileColor" content="#000000">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="system/js.on/manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23cc0000'/%3E%3Cpath d='M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z' fill='%23ff6666'/%3E%3Ccircle cx='22' cy='12' r='4' fill='%2300ff00'/%3E%3Cpath d='M22 10v4m-2-2h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="system/img/icon-192.png">
     <title>PREPARE Trading Journal</title>
     <style>
         * {
@@ -2150,7 +2150,7 @@
         
         // Register service worker for PWA functionality
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
+            navigator.serviceWorker.register('system/js.on/sw.js')
                 .then(function(registration) {
                     console.log('Service Worker registered with scope:', registration.scope);
                 })
