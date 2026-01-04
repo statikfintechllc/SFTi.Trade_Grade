@@ -1318,22 +1318,30 @@
         
         const displayTitle = title || defaultTitles[type] || 'Notification';
         
+        // Helper to close toast with animation
+        function closeToast() {
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }
+        
         toast.innerHTML = `
             <div class="toast-icon ${type}">${icons[type] || icons.info}</div>
             <div class="toast-content">
                 <div class="toast-title">${escapeHtml(displayTitle)}</div>
                 <div class="toast-message">${escapeHtml(message)}</div>
             </div>
-            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            <button class="toast-close">×</button>
         `;
+        
+        // Add click listener for close button
+        toast.querySelector('.toast-close').addEventListener('click', closeToast);
         
         container.appendChild(toast);
         
         // Auto-remove after duration
         setTimeout(() => {
             if (toast.parentElement) {
-                toast.classList.add('toast-exit');
-                setTimeout(() => toast.remove(), 300);
+                closeToast();
             }
         }, duration);
         
