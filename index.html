@@ -1096,7 +1096,12 @@
             <div class="slider-group">
                 <div class="slider-header">
                     <div class="slider-label">
-                        <div class="slider-title" style="color: #6495ed;">💭 Trade Thoughts</div>
+                        <div class="slider-title" style="color: #6495ed; display: flex; align-items: center; gap: 6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6495ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>Trade Thoughts</span>
+                        </div>
                         <div class="slider-subtitle" style="display: block;">What are you thinking?</div>
                     </div>
                 </div>
@@ -1816,7 +1821,7 @@
                     </div>
                     <div style="margin-top: 6px; text-align: center; font-size: 11px; color: #888;">
                         R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
-                        ${grade.plan.thoughts ? '<span style="color: #6495ed; margin-left: 8px;">💭</span>' : ''}
+                        ${grade.plan.thoughts ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6495ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' : ''}
                     </div>
                     ` : `
                     <div class="history-grades-grid" style="margin-top: 8px;">
@@ -2026,7 +2031,12 @@
             if (grade.plan.thoughts) {
                 content += `
                     <div style="background: rgba(100, 149, 237, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="font-weight: 600; margin-bottom: 8px; color: #6495ed;">💭 Trade Thoughts</div>
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #6495ed; display: flex; align-items: center; gap: 6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6495ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>Trade Thoughts</span>
+                        </div>
                         <div style="font-size: 11px; line-height: 1.5; color: #e0e0e0; white-space: pre-wrap;">${escapeHtml(grade.plan.thoughts)}</div>
                     </div>
                 `;
