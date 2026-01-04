@@ -33,13 +33,13 @@
   <line x1="327" y1="186" x2="327" y2="198" stroke="white" stroke-width="2.5"/>
   <line x1="327" y1="232" x2="327" y2="244" stroke="white" stroke-width="2.5"/>
 
-  <rect x="352" y="192" width="14" height="40" fill="white"/>
-  <line x1="359" y1="180" x2="359" y2="192" stroke="white" stroke-width="2.5"/>
+  <rect x="352" y="176" width="14" height="56" fill="white"/>
+  <line x1="359" y1="164" x2="359" y2="176" stroke="white" stroke-width="2.5"/>
   <line x1="359" y1="232" x2="359" y2="244" stroke="white" stroke-width="2.5"/>
 
-  <rect x="384" y="185" width="14" height="36" fill="#212121"/>
-  <line x1="391" y1="173" x2="391" y2="185" stroke="#212121" stroke-width="2.5"/>
-  <line x1="391" y1="221" x2="391" y2="233" stroke="#212121" stroke-width="2.5"/>
+  <rect x="384" y="164" width="14" height="68" fill="white"/>
+  <line x1="391" y1="150" x2="391" y2="164" stroke="white" stroke-width="2.5"/>
+  <line x1="391" y1="232" x2="391" y2="248" stroke="white" stroke-width="2.5"/>
 
   <!-- Base line -->
   <path d="M100 270H412" stroke="white" stroke-width="4" stroke-linecap="round"/>
@@ -71,9 +71,5 @@
 
   <path d="M391 270V286L406 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
   <circle cx="406" cy="301" r="4" fill="white"/>
-  
-  <!-- Plus button (1.5x smaller) -->
-  <circle cx="400" cy="140" r="24" fill="#76FF5C"/>
-  <rect x="390.5" y="135.5" width="19" height="9" rx="2" fill="white"/>
-  <rect x="395.5" y="130.5" width="9" height="19" rx="2" fill="white"/>
+
 </svg>
