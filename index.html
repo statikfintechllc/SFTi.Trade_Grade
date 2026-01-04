@@ -1520,7 +1520,7 @@
 
         // Apply filters
         if (historyFilterTicker) {
-            grades = grades.filter(g => g.ticker.includes(historyFilterTicker));
+            grades = grades.filter(g => g.ticker === historyFilterTicker);
         }
         if (historyFilterGrade) {
             grades = grades.filter(g => {
