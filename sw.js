@@ -1,5 +1,5 @@
 // IMPORTANT: Bump this version whenever you deploy changes to any of the cached assets below.
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `prepare-trading-journal-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',

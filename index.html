@@ -707,10 +707,136 @@
         background: #1a1a1a;
         color: #e0e0e0;
     }
+
+    /* Toast Notification Styles */
+    .toast-container {
+        position: fixed;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+        width: 90%;
+        max-width: 400px;
+    }
+
+    .toast {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.98) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 16px 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        pointer-events: auto;
+        animation: toastSlideIn 0.3s ease-out;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .toast.toast-exit {
+        animation: toastSlideOut 0.3s ease-in forwards;
+    }
+
+    @keyframes toastSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes toastSlideOut {
+        from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+    }
+
+    .toast-icon {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 14px;
+    }
+
+    .toast-icon.success {
+        background: rgba(0, 255, 0, 0.2);
+        color: #00ff00;
+    }
+
+    .toast-icon.error {
+        background: rgba(255, 68, 68, 0.2);
+        color: #ff4444;
+    }
+
+    .toast-icon.warning {
+        background: rgba(255, 204, 0, 0.2);
+        color: #ffcc00;
+    }
+
+    .toast-icon.info {
+        background: rgba(100, 149, 237, 0.2);
+        color: #6495ed;
+    }
+
+    .toast-content {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 4px;
+    }
+
+    .toast-message {
+        font-size: 12px;
+        color: #b0b0b0;
+        line-height: 1.4;
+        white-space: pre-line;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 4px;
+        margin: -4px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    .toast-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #999;
+    }
 </style>
 
 </head>
 <body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="header">
         <button class="hamburger" onclick="toggleMenu()">
             <span class="hamburger-icon"></span>
@@ -1169,6 +1295,51 @@
     // Expose helpers globally so they can be used from inline handlers or other scripts.
     window.resetHistoryFilters = resetHistoryFilters;
     window.clearHistoryFiltersAndRefreshHistory = clearHistoryFiltersAndRefreshHistory;
+
+    // Toast Notification System
+    function showToast(message, type = 'info', title = null, duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        
+        const icons = {
+            success: '✓',
+            error: '✕',
+            warning: '⚠',
+            info: 'ℹ'
+        };
+        
+        const defaultTitles = {
+            success: 'Success',
+            error: 'Error',
+            warning: 'Warning',
+            info: 'Info'
+        };
+        
+        const displayTitle = title || defaultTitles[type] || 'Notification';
+        
+        toast.innerHTML = `
+            <div class="toast-icon ${type}">${icons[type] || icons.info}</div>
+            <div class="toast-content">
+                <div class="toast-title">${escapeHtml(displayTitle)}</div>
+                <div class="toast-message">${escapeHtml(message)}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Auto-remove after duration
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, duration);
+        
+        return toast;
+    }
+
     // Security: HTML escape function to prevent XSS
     function escapeHtml(text) {
         const div = document.createElement('div');
@@ -1252,7 +1423,7 @@
         const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
         
         if (!ticker) {
-            alert('Please enter a ticker symbol');
+            showToast('Please enter a ticker symbol', 'warning', 'Missing Ticker');
             return;
         }
 
@@ -1379,13 +1550,13 @@
 
     function saveTradePlan() {
         if (!trackerState.ticker) {
-            alert('No trade to save. Please grade a stock first.');
+            showToast('No trade to save. Please grade a stock first.', 'warning', 'Missing Data');
             return;
         }
         
         const entry = trackerState.entryPrice;
         if (!entry || entry <= 0) {
-            alert('Please enter a valid entry price');
+            showToast('Please enter a valid entry price', 'warning', 'Invalid Price');
             return;
         }
         
@@ -1424,7 +1595,7 @@
         grades.unshift(trade);
         localStorage.setItem('prepareGrades', JSON.stringify(grades));
         
-        alert(`${trade.ticker} trade plan saved!\nEntry: $${entry.toFixed(2)} | Stop: $${stopPrice.toFixed(2)} | Target: $${targetPrice.toFixed(2)}\nR:R Ratio: ${rrRatio}:1`);
+        showToast(`Entry: $${entry.toFixed(2)} | Stop: $${stopPrice.toFixed(2)} | Target: $${targetPrice.toFixed(2)}\nR:R Ratio: ${rrRatio}:1`, 'success', `${trade.ticker} Trade Plan Saved`, 5000);
         
         // Reset for next trade
         document.getElementById('tickerInput').value = '';
@@ -1458,7 +1629,7 @@
         if (file) {
             // Validate file size
             if (file.size > CONFIG.MAX_SCREENSHOT_SIZE) {
-                alert(`Screenshot is too large. Maximum size is ${CONFIG.MAX_SCREENSHOT_SIZE / (1024 * 1024)}MB. Please choose a smaller image.`);
+                showToast(`Maximum size is ${CONFIG.MAX_SCREENSHOT_SIZE / (1024 * 1024)}MB. Please choose a smaller image.`, 'error', 'Screenshot Too Large');
                 input.value = '';
                 return;
             }
@@ -1471,7 +1642,7 @@
                 document.getElementById('screenshotBtnText').textContent = 'Change Screenshot';
             };
             reader.onerror = function() {
-                alert('Failed to read the selected file. Please try again with a different screenshot.');
+                showToast('Failed to read the selected file. Please try again with a different screenshot.', 'error', 'File Error');
                 clearScreenshot();
             };
             reader.readAsDataURL(file);
@@ -1489,7 +1660,7 @@
         const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
         
         if (!ticker) {
-            alert('Please enter a ticker symbol');
+            showToast('Please enter a ticker symbol', 'warning', 'Missing Ticker');
             return;
         }
 
@@ -1506,7 +1677,7 @@
         grades.unshift(grade);
         localStorage.setItem('prepareGrades', JSON.stringify(grades));
 
-        alert(`${ticker} saved with score: ${grade.total}/100`);
+        showToast(`Score: ${grade.total}/100`, 'success', `${ticker} Saved`);
         
         document.getElementById('tickerInput').value = '';
         clearScreenshot();
@@ -1744,7 +1915,7 @@
         const token = document.getElementById('githubToken').value.trim();
         if (token) {
             localStorage.setItem('githubToken', token);
-            alert('Token saved to browser storage');
+            showToast('Token saved to browser storage', 'success', 'Token Saved');
         }
     }
 
@@ -1760,12 +1931,12 @@
         const prompt = document.getElementById('aiPrompt').value.trim();
         
         if (!token) {
-            alert('Please enter and save your GitHub token first');
+            showToast('Please enter and save your GitHub token first', 'warning', 'Token Required');
             return;
         }
         
         if (!prompt) {
-            alert('Please enter a question or prompt');
+            showToast('Please enter a question or prompt', 'warning', 'Missing Prompt');
             return;
         }
 
@@ -1852,7 +2023,7 @@
     function reviewGrades() {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         if (grades.length === 0) {
-            alert('No grades to review. Save some grades first!');
+            showToast('No grades to review. Save some grades first!', 'info', 'No Grades');
             return;
         }
         
@@ -1863,7 +2034,7 @@
     function findPatterns() {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         if (grades.length < 2) {
-            alert('Need at least 2 grades to find patterns. Keep grading!');
+            showToast('Need at least 2 grades to find patterns. Keep grading!', 'info', 'More Data Needed');
             return;
         }
         
@@ -1977,7 +2148,7 @@
                 })
                 .catch(function(error) {
                     console.log('Service Worker registration failed:', error);
-                    alert('Some offline and installation features may not be available because the app could not complete its installation. You can continue using the app online.');
+                    showToast('Some offline features may not be available. You can continue using the app online.', 'warning', 'Offline Mode Limited');
                 });
         }
     };
