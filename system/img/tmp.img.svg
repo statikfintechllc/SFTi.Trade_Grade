@@ -72,8 +72,8 @@
   <path d="M391 270V286L406 301" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
   <circle cx="406" cy="301" r="4" fill="white"/>
   
-  <!-- Plus button -->
-  <circle cx="400" cy="140" r="36" fill="#76FF5C"/>
-  <rect x="386" y="133" width="28" height="14" rx="3" fill="white"/>
-  <rect x="393" y="126" width="14" height="28" rx="3" fill="white"/>
+  <!-- Plus button (1.5x smaller) -->
+  <circle cx="400" cy="140" r="24" fill="#76FF5C"/>
+  <rect x="390.5" y="135.5" width="19" height="9" rx="2" fill="white"/>
+  <rect x="395.5" y="130.5" width="9" height="19" rx="2" fill="white"/>
 </svg>
