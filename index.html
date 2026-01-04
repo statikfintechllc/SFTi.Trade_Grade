@@ -1261,12 +1261,15 @@
         updateTrackerSlider('profitTarget', 20);
         updateTrackerCalculations();
         
-        // Add entry price input listener
+        // Add entry price input listener (only once)
         const entryInput = document.getElementById('entryPriceInput');
-        entryInput.addEventListener('input', function() {
-            trackerState.entryPrice = parseFloat(this.value) || 0;
-            updateTrackerCalculations();
-        });
+        if (entryInput && !entryInput._hasTrackerListener) {
+            entryInput.addEventListener('input', function() {
+                trackerState.entryPrice = parseFloat(this.value) || 0;
+                updateTrackerCalculations();
+            });
+            entryInput._hasTrackerListener = true;
+        }
     }
 
     function updateTrackerSlider(name, value) {
