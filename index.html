@@ -2098,7 +2098,13 @@
         const container = document.getElementById('historyContainer');
 
         // Populate strategy filter dropdown with unique strategies
-        const strategies = [...new Set(grades.filter(g => g.outcome && g.outcome.strategy).map(g => g.outcome.strategy))];
+        const strategySet = new Set();
+        for (const g of grades) {
+            if (g && g.outcome && g.outcome.strategy) {
+                strategySet.add(g.outcome.strategy);
+            }
+        }
+        const strategies = Array.from(strategySet);
         const strategyFilter = document.getElementById('historyStrategyFilter');
         if (strategyFilter) {
             const currentValue = strategyFilter.value;
