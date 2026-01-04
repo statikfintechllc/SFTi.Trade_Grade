@@ -1433,24 +1433,24 @@
         <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 8px;">
             <div style="background: rgba(26, 26, 26, 0.8); border: 2px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 8px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
                 <input type="text" class="ticker-input" id="historySearchInput" placeholder="Search ticker..." style="width: 100%; padding: 12px 14px; font-size: 14px; border: none; background: transparent; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                <div style="display: flex; gap: 6px; align-items: stretch;">
-                    <select id="historyGradeFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 12px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <select id="historyGradeFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 13px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); height: 38px;">
                         <option value="">All Grades</option>
                         <option value="A">A (90+)</option>
                         <option value="B">B (75-89)</option>
                         <option value="C">C (60-74)</option>
                         <option value="D">D (Below 60)</option>
                     </select>
-                    <select id="historyStatusFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 12px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <select id="historyStatusFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 13px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); height: 38px;">
                         <option value="">All Status</option>
                         <option value="finalized">Finalized</option>
                         <option value="non-finalized">Non-Finalized</option>
                     </select>
-                    <select id="historyStrategyFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 12px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <select id="historyStrategyFilter" class="ticker-input" style="flex: 1; padding: 10px 8px; font-size: 13px; text-transform: none; border-radius: 8px; background: rgba(40, 40, 40, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); height: 38px;">
                         <option value="">All Strategies</option>
                     </select>
-                    <button class="save-btn" onclick="filterHistory()" aria-label="Search" style="flex: 0 0 auto; padding: 10px 14px; font-size: 12px; border-radius: 8px; min-width: 44px; height: 44px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <button class="save-btn" onclick="filterHistory()" aria-label="Search" style="flex: 0 0 auto; padding: 8px; font-size: 12px; border-radius: 8px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
                             <path d="m21 21-4.35-4.35"></path>
                         </svg>
