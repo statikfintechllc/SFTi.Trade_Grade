@@ -1921,7 +1921,12 @@
                         R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
                         ${grade.plan.thoughts ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6495ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' : ''}
                     </div>
-                    ${isFinalized && grade.outcome && grade.outcome.strategy ? `<div style="margin-top: 4px; text-align: center; font-size: 10px; color: #6495ed;">Strategy: ${escapeHtml(grade.outcome.strategy)}</div>` : ''}
+                    ${isFinalized && grade.outcome ? `
+                        <div style="margin-top: 4px; text-align: center; font-size: 10px;">
+                            ${grade.outcome.strategy ? `<span style="color: #6495ed;">Strategy: ${escapeHtml(grade.outcome.strategy)}</span>` : ''}
+                            ${grade.outcome.positionSize ? `<span style="color: #888; margin-left: 8px;">📊 ${grade.outcome.positionSize} ${grade.outcome.positionUnit || 'shares'}</span>` : ''}
+                        </div>
+                    ` : ''}
                     ` : `
                     <div class="history-grades-grid" style="margin-top: 8px;">
                         <div class="history-grade-item">
@@ -2183,6 +2188,20 @@
                     </button>
                 </div>
             </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                    <label class="label-text">Position Size</label>
+                    <input type="number" id="positionSizeInput" class="ticker-input" placeholder="e.g., 100" min="1" style="text-transform: none; font-size: 12px; padding: 8px;">
+                </div>
+                <div>
+                    <label class="label-text">Unit</label>
+                    <select id="positionUnitSelect" class="ticker-input" style="text-transform: none; font-size: 12px; padding: 8px; cursor: pointer;">
+                        <option value="shares">Shares</option>
+                        <option value="contracts">Contracts</option>
+                        <option value="lots">Lots</option>
+                    </select>
+                </div>
+            </div>
             <div style="margin-bottom: 12px;">
                 <label class="label-text">Strategy Used</label>
                 <textarea id="strategyInput" class="ticker-input" placeholder="e.g., 52w High Breakout, Support Bounce, etc." style="text-transform: none; font-size: 12px; min-height: 60px; resize: vertical;"></textarea>
@@ -2216,7 +2235,7 @@
             targetBtn.style.border = '2px solid #00ff00';
             targetBtn.style.background = 'rgba(0, 255, 0, 0.3)';
             stopBtn.style.border = '1px solid rgba(255, 68, 68, 0.3)';
-            stopBtn.style.border = 'rgba(255, 68, 68, 0.2)';
+            stopBtn.style.background = 'rgba(255, 68, 68, 0.2)';
         }
     }
 
@@ -2226,6 +2245,8 @@
         
         const outcome = document.getElementById('selectedOutcome').value;
         const strategy = document.getElementById('strategyInput').value.trim();
+        const positionSize = document.getElementById('positionSizeInput').value.trim();
+        const positionUnit = document.getElementById('positionUnitSelect').value;
         
         if (!outcome) {
             showToast('Please select which target was satisfied', 'warning', 'Missing Information');
@@ -2234,6 +2255,11 @@
         
         if (!strategy) {
             showToast('Please enter the strategy you used', 'warning', 'Missing Strategy');
+            return;
+        }
+        
+        if (!positionSize || parseFloat(positionSize) <= 0) {
+            showToast('Please enter a valid position size', 'warning', 'Missing Position Size');
             return;
         }
         
@@ -2252,14 +2278,16 @@
             result: outcome,
             exitPrice: exitPrice,
             pnlPercent: pnlPercent,
-            strategy: strategy
+            strategy: strategy,
+            positionSize: parseFloat(positionSize),
+            positionUnit: positionUnit
         };
         
         grades[currentFinalizeTradeIndex] = grade;
         localStorage.setItem('prepareGrades', JSON.stringify(grades));
         
         const outcomeText = outcome === 'stop' ? `Loss: -${grade.plan.stopPercent}%` : `Win: +${grade.plan.targetPercent}%`;
-        showToast(`Exit: $${exitPrice.toFixed(2)} | ${outcomeText}\nStrategy: ${strategy}`, 'success', `${grade.ticker} Trade Finalized`, 5000);
+        showToast(`Exit: $${exitPrice.toFixed(2)} | ${outcomeText}\nStrategy: ${strategy}\nPosition: ${positionSize} ${positionUnit}`, 'success', `${grade.ticker} Trade Finalized`, 5000);
         
         hideFinalizeModal();
         loadFinalizeView();
@@ -2417,14 +2445,26 @@
                 </div>
             `;
             
-            // Add strategy if finalized
-            if (isFinalized && grade.outcome && grade.outcome.strategy) {
-                content += `
-                    <div style="background: rgba(100, 149, 237, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="font-weight: 600; margin-bottom: 8px; color: #6495ed;">Strategy Used</div>
-                        <div style="font-size: 12px; line-height: 1.5; color: #e0e0e0;">${escapeHtml(grade.outcome.strategy)}</div>
-                    </div>
-                `;
+            // Add strategy and position size if finalized
+            if (isFinalized && grade.outcome) {
+                if (grade.outcome.strategy || grade.outcome.positionSize) {
+                    content += `
+                        <div style="background: rgba(100, 149, 237, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                            ${grade.outcome.strategy ? `
+                                <div style="margin-bottom: ${grade.outcome.positionSize ? '8px' : '0'};">
+                                    <div style="font-weight: 600; margin-bottom: 4px; color: #6495ed; font-size: 11px;">STRATEGY USED</div>
+                                    <div style="font-size: 12px; line-height: 1.5; color: #e0e0e0;">${escapeHtml(grade.outcome.strategy)}</div>
+                                </div>
+                            ` : ''}
+                            ${grade.outcome.positionSize ? `
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px; color: #6495ed; font-size: 11px;">POSITION SIZE</div>
+                                    <div style="font-size: 12px; line-height: 1.5; color: #e0e0e0;">📊 ${grade.outcome.positionSize} ${grade.outcome.positionUnit || 'shares'}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
             }
             
             // Add trade thoughts if available
