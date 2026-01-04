@@ -1092,6 +1092,16 @@
                     <span>30%</span>
                 </div>
             </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <div class="slider-label">
+                        <div class="slider-title" style="color: #6495ed;">💭 Trade Thoughts</div>
+                        <div class="slider-subtitle" style="display: block;">What are you thinking?</div>
+                    </div>
+                </div>
+                <textarea class="ticker-input" id="tradeThoughtsInput" placeholder="Write down your thoughts about this trade..." style="text-transform: none; font-size: 12px; min-height: 80px; resize: vertical; line-height: 1.4;"></textarea>
+            </div>
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, rgba(0, 100, 0, 0.2) 0%, rgba(100, 0, 0, 0.2) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.15);">
@@ -1231,6 +1241,19 @@
     </div>
 </div>
 
+<!-- Trade Details Modal -->
+<div class="modal-overlay" id="tradeDetailsModal">
+    <div class="modal-content" style="max-width: 400px; max-height: 80vh; overflow-y: auto;">
+        <div class="modal-title" id="tradeDetailsTitle">Trade Details</div>
+        <div id="tradeDetailsContent" style="font-size: 12px; color: #e0e0e0; line-height: 1.6;">
+            <!-- Content will be populated dynamically -->
+        </div>
+        <div class="modal-buttons" style="margin-top: 16px;">
+            <button class="modal-btn modal-btn-cancel" onclick="hideTradeDetailsModal()" style="width: 100%;">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Configuration constants
     const CONFIG = {
@@ -1262,7 +1285,8 @@
         screenshot: null,
         stopLossPercent: 7,
         profitTargetPercent: 20,
-        entryPrice: 0
+        entryPrice: 0,
+        thoughts: ''
     };
 
     let currentScreenshot = null;
@@ -1453,10 +1477,14 @@
         // Reset entry price input
         document.getElementById('entryPriceInput').value = '';
         
+        // Reset thoughts input
+        document.getElementById('tradeThoughtsInput').value = '';
+        
         // Initialize slider values and display
         trackerState.stopLossPercent = 7;
         trackerState.profitTargetPercent = 20;
         trackerState.entryPrice = 0;
+        trackerState.thoughts = '';
         
         document.getElementById('stopLoss-slider').value = 7;
         document.getElementById('profitTarget-slider').value = 20;
@@ -1568,6 +1596,9 @@
             return;
         }
         
+        // Get the thoughts from the textarea
+        const thoughts = document.getElementById('tradeThoughtsInput').value.trim();
+        
         const stopPrice = entry * (1 - trackerState.stopLossPercent / 100);
         const targetPrice = entry * (1 + trackerState.profitTargetPercent / 100);
         const riskAmount = entry - stopPrice;
@@ -1589,7 +1620,8 @@
                 stopPercent: trackerState.stopLossPercent,
                 target: parseFloat(targetPrice.toFixed(2)),
                 targetPercent: trackerState.profitTargetPercent,
-                riskReward: rrRatio
+                riskReward: rrRatio,
+                thoughts: thoughts
             },
             execution: {
                 actualEntry: null,
@@ -1613,6 +1645,7 @@
         trackerState.scores = null;
         trackerState.total = 0;
         trackerState.screenshot = null;
+        trackerState.thoughts = '';
         
         // Go back to grade view
         switchView('grade');
@@ -1760,7 +1793,7 @@
             const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
             
             return `
-            <div class="history-item" data-index="${index}" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="history-item" data-index="${index}" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer;" onclick="showTradeDetailsModal(${index})">
                 <div class="history-left">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
@@ -1783,6 +1816,7 @@
                     </div>
                     <div style="margin-top: 6px; text-align: center; font-size: 11px; color: #888;">
                         R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
+                        ${grade.plan.thoughts ? '<span style="color: #6495ed; margin-left: 8px;">💭</span>' : ''}
                     </div>
                     ` : `
                     <div class="history-grades-grid" style="margin-top: 8px;">
@@ -1810,12 +1844,12 @@
                 </div>
                 <div class="history-right">
                     ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `
-                        <img src="${encodeURI(grade.screenshot)}" class="history-screenshot" onclick="viewScreenshot('${encodeURIComponent(grade.id != null ? grade.id : index)}')" alt="Trade screenshot">
+                        <img src="${encodeURI(grade.screenshot)}" class="history-screenshot" onclick="event.stopPropagation(); viewScreenshot('${encodeURIComponent(grade.id != null ? grade.id : index)}')" alt="Trade screenshot">
                     ` : `
                         <div class="history-no-screenshot">No screenshot</div>
                     `}
                 </div>
-                <div class="history-footer">
+                <div class="history-footer" onclick="event.stopPropagation()">
                     <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>
                         Analyze
@@ -1916,6 +1950,106 @@
             document.getElementById('aiPrompt').value = `Analyze ${ticker} for trading:\n- Technical setup quality\n- Key support/resistance levels\n- Recent price action\n- Volume analysis\n- Risk/reward for entry today\n\nProvide a PREPARE score estimate.`;
             hideTickerModal();
         }
+    }
+
+    // Trade Details Modal functions
+    function showTradeDetailsModal(index) {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[index];
+        
+        if (!grade) return;
+        
+        const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
+        const total = grade.total || (grade.grade ? grade.grade.total : 0);
+        const hasPlan = grade.plan && grade.plan.entry;
+        const gradeLetter = getGradeLetter(total);
+        const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
+        
+        // Build the modal content
+        let content = `
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 12px;">
+                    <span style="font-size: 24px; font-weight: 700; color: white;">${escapeHtml(grade.ticker)}</span>
+                    <span style="background: ${gradeColor}22; color: ${gradeColor}; padding: 4px 12px; border-radius: 8px; font-size: 14px; font-weight: 700;">${gradeLetter} - ${total}/100</span>
+                </div>
+                <div style="font-size: 10px; color: #888; text-align: center;">
+                    ${new Date(grade.timestamp).toLocaleString()}
+                </div>
+            </div>
+        `;
+        
+        // Add PREPARE scores
+        content += `
+            <div style="background: rgba(40, 40, 40, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                <div style="font-weight: 600; margin-bottom: 8px; color: #cc0000;">PREPARE Scores</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+                    <div><span style="color: #cc0000; font-weight: 600;">P</span> Pattern: <span style="color: white;">${scores.pattern || 0}/20</span></div>
+                    <div><span style="color: #cc0000; font-weight: 600;">R</span> Risk: <span style="color: white;">${scores.risk || 0}/20</span></div>
+                    <div><span style="color: #cc0000; font-weight: 600;">E</span> Entry: <span style="color: white;">${scores.entry || 0}/10</span></div>
+                    <div><span style="color: #cc0000; font-weight: 600;">P</span> Performance: <span style="color: white;">${scores.performance || 0}/10</span></div>
+                    <div><span style="color: #cc0000; font-weight: 600;">A</span> Timing: <span style="color: white;">${scores.time || 0}/20</span></div>
+                    <div><span style="color: #cc0000; font-weight: 600;">R</span> Catalyst: <span style="color: white;">${scores.catalyst || 0}/10</span></div>
+                    <div style="grid-column: 1 / -1;"><span style="color: #cc0000; font-weight: 600;">E</span> Environment: <span style="color: white;">${scores.environment || 0}/10</span></div>
+                </div>
+            </div>
+        `;
+        
+        // Add trade plan if available
+        if (hasPlan) {
+            content += `
+                <div style="background: rgba(40, 40, 40, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #cc0000;">Trade Plan</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;">
+                        <div style="text-align: center; padding: 8px; background: rgba(255, 204, 0, 0.15); border-radius: 6px;">
+                            <div style="color: #ffcc00; font-size: 10px;">ENTRY</div>
+                            <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.entry.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center; padding: 8px; background: rgba(255, 68, 68, 0.15); border-radius: 6px;">
+                            <div style="color: #ff4444; font-size: 10px;">STOP</div>
+                            <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.stopLoss.toFixed(2)}</div>
+                            <div style="color: #ff4444; font-size: 9px;">${grade.plan.stopPercent}%</div>
+                        </div>
+                        <div style="text-align: center; padding: 8px; background: rgba(0, 255, 0, 0.15); border-radius: 6px;">
+                            <div style="color: #00ff00; font-size: 10px;">TARGET</div>
+                            <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.target.toFixed(2)}</div>
+                            <div style="color: #00ff00; font-size: 9px;">${grade.plan.targetPercent}%</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; padding: 8px; background: rgba(100, 149, 237, 0.15); border-radius: 6px;">
+                        <span style="color: #6495ed; font-size: 10px;">RISK/REWARD RATIO: </span>
+                        <span style="color: white; font-weight: 600; font-size: 14px;">${grade.plan.riskReward}:1</span>
+                    </div>
+                </div>
+            `;
+            
+            // Add trade thoughts if available
+            if (grade.plan.thoughts) {
+                content += `
+                    <div style="background: rgba(100, 149, 237, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #6495ed;">💭 Trade Thoughts</div>
+                        <div style="font-size: 11px; line-height: 1.5; color: #e0e0e0; white-space: pre-wrap;">${escapeHtml(grade.plan.thoughts)}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Add screenshot if available
+        if (grade.screenshot && grade.screenshot.startsWith('data:image/')) {
+            content += `
+                <div style="background: rgba(40, 40, 40, 0.5); padding: 12px; border-radius: 8px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #cc0000;">Screenshot</div>
+                    <img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; cursor: pointer;" onclick="window.open('${encodeURI(grade.screenshot)}', '_blank')" alt="Trade screenshot">
+                </div>
+            `;
+        }
+        
+        document.getElementById('tradeDetailsTitle').textContent = `${grade.ticker} - Trade Details`;
+        document.getElementById('tradeDetailsContent').innerHTML = content;
+        document.getElementById('tradeDetailsModal').classList.add('active');
+    }
+
+    function hideTradeDetailsModal() {
+        document.getElementById('tradeDetailsModal').classList.remove('active');
     }
 
     // AI Assistant functions
@@ -2144,6 +2278,16 @@
             tickerModal.addEventListener('click', function(e) {
                 if (e.target === tickerModal) {
                     hideTickerModal();
+                }
+            });
+        }
+        
+        // Close trade details modal on overlay click
+        const tradeDetailsModal = document.getElementById('tradeDetailsModal');
+        if (tradeDetailsModal) {
+            tradeDetailsModal.addEventListener('click', function(e) {
+                if (e.target === tradeDetailsModal) {
+                    hideTradeDetailsModal();
                 }
             });
         }
