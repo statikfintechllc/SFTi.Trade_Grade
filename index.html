@@ -882,6 +882,13 @@
             </svg>
             <span>Trade Tracker</span>
         </button>
+        <button class="menu-btn" onclick="switchView('finalize')" id="finalizeBtn">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <span>Finalize Trades</span>
+        </button>
         <button class="menu-btn" onclick="switchView('history')" id="historyBtn">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -1152,6 +1159,18 @@
         </button>
     </div>
 
+    <div id="finalizeView" style="display: none;">
+        <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 12px;">Finalize Trades</h2>
+        
+        <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+            <div style="font-size: 11px; color: #888; line-height: 1.5;">
+                <p>Review and finalize your planned trades. Mark trades as <span style="color: #ff4444; font-weight: 600;">Rejected</span> (not taken) or <span style="color: #00ff00; font-weight: 600;">Accepted</span> (executed) to track your results.</p>
+            </div>
+        </div>
+        
+        <div id="finalizeContainer"></div>
+    </div>
+
     <div id="historyView" style="display: none;">
         <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 12px;">Trade History</h2>
         
@@ -1164,6 +1183,14 @@
                     <option value="B">B (75-89)</option>
                     <option value="C">C (60-74)</option>
                     <option value="D">D (Below 60)</option>
+                </select>
+                <select id="historyStatusFilter" class="ticker-input" style="flex: 0 0 auto; width: auto; padding: 8px; font-size: 12px; text-transform: none;">
+                    <option value="">All Status</option>
+                    <option value="finalized">Finalized</option>
+                    <option value="non-finalized">Non-Finalized</option>
+                </select>
+                <select id="historyStrategyFilter" class="ticker-input" style="flex: 0 0 auto; width: auto; padding: 8px; font-size: 12px; text-transform: none;">
+                    <option value="">All Strategies</option>
                 </select>
                 <button class="save-btn" onclick="filterHistory()" style="flex: 0 0 auto; padding: 8px 12px; font-size: 12px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1259,6 +1286,25 @@
     </div>
 </div>
 
+<!-- Finalize Trade Modal -->
+<div class="modal-overlay" id="finalizeTradeModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-title">Finalize Trade: <span id="finalizeModalTicker"></span></div>
+        <div id="finalizeModalContent" style="font-size: 12px; color: #e0e0e0; margin-bottom: 16px;">
+            <!-- Initial choice or detailed finalization form -->
+        </div>
+        <div id="finalizeModalButtons" class="modal-buttons">
+            <!-- Buttons will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Full Screen Image Viewer Modal -->
+<div class="modal-overlay" id="imageViewerModal" style="background: rgba(0, 0, 0, 0.95); cursor: pointer;">
+    <button onclick="hideImageViewer()" style="position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px; z-index: 101; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">×</button>
+    <img id="fullScreenImage" src="" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; cursor: default;" onclick="event.stopPropagation();" alt="Full screen view">
+</div>
+
 <script>
     // Configuration constants
     const CONFIG = {
@@ -1298,6 +1344,9 @@
     let chatHistory = [];
     let historyFilterTicker = '';
     let historyFilterGrade = '';
+    let historyFilterStatus = '';
+    let historyFilterStrategy = '';
+    let currentFinalizeTradeIndex = null;
 
     /**
      * Reset all history filter state variables to their default (unfiltered) values.
@@ -1306,6 +1355,8 @@
     function resetHistoryFilters() {
         historyFilterTicker = '';
         historyFilterGrade = '';
+        historyFilterStatus = '';
+        historyFilterStrategy = '';
     }
 
     /**
@@ -1397,20 +1448,24 @@
     function switchView(view) {
         const gradeView = document.getElementById('gradeView');
         const trackerView = document.getElementById('trackerView');
+        const finalizeView = document.getElementById('finalizeView');
         const historyView = document.getElementById('historyView');
         const aiView = document.getElementById('aiView');
         const gradeBtn = document.getElementById('gradeBtn');
         const trackerBtn = document.getElementById('trackerBtn');
+        const finalizeBtn = document.getElementById('finalizeBtn');
         const historyBtn = document.getElementById('historyBtn');
         const aiBtn = document.getElementById('aiBtn');
 
         // Hide all views and deactivate all buttons
         gradeView.style.display = 'none';
         trackerView.style.display = 'none';
+        finalizeView.style.display = 'none';
         historyView.style.display = 'none';
         aiView.style.display = 'none';
         gradeBtn.classList.remove('active');
         trackerBtn.classList.remove('active');
+        finalizeBtn.classList.remove('active');
         historyBtn.classList.remove('active');
         aiBtn.classList.remove('active');
 
@@ -1421,6 +1476,10 @@
             trackerView.style.display = 'block';
             trackerBtn.classList.add('active');
             initializeTracker();
+        } else if (view === 'finalize') {
+            finalizeView.style.display = 'block';
+            finalizeBtn.classList.add('active');
+            loadFinalizeView();
         } else if (view === 'history') {
             historyView.style.display = 'block';
             historyBtn.classList.add('active');
@@ -1666,6 +1725,8 @@
     function filterHistory() {
         historyFilterTicker = document.getElementById('historySearchInput').value.trim().toUpperCase();
         historyFilterGrade = document.getElementById('historyGradeFilter').value;
+        historyFilterStatus = document.getElementById('historyStatusFilter').value;
+        historyFilterStrategy = document.getElementById('historyStrategyFilter').value;
         loadHistory();
     }
 
@@ -1760,6 +1821,16 @@
         let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         const container = document.getElementById('historyContainer');
 
+        // Populate strategy filter dropdown with unique strategies
+        const strategies = [...new Set(grades.filter(g => g.outcome && g.outcome.strategy).map(g => g.outcome.strategy))];
+        const strategyFilter = document.getElementById('historyStrategyFilter');
+        if (strategyFilter) {
+            const currentValue = strategyFilter.value;
+            strategyFilter.innerHTML = '<option value="">All Strategies</option>' + 
+                strategies.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+            strategyFilter.value = currentValue;
+        }
+
         // Apply filters
         if (historyFilterTicker) {
             grades = grades.filter(g => g.ticker === historyFilterTicker);
@@ -1771,9 +1842,19 @@
                 return letter === historyFilterGrade;
             });
         }
+        if (historyFilterStatus) {
+            if (historyFilterStatus === 'finalized') {
+                grades = grades.filter(g => g.finalized === true);
+            } else if (historyFilterStatus === 'non-finalized') {
+                grades = grades.filter(g => !g.finalized);
+            }
+        }
+        if (historyFilterStrategy) {
+            grades = grades.filter(g => g.outcome && g.outcome.strategy === historyFilterStrategy);
+        }
 
         if (grades.length === 0) {
-            const hasFilters = historyFilterTicker || historyFilterGrade;
+            const hasFilters = historyFilterTicker || historyFilterGrade || historyFilterStatus || historyFilterStrategy;
             container.innerHTML = `
                 <div class="card empty-state" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
                     <div class="empty-icon">
@@ -1794,8 +1875,23 @@
             const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
             const total = grade.total || (grade.grade ? grade.grade.total : 0);
             const hasPlan = grade.plan && grade.plan.entry;
+            const isFinalized = grade.finalized === true;
             const gradeLetter = getGradeLetter(total);
             const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
+            
+            // Finalized status badge
+            let statusBadge = '';
+            let outcomeDisplay = '';
+            if (isFinalized && grade.outcome) {
+                const isWin = grade.outcome.result === 'target';
+                const pnl = grade.outcome.pnlPercent;
+                const pnlColor = isWin ? '#00ff00' : '#ff4444';
+                const pnlIcon = isWin ? '✓' : '✗';
+                statusBadge = `<span style="color: ${pnlColor}; font-size: 16px; margin-left: 4px;">${pnlIcon}</span>`;
+                outcomeDisplay = `<span style="color: ${pnlColor}; font-weight: 600; font-size: 12px;">${isWin ? '+' : ''}${pnl.toFixed(1)}%</span>`;
+            } else if (hasPlan && !isFinalized) {
+                statusBadge = '<span style="color: #888; font-size: 16px; margin-left: 4px;">✗</span>';
+            }
             
             return `
             <div class="history-item" data-index="${index}" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer;" onclick="showTradeDetailsModal(${index})">
@@ -1803,6 +1899,8 @@
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
                         <span style="background: ${gradeColor}22; color: ${gradeColor}; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;">${gradeLetter}</span>
+                        ${statusBadge}
+                        ${outcomeDisplay}
                     </div>
                     ${hasPlan ? `
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; font-size: 10px;">
@@ -1810,11 +1908,11 @@
                             <div style="color: #ffcc00;">ENTRY</div>
                             <div style="color: white; font-weight: 600;">$${grade.plan.entry.toFixed(2)}</div>
                         </div>
-                        <div style="text-align: center; padding: 4px; background: rgba(255, 68, 68, 0.15); border-radius: 4px;">
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 68, 68, 0.15); border-radius: 4px; ${isFinalized && grade.outcome && grade.outcome.result === 'stop' ? 'border: 2px solid #ff4444;' : ''}">
                             <div style="color: #ff4444;">STOP</div>
                             <div style="color: white; font-weight: 600;">$${grade.plan.stopLoss.toFixed(2)}</div>
                         </div>
-                        <div style="text-align: center; padding: 4px; background: rgba(0, 255, 0, 0.15); border-radius: 4px;">
+                        <div style="text-align: center; padding: 4px; background: rgba(0, 255, 0, 0.15); border-radius: 4px; ${isFinalized && grade.outcome && grade.outcome.result === 'target' ? 'border: 2px solid #00ff00;' : ''}">
                             <div style="color: #00ff00;">TARGET</div>
                             <div style="color: white; font-weight: 600;">$${grade.plan.target.toFixed(2)}</div>
                         </div>
@@ -1823,6 +1921,7 @@
                         R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
                         ${grade.plan.thoughts ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6495ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' : ''}
                     </div>
+                    ${isFinalized && grade.outcome && grade.outcome.strategy ? `<div style="margin-top: 4px; text-align: center; font-size: 10px; color: #6495ed;">Strategy: ${escapeHtml(grade.outcome.strategy)}</div>` : ''}
                     ` : `
                     <div class="history-grades-grid" style="margin-top: 8px;">
                         <div class="history-grade-item">
@@ -1900,9 +1999,272 @@
             }
         }
         if (grade && grade.screenshot) {
-            window.open(grade.screenshot, '_blank');
+            showImageViewer(grade.screenshot);
         }
     }
+
+    function showImageViewer(imageData) {
+        const modal = document.getElementById('imageViewerModal');
+        const img = document.getElementById('fullScreenImage');
+        img.src = imageData;
+        modal.classList.add('active');
+    }
+
+    function hideImageViewer() {
+        const modal = document.getElementById('imageViewerModal');
+        modal.classList.remove('active');
+        document.getElementById('fullScreenImage').src = '';
+    }
+
+    // Load non-finalized trades for finalization
+    function loadFinalizeView() {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const container = document.getElementById('finalizeContainer');
+
+        // Filter for non-finalized trades that have plans
+        const nonFinalizedTrades = grades.filter(g => {
+            const hasPlan = g.plan && g.plan.entry;
+            const isFinalized = g.finalized === true;
+            return hasPlan && !isFinalized;
+        });
+
+        if (nonFinalizedTrades.length === 0) {
+            container.innerHTML = `
+                <div class="card empty-state" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1.5">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                    </div>
+                    <div class="empty-text">No trades to finalize</div>
+                    <div class="empty-subtext">Create and save trade plans to track their outcomes</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = nonFinalizedTrades.map(grade => {
+            const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
+            const total = grade.total || (grade.grade ? grade.grade.total : 0);
+            const gradeLetter = getGradeLetter(total);
+            const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
+            const originalIndex = grades.indexOf(grade);
+            
+            return `
+            <div class="history-item" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer;" onclick="showFinalizeModal(${originalIndex})">
+                <div class="history-left">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="history-ticker">${escapeHtml(grade.ticker)}</div>
+                        <span style="background: ${gradeColor}22; color: ${gradeColor}; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;">${gradeLetter}</span>
+                        <span style="color: #ffcc00; font-size: 11px;">⏳ Pending</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 8px; font-size: 10px;">
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 204, 0, 0.15); border-radius: 4px;">
+                            <div style="color: #ffcc00;">ENTRY</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.entry.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px; background: rgba(255, 68, 68, 0.15); border-radius: 4px;">
+                            <div style="color: #ff4444;">STOP</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.stopLoss.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center; padding: 4px; background: rgba(0, 255, 0, 0.15); border-radius: 4px;">
+                            <div style="color: #00ff00;">TARGET</div>
+                            <div style="color: white; font-weight: 600;">$${grade.plan.target.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 6px; text-align: center; font-size: 11px; color: #888;">
+                        R:R <span style="color: white; font-weight: 600;">${grade.plan.riskReward}:1</span>
+                    </div>
+                </div>
+                <div class="history-center">
+                    <div class="history-score-value">${total}</div>
+                </div>
+                <div class="history-right">
+                    ${grade.screenshot && grade.screenshot.startsWith('data:image/') ? `
+                        <img src="${encodeURI(grade.screenshot)}" class="history-screenshot" onclick="event.stopPropagation(); viewScreenshot('${encodeURIComponent(grade.id != null ? grade.id : originalIndex)}')" alt="Trade screenshot">
+                    ` : `
+                        <div class="history-no-screenshot">No screenshot</div>
+                    `}
+                </div>
+            </div>
+        `;
+        }).join('');
+    }
+
+    // Show finalize modal with reject/accept options
+    function showFinalizeModal(index) {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[index];
+        
+        if (!grade) return;
+        
+        currentFinalizeTradeIndex = index;
+        const modal = document.getElementById('finalizeTradeModal');
+        document.getElementById('finalizeModalTicker').textContent = grade.ticker;
+        
+        // Show initial choice: Reject or Accept
+        document.getElementById('finalizeModalContent').innerHTML = `
+            <div style="text-align: center; padding: 16px 0;">
+                <p style="margin-bottom: 16px; line-height: 1.5;">Did you execute this trade?</p>
+                <div style="background: rgba(40, 40, 40, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <div style="font-size: 11px; color: #888; margin-bottom: 4px;">TRADE PLAN</div>
+                    <div style="display: flex; justify-content: space-around; font-size: 12px;">
+                        <div><span style="color: #ffcc00;">Entry:</span> $${grade.plan.entry.toFixed(2)}</div>
+                        <div><span style="color: #ff4444;">Stop:</span> $${grade.plan.stopLoss.toFixed(2)}</div>
+                        <div><span style="color: #00ff00;">Target:</span> $${grade.plan.target.toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('finalizeModalButtons').innerHTML = `
+            <button class="modal-btn" onclick="rejectTrade()" style="flex: 1; background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                Rejected (Not Taken)
+            </button>
+            <button class="modal-btn modal-btn-confirm" onclick="showAcceptForm()" style="flex: 1;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Accepted (Executed)
+            </button>
+        `;
+        
+        modal.classList.add('active');
+    }
+
+    function hideFinalizeModal() {
+        document.getElementById('finalizeTradeModal').classList.remove('active');
+        currentFinalizeTradeIndex = null;
+    }
+
+    // Reject trade - delete it from the journal
+    function rejectTrade() {
+        if (currentFinalizeTradeIndex === null) return;
+        
+        if (!confirm('Are you sure you want to reject this trade? It will be deleted from your journal.')) {
+            return;
+        }
+        
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[currentFinalizeTradeIndex];
+        
+        grades.splice(currentFinalizeTradeIndex, 1);
+        localStorage.setItem('prepareGrades', JSON.stringify(grades));
+        
+        showToast(`Trade plan deleted`, 'info', `${grade.ticker} Rejected`);
+        hideFinalizeModal();
+        loadFinalizeView();
+    }
+
+    // Show form to accept trade and enter details
+    function showAcceptForm() {
+        const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[currentFinalizeTradeIndex];
+        
+        if (!grade) return;
+        
+        document.getElementById('finalizeModalContent').innerHTML = `
+            <div style="margin-bottom: 12px;">
+                <label class="label-text">Which target was satisfied?</label>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button id="stopLossBtn" class="modal-btn" onclick="selectOutcome('stop')" style="flex: 1; background: rgba(255, 68, 68, 0.2); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3);">
+                        🛑 Stop Loss<br>
+                        <span style="font-size: 10px;">$${grade.plan.stopLoss.toFixed(2)} (-${grade.plan.stopPercent}%)</span>
+                    </button>
+                    <button id="targetBtn" class="modal-btn modal-btn-confirm" onclick="selectOutcome('target')" style="flex: 1;">
+                        🎯 Profit Target<br>
+                        <span style="font-size: 10px;">$${grade.plan.target.toFixed(2)} (+${grade.plan.targetPercent}%)</span>
+                    </button>
+                </div>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label class="label-text">Strategy Used</label>
+                <textarea id="strategyInput" class="ticker-input" placeholder="e.g., 52w High Breakout, Support Bounce, etc." style="text-transform: none; font-size: 12px; min-height: 60px; resize: vertical;"></textarea>
+            </div>
+            <input type="hidden" id="selectedOutcome" value="">
+        `;
+        
+        document.getElementById('finalizeModalButtons').innerHTML = `
+            <button class="modal-btn modal-btn-cancel" onclick="showFinalizeModal(${currentFinalizeTradeIndex})">
+                Back
+            </button>
+            <button class="modal-btn modal-btn-confirm" onclick="acceptTrade()">
+                Finalize Trade
+            </button>
+        `;
+    }
+
+    function selectOutcome(outcome) {
+        document.getElementById('selectedOutcome').value = outcome;
+        
+        // Visual feedback
+        const stopBtn = document.getElementById('stopLossBtn');
+        const targetBtn = document.getElementById('targetBtn');
+        
+        if (outcome === 'stop') {
+            stopBtn.style.border = '2px solid #ff4444';
+            stopBtn.style.background = 'rgba(255, 68, 68, 0.3)';
+            targetBtn.style.border = '1px solid rgba(0, 255, 0, 0.3)';
+            targetBtn.style.background = 'rgba(0, 255, 0, 0.2)';
+        } else {
+            targetBtn.style.border = '2px solid #00ff00';
+            targetBtn.style.background = 'rgba(0, 255, 0, 0.3)';
+            stopBtn.style.border = '1px solid rgba(255, 68, 68, 0.3)';
+            stopBtn.style.border = 'rgba(255, 68, 68, 0.2)';
+        }
+    }
+
+    // Accept trade and finalize with outcome
+    function acceptTrade() {
+        if (currentFinalizeTradeIndex === null) return;
+        
+        const outcome = document.getElementById('selectedOutcome').value;
+        const strategy = document.getElementById('strategyInput').value.trim();
+        
+        if (!outcome) {
+            showToast('Please select which target was satisfied', 'warning', 'Missing Information');
+            return;
+        }
+        
+        if (!strategy) {
+            showToast('Please enter the strategy you used', 'warning', 'Missing Strategy');
+            return;
+        }
+        
+        let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
+        const grade = grades[currentFinalizeTradeIndex];
+        
+        // Calculate P&L
+        const entryPrice = grade.plan.entry;
+        const exitPrice = outcome === 'stop' ? grade.plan.stopLoss : grade.plan.target;
+        const pnlPercent = outcome === 'stop' ? -grade.plan.stopPercent : grade.plan.targetPercent;
+        
+        // Update grade with finalization data
+        grade.finalized = true;
+        grade.finalizedAt = new Date().toISOString();
+        grade.outcome = {
+            result: outcome,
+            exitPrice: exitPrice,
+            pnlPercent: pnlPercent,
+            strategy: strategy
+        };
+        
+        grades[currentFinalizeTradeIndex] = grade;
+        localStorage.setItem('prepareGrades', JSON.stringify(grades));
+        
+        const outcomeText = outcome === 'stop' ? `Loss: -${grade.plan.stopPercent}%` : `Win: +${grade.plan.targetPercent}%`;
+        showToast(`Exit: $${exitPrice.toFixed(2)} | ${outcomeText}\nStrategy: ${strategy}`, 'success', `${grade.ticker} Trade Finalized`, 5000);
+        
+        hideFinalizeModal();
+        loadFinalizeView();
+    }
+
 
     function analyzeGradeWithAI(index) {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
@@ -1967,6 +2329,7 @@
         const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
         const total = grade.total || (grade.grade ? grade.grade.total : 0);
         const hasPlan = grade.plan && grade.plan.entry;
+        const isFinalized = grade.finalized === true;
         const gradeLetter = getGradeLetter(total);
         const gradeColor = gradeLetter === 'A' ? '#00ff00' : gradeLetter === 'B' ? '#00cc00' : gradeLetter === 'C' ? '#ffcc00' : '#ff4444';
         
@@ -1982,6 +2345,33 @@
                 </div>
             </div>
         `;
+        
+        // Add finalized status if applicable
+        if (isFinalized && grade.outcome) {
+            const isWin = grade.outcome.result === 'target';
+            const pnl = grade.outcome.pnlPercent;
+            const pnlColor = isWin ? '#00ff00' : '#ff4444';
+            const statusText = isWin ? 'WIN' : 'LOSS';
+            
+            content += `
+                <div style="background: ${isWin ? 'rgba(0, 255, 0, 0.15)' : 'rgba(255, 68, 68, 0.15)'}; padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid ${pnlColor};">
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: ${pnlColor}; font-weight: 700; margin-bottom: 4px;">${statusText}: ${isWin ? '+' : ''}${pnl.toFixed(1)}%</div>
+                        <div style="font-size: 11px; color: #888;">Exit Price: $${grade.outcome.exitPrice.toFixed(2)}</div>
+                        <div style="font-size: 11px; color: #888;">Finalized: ${new Date(grade.finalizedAt).toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+        } else if (hasPlan && !isFinalized) {
+            content += `
+                <div style="background: rgba(255, 204, 0, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(255, 204, 0, 0.3);">
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #ffcc00; font-weight: 700;">⏳ PENDING FINALIZATION</div>
+                        <div style="font-size: 11px; color: #888; margin-top: 4px;">Visit "Finalize Trades" to record the outcome</div>
+                    </div>
+                </div>
+            `;
+        }
         
         // Add PREPARE scores
         content += `
@@ -2009,12 +2399,12 @@
                             <div style="color: #ffcc00; font-size: 10px;">ENTRY</div>
                             <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.entry.toFixed(2)}</div>
                         </div>
-                        <div style="text-align: center; padding: 8px; background: rgba(255, 68, 68, 0.15); border-radius: 6px;">
+                        <div style="text-align: center; padding: 8px; background: rgba(255, 68, 68, 0.15); border-radius: 6px; ${isFinalized && grade.outcome && grade.outcome.result === 'stop' ? 'border: 2px solid #ff4444;' : ''}">
                             <div style="color: #ff4444; font-size: 10px;">STOP</div>
                             <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.stopLoss.toFixed(2)}</div>
                             <div style="color: #ff4444; font-size: 9px;">${grade.plan.stopPercent}%</div>
                         </div>
-                        <div style="text-align: center; padding: 8px; background: rgba(0, 255, 0, 0.15); border-radius: 6px;">
+                        <div style="text-align: center; padding: 8px; background: rgba(0, 255, 0, 0.15); border-radius: 6px; ${isFinalized && grade.outcome && grade.outcome.result === 'target' ? 'border: 2px solid #00ff00;' : ''}">
                             <div style="color: #00ff00; font-size: 10px;">TARGET</div>
                             <div style="color: white; font-weight: 600; font-size: 14px;">$${grade.plan.target.toFixed(2)}</div>
                             <div style="color: #00ff00; font-size: 9px;">${grade.plan.targetPercent}%</div>
@@ -2026,6 +2416,16 @@
                     </div>
                 </div>
             `;
+            
+            // Add strategy if finalized
+            if (isFinalized && grade.outcome && grade.outcome.strategy) {
+                content += `
+                    <div style="background: rgba(100, 149, 237, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #6495ed;">Strategy Used</div>
+                        <div style="font-size: 12px; line-height: 1.5; color: #e0e0e0;">${escapeHtml(grade.outcome.strategy)}</div>
+                    </div>
+                `;
+            }
             
             // Add trade thoughts if available
             if (grade.plan.thoughts) {
@@ -2048,7 +2448,7 @@
             content += `
                 <div style="background: rgba(40, 40, 40, 0.5); padding: 12px; border-radius: 8px;">
                     <div style="font-weight: 600; margin-bottom: 8px; color: #cc0000;">Screenshot</div>
-                    <img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; cursor: pointer;" onclick="window.open('${encodeURI(grade.screenshot)}', '_blank')" alt="Trade screenshot">
+                    <img src="${encodeURI(grade.screenshot)}" style="width: 100%; border-radius: 6px; cursor: pointer;" onclick="showImageViewer('${encodeURI(grade.screenshot)}')" alt="Trade screenshot">
                 </div>
             `;
         }
@@ -2298,6 +2698,26 @@
             tradeDetailsModal.addEventListener('click', function(e) {
                 if (e.target === tradeDetailsModal) {
                     hideTradeDetailsModal();
+                }
+            });
+        }
+        
+        // Close finalize modal on overlay click
+        const finalizeTradeModal = document.getElementById('finalizeTradeModal');
+        if (finalizeTradeModal) {
+            finalizeTradeModal.addEventListener('click', function(e) {
+                if (e.target === finalizeTradeModal) {
+                    hideFinalizeModal();
+                }
+            });
+        }
+        
+        // Close image viewer on overlay click
+        const imageViewerModal = document.getElementById('imageViewerModal');
+        if (imageViewerModal) {
+            imageViewerModal.addEventListener('click', function(e) {
+                if (e.target === imageViewerModal) {
+                    hideImageViewer();
                 }
             });
         }
