@@ -17,10 +17,11 @@ A Progressive Web App (PWA) for grading trades using the PREPARE methodology.
 
 ```
 ├── LICENSE
-├── README.md
-├── index.html
 ├── docs/
+│   ├── README.md
 │   └── (documentation files)
+│
+├── index.html
 └── system/
     ├── img/
     │   ├── icon-192.png
