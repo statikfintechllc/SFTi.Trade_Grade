@@ -249,7 +249,7 @@
         padding: 10px;
         max-width: 480px;
         margin: 0 auto;
-        padding-bottom: 4px;
+        padding-bottom: 0;
     }
 
     .card {
@@ -1093,7 +1093,8 @@
         height: 400px;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        margin-top: 12px;
+        margin-top: 0;
+        margin-bottom: 0;
     }
 
     .chat-messages {
@@ -1230,6 +1231,8 @@
         display: flex;
         gap: 8px;
         align-items: flex-end;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
     }
 
     .chat-input-wrapper {
@@ -1361,7 +1364,8 @@
     @media (max-width: 480px) {
         .chat-window-container {
             height: 450px;
-            margin-top: 8px;
+            margin-top: 0;
+            margin-bottom: 0;
         }
 
         .chat-bubble {
