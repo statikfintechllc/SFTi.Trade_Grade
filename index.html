@@ -246,10 +246,9 @@
     }
 
     .container {
-        padding: 10px;
+        padding: 10px 10px 0 10px;
         max-width: 480px;
         margin: 0 auto;
-        padding-bottom: 4px;
     }
 
     .card {
@@ -1081,6 +1080,334 @@
         background: rgba(255, 255, 255, 0.1);
         color: #999;
     }
+
+    /* Chat Window Styles */
+    .chat-window-container {
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(13, 13, 13, 0.98) 100%);
+        border-top: 2px solid #cc0000;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        height: 400px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        margin-top: 0;
+        margin-bottom: 1px;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .chat-message {
+        display: flex;
+        gap: 8px;
+        animation: messageSlideIn 0.3s ease-out;
+    }
+
+    @keyframes messageSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .chat-message.user {
+        flex-direction: row-reverse;
+    }
+
+    .chat-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .chat-message.user .chat-avatar {
+        background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+        color: white;
+    }
+
+    .chat-message.assistant .chat-avatar {
+        background: linear-gradient(135deg, #00ff00 0%, #00aa00 100%);
+        color: #000;
+    }
+
+    .chat-bubble {
+        max-width: 75%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .chat-message.user .chat-bubble {
+        background: linear-gradient(135deg, rgba(204, 0, 0, 0.2) 0%, rgba(153, 0, 0, 0.3) 100%);
+        border: 1px solid rgba(204, 0, 0, 0.3);
+        color: #fff;
+        border-top-right-radius: 4px;
+    }
+
+    .chat-message.assistant .chat-bubble {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(30, 30, 30, 0.95) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e0e0e0;
+        border-top-left-radius: 4px;
+    }
+
+    .chat-bubble pre {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        padding: 12px;
+        overflow-x: auto;
+        margin: 8px 0;
+        font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .chat-bubble code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+        font-size: 12px;
+    }
+
+    .chat-bubble pre code {
+        background: none;
+        padding: 0;
+    }
+
+    .chat-bubble p {
+        margin: 8px 0;
+    }
+
+    .chat-bubble p:first-child {
+        margin-top: 0;
+    }
+
+    .chat-bubble p:last-child {
+        margin-bottom: 0;
+    }
+
+    .chat-bubble ul, .chat-bubble ol {
+        margin: 8px 0;
+        padding-left: 20px;
+    }
+
+    .chat-bubble li {
+        margin: 4px 0;
+    }
+
+    .chat-bubble strong {
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .chat-input-bar {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 12px 12px 0 12px;
+        background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+    }
+
+    .chat-input-wrapper {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(26, 26, 26, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 8px 12px;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input-wrapper:focus-within {
+        border-color: #cc0000;
+        background: rgba(13, 13, 13, 0.9);
+        box-shadow: 0 0 0 4px rgba(204, 0, 0, 0.15);
+    }
+
+    .chat-textarea {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: white;
+        font-size: 14px;
+        font-family: inherit;
+        resize: none;
+        max-height: 100px;
+        min-height: 24px;
+    }
+
+    .chat-textarea::placeholder {
+        color: #555;
+    }
+
+    .chat-controls {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .chat-icon-btn {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chat-icon-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #cc0000;
+    }
+
+    .chat-icon-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .chat-send-icon-btn {
+        color: #cc0000;
+    }
+
+    .chat-send-icon-btn:hover {
+        background: rgba(204, 0, 0, 0.2);
+        color: #ff0000;
+    }
+
+    .chat-send-icon-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .chat-model-select {
+        background: rgba(26, 26, 26, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 6px 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+        outline: none;
+    }
+
+    .chat-model-select:hover {
+        border-color: rgba(204, 0, 0, 0.5);
+    }
+
+    .chat-model-select:focus {
+        border-color: #cc0000;
+        box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.2);
+    }
+
+    .chat-file-input {
+        display: none;
+    }
+
+    .chat-empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+
+    .chat-empty-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.3;
+    }
+
+    .chat-empty-text {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .chat-empty-subtext {
+        font-size: 12px;
+        color: #555;
+    }
+
+    @media (max-width: 480px) {
+        .chat-window-container {
+            height: 450px;
+            margin-top: 0;
+            margin-bottom: 1px;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            font-size: 12px;
+        }
+
+        .chat-input-bar {
+            padding: 8px 8px 0 8px;
+            gap: 6px;
+        }
+
+        .chat-input-wrapper {
+            flex: 1;
+            min-width: 0;
+            gap: 4px;
+            padding: 6px 10px;
+        }
+
+        .chat-textarea {
+            font-size: 13px;
+        }
+
+        .chat-controls {
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .chat-model-select {
+            font-size: 10px;
+            padding: 4px 6px;
+            min-width: 100px;
+        }
+
+        .chat-icon-btn {
+            padding: 4px;
+        }
+
+        .chat-icon-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 </style>
 
 </head>
@@ -1593,24 +1920,46 @@
             </div>
         </div>
 
-        <div class="card">
-            <label class="label-text">Chat with Copilot</label>
-            <div id="chatMessages" style="max-height: 200px; overflow-y: auto; margin-bottom: 8px; font-size: 11px;"></div>
-            <textarea id="aiPrompt" class="ticker-input" placeholder="Ask about trades, patterns, sentiment..." style="text-transform: none; font-size: 12px; min-height: 50px; resize: vertical;"></textarea>
-            <div style="display: flex; gap: 6px; margin-top: 8px;">
-                <button class="save-btn" style="flex: 1; padding: 8px;" onclick="askAI()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                    Send
-                </button>
-                <button class="save-btn" style="padding: 8px; background: linear-gradient(135deg, #333 0%, #222 100%);" onclick="clearChat()">Clear</button>
+        <!-- Chat Window - Fixed at bottom when AI view is active -->
+        <div class="chat-window-container" id="chatWindow" style="display: none;">
+            <div class="chat-messages" id="chatMessagesContainer">
+                <div class="chat-empty-state">
+                    <div class="chat-empty-icon">💬</div>
+                    <div class="chat-empty-text">Start a conversation</div>
+                    <div class="chat-empty-subtext">Ask about trades, patterns, or market sentiment</div>
+                </div>
             </div>
-        </div>
-        <div class="card" id="aiResponseCard" style="display: none;">
-            <label class="label-text">AI Response</label>
-            <div id="aiResponse" style="font-size: 11px; line-height: 1.4; white-space: pre-wrap; color: #e0e0e0;"></div>
+            <div class="chat-input-bar">
+                <div class="chat-input-wrapper">
+                    <textarea 
+                        id="aiPrompt" 
+                        class="chat-textarea" 
+                        placeholder="Talk about Markets..."
+                        rows="1"
+                        onkeydown="handleChatKeyPress(event)"
+                        oninput="autoResizeTextarea(this)"></textarea>
+                    <div class="chat-controls">
+                        <input type="file" id="chatFileInput" class="chat-file-input" accept="image/*" onchange="handleChatFileUpload(this)">
+                        <button class="chat-icon-btn" onclick="document.getElementById('chatFileInput').click()" title="Attach file" aria-label="Attach file">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                            </svg>
+                        </button>
+                        <select id="chatModelSelect" class="chat-model-select" title="Select AI model">
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        </select>
+                        <button class="chat-icon-btn chat-send-icon-btn" onclick="askAI()" id="chatSendBtn" title="Send message" aria-label="Send message">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1823,6 +2172,7 @@
         const finalizeView = document.getElementById('finalizeView');
         const historyView = document.getElementById('historyView');
         const aiView = document.getElementById('aiView');
+        const chatWindow = document.getElementById('chatWindow');
         const gradeBtn = document.getElementById('gradeBtn');
         const trackerBtn = document.getElementById('trackerBtn');
         const finalizeBtn = document.getElementById('finalizeBtn');
@@ -1835,6 +2185,7 @@
         finalizeView.style.display = 'none';
         historyView.style.display = 'none';
         aiView.style.display = 'none';
+        if (chatWindow) chatWindow.style.display = 'none';
         gradeBtn.classList.remove('active');
         trackerBtn.classList.remove('active');
         finalizeBtn.classList.remove('active');
@@ -1860,6 +2211,10 @@
             aiView.style.display = 'block';
             aiBtn.classList.add('active');
             loadToken();
+            // Show chat window when AI view is active
+            if (chatWindow) {
+                chatWindow.style.display = 'flex';
+            }
         }
         
         // Only toggle menu if it's open (for menu button clicks)
@@ -2741,6 +3096,8 @@
         if (ticker) {
             document.getElementById('aiPrompt').value = `Analyze ${ticker} for trading:\n- Technical setup quality\n- Key support/resistance levels\n- Recent price action\n- Volume analysis\n- Risk/reward for entry today\n\nProvide a PREPARE score estimate.`;
             hideTickerModal();
+            // Auto-trigger the send
+            askAI();
         }
     }
 
@@ -2958,6 +3315,149 @@
         }
     }
 
+    // Chat window functions
+    function showChatWindow() {
+        const chatWindow = document.getElementById('chatWindow');
+        if (chatWindow) {
+            chatWindow.style.display = 'flex';
+        }
+    }
+
+    function hideChatWindow() {
+        const chatWindow = document.getElementById('chatWindow');
+        if (chatWindow) {
+            chatWindow.style.display = 'none';
+        }
+    }
+
+    // Auto-resize textarea as user types
+    function autoResizeTextarea(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+    }
+
+    // Handle Enter key to send message (Shift+Enter for new line)
+    function handleChatKeyPress(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            askAI();
+        }
+    }
+
+    // Handle file upload for chat
+    function handleChatFileUpload(input) {
+        const file = input.files[0];
+        if (file) {
+            showToast('File attachment feature coming soon!', 'info', 'Feature Preview');
+            input.value = '';
+        }
+    }
+
+    // Format text to HTML with markdown-like features
+    function formatMessageText(text) {
+        // Escape HTML first
+        let formatted = text.replace(/&/g, '&amp;')
+                           .replace(/</g, '&lt;')
+                           .replace(/>/g, '&gt;');
+        
+        // Format code blocks (```...```)
+        formatted = formatted.replace(/```([a-zA-Z0-9+-]*)\n?([\s\S]*?)```/g, function(match, lang, code) {
+            return `<pre><code class="language-${lang}">${code.trim()}</code></pre>`;
+        });
+        
+        // Format inline code (`...`)
+        formatted = formatted.replace(/`([^`]*)`/g, '<code>$1</code>');
+        
+        // Format bold (**...** or __...__)
+        formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        formatted = formatted.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+        
+        // Format bullet points (- ... or * ...)
+        const lines = formatted.split('\n');
+        let inList = false;
+        let listType = '';
+        const processedLines = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.match(/^[\-\*]\s+/)) {
+                if (!inList) {
+                    processedLines.push('<ul>');
+                    inList = true;
+                    listType = 'ul';
+                }
+                processedLines.push('<li>' + line.replace(/^[\-\*]\s+/, '') + '</li>');
+            } else if (line.match(/^\d+\.\s+/)) {
+                if (!inList) {
+                    processedLines.push('<ol>');
+                    inList = true;
+                    listType = 'ol';
+                } else if (listType === 'ul') {
+                    processedLines.push('</ul>');
+                    processedLines.push('<ol>');
+                    listType = 'ol';
+                }
+                processedLines.push('<li>' + line.replace(/^\d+\.\s+/, '') + '</li>');
+            } else {
+                if (inList) {
+                    processedLines.push(listType === 'ol' ? '</ol>' : '</ul>');
+                    inList = false;
+                    listType = '';
+                }
+                if (line.trim()) {
+                    processedLines.push('<p>' + line + '</p>');
+                } else if (i > 0 && processedLines.length > 0 && processedLines[processedLines.length - 1] !== '<br>') {
+                    processedLines.push('<br>');
+                }
+            }
+        }
+        
+        if (inList) {
+            processedLines.push(listType === 'ol' ? '</ol>' : '</ul>');
+        }
+        
+        return processedLines.join('\n');
+    }
+
+    // Add a message to the chat
+    function addChatMessage(role, content) {
+        const container = document.getElementById('chatMessagesContainer');
+        
+        // Remove empty state if it exists
+        const emptyState = container.querySelector('.chat-empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${role}`;
+        
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'chat-avatar';
+        avatarDiv.textContent = role === 'user' ? 'U' : 'AI';
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'chat-bubble';
+        
+        if (role === 'user') {
+            // User messages - plain text
+            bubbleDiv.textContent = content;
+        } else {
+            // AI messages - formatted with markdown-like features
+            bubbleDiv.innerHTML = formatMessageText(content);
+        }
+        
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(bubbleDiv);
+        container.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        container.scrollTop = container.scrollHeight;
+        
+        // Add to chat history
+        chatHistory.push({ role, content });
+    }
+
     async function askAI() {
         const token = localStorage.getItem('githubToken');
         const prompt = document.getElementById('aiPrompt').value.trim();
@@ -2972,13 +3472,48 @@
             return;
         }
 
-        const responseCard = document.getElementById('aiResponseCard');
-        const responseDiv = document.getElementById('aiResponse');
+        // Show chat window if not visible
+        showChatWindow();
         
-        responseCard.style.display = 'block';
-        responseDiv.textContent = 'Thinking...';
+        // Add user message to chat
+        addChatMessage('user', prompt);
+        
+        // Clear input and reset height
+        const textarea = document.getElementById('aiPrompt');
+        textarea.value = '';
+        textarea.style.height = 'auto';
+        
+        // Disable send button
+        const sendBtn = document.getElementById('chatSendBtn');
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+            </svg>
+        `;
+        
+        // Add loading indicator - ensure unique ID or remove existing
+        let loadingDiv = document.getElementById('loading-message');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+        
+        loadingDiv = document.createElement('div');
+        loadingDiv.className = 'chat-message assistant';
+        loadingDiv.id = 'loading-message';
+        loadingDiv.innerHTML = `
+            <div class="chat-avatar">AI</div>
+            <div class="chat-bubble">
+                <span style="opacity: 0.7;">Thinking...</span>
+            </div>
+        `;
+        container.appendChild(loadingDiv);
+        container.scrollTop = container.scrollHeight;
 
         try {
+            const selectedModel = document.getElementById('chatModelSelect').value || CONFIG.AI_MODEL;
+            
             const response = await fetch(CONFIG.API_ENDPOINT, {
                 method: 'POST',
                 headers: {
@@ -2986,7 +3521,7 @@
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    model: CONFIG.AI_MODEL,
+                    model: selectedModel,
                     messages: [
                         {
                             role: 'system',
@@ -3012,6 +3547,8 @@ Format your responses with:
 - Key findings at the top
 - Detailed analysis in the middle
 - Actionable recommendations at the bottom
+- Use bullet points for clarity
+- Include specific price levels and percentages
 
 Be direct, professional, and avoid generic advice. Treat this as real money at stake.`
                         },
@@ -3025,6 +3562,11 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
                 })
             });
 
+            // Remove loading indicator
+            if (loadingDiv && loadingDiv.parentNode) {
+                loadingDiv.remove();
+            }
+
             if (!response.ok) {
                 const errorData = await response.text();
                 throw new Error(`API Error: ${response.status} - ${errorData}`);
@@ -3033,48 +3575,54 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
             const data = await response.json();
             const aiMessage = data.choices[0].message.content;
             
-            // Add to chat history
-            addChatMessage('user', prompt);
+            // Add AI response to chat
             addChatMessage('assistant', aiMessage);
             
-            responseCard.style.display = 'block';
-            responseDiv.textContent = aiMessage;
-            document.getElementById('aiPrompt').value = '';
         } catch (error) {
             console.error('AI request failed:', error);
-            responseDiv.textContent = 'An error occurred while contacting the AI service. Make sure your GitHub token has access to GitHub Models and try again.';
+            
+            // Remove loading indicator
+            const loadingMsg = document.getElementById('loading-message');
+            if (loadingMsg && loadingMsg.parentNode) {
+                loadingMsg.remove();
+            }
+            
+            // Sanitize error message
+            const safeErrorMessage = String(error && error.message ? error.message : 'Unknown error')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            
+            addChatMessage('assistant', 'An error occurred while contacting the AI service. Make sure your GitHub token has access to GitHub Models and try again.\n\nError: ' + safeErrorMessage);
+        } finally {
+            // Re-enable send button
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            `;
         }
     }
 
-    function addChatMessage(role, content) {
-        const chatMessages = document.getElementById('chatMessages');
-        const msgDiv = document.createElement('div');
-        msgDiv.style.cssText = `padding: 6px 8px; margin-bottom: 6px; border-radius: 6px; ${role === 'user' ? 'background: #333; margin-left: 20%;' : 'background: #1a1a1a; margin-right: 20%;'}`;
-        
-        // Security: Use DOM methods instead of innerHTML to prevent XSS
-        const strong = document.createElement('strong');
-        strong.style.color = role === 'user' ? '#cc0000' : '#00ff00';
-        strong.textContent = role === 'user' ? 'You: ' : 'AI: ';
-        msgDiv.appendChild(strong);
-        
-        const previewLength = CONFIG.CHAT_MESSAGE_PREVIEW_LENGTH;
-        const textNode = document.createTextNode(content.substring(0, previewLength) + (content.length > previewLength ? '...' : ''));
-        msgDiv.appendChild(textNode);
-        
-        chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        chatHistory.push({ role, content });
-    }
-
     function clearChat() {
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.textContent = '';
+        const container = document.getElementById('chatMessagesContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="chat-empty-state">
+                    <div class="chat-empty-icon">💬</div>
+                    <div class="chat-empty-text">Start a conversation</div>
+                    <div class="chat-empty-subtext">Ask about trades, patterns, or market sentiment</div>
+                </div>
+            `;
         }
         chatHistory = [];
     }
 
-    // Quick action functions
+    // Quick action functions - now populate chat instead of separate card
     function reviewGrades() {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
         if (grades.length === 0) {
@@ -3084,6 +3632,9 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
         
         const summary = grades.slice(0, CONFIG.MAX_GRADES_FOR_REVIEW).map(g => `${g.ticker}: ${g.total}/100`).join(', ');
         document.getElementById('aiPrompt').value = `Review my recent trades and provide insights:\n${summary}\n\nAnalyze patterns, identify strengths/weaknesses, and suggest improvements.`;
+        
+        // Auto-trigger the send
+        askAI();
     }
 
     function findPatterns() {
@@ -3102,10 +3653,16 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
         }));
         
         document.getElementById('aiPrompt').value = `Find patterns in my trading grades:\n${JSON.stringify(data, null, 2)}\n\nIdentify what makes my high-scoring trades different from low-scoring ones.`;
+        
+        // Auto-trigger the send
+        askAI();
     }
 
     function getSentiment() {
         document.getElementById('aiPrompt').value = `What is the current market sentiment? Consider:\n- Major indices (SPY, QQQ, DIA)\n- VIX levels\n- Sector rotation\n- Recent market news\n\nProvide a brief actionable summary for day trading.`;
+        
+        // Auto-trigger the send
+        askAI();
     }
 
     // Refresh service worker only (not local storage or settings)
