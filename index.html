@@ -1084,19 +1084,16 @@
 
     /* Chat Window Styles */
     .chat-window-container {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 400px;
         background: linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(13, 13, 13, 0.98) 100%);
         border-top: 2px solid #cc0000;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
         display: flex;
         flex-direction: column;
-        z-index: 40;
+        height: 400px;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
+        margin-top: 12px;
     }
 
     .chat-messages {
@@ -1378,12 +1375,9 @@
     }
 
     @media (max-width: 480px) {
-        #aiView {
-            padding-bottom: 380px !important;
-        }
-
         .chat-window-container {
             height: 380px;
+            margin-top: 8px;
         }
 
         .chat-bubble {
@@ -1911,7 +1905,7 @@
         <div id="historyContainer"></div>
     </div>
 
-    <div id="aiView" style="display: none; padding-bottom: 420px;">
+    <div id="aiView" style="display: none;">
         <h2 style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 8px;">AI Trading Assistant</h2>
         <div class="card">
             <label class="label-text">GitHub Token (for GitHub Models API)</label>
@@ -3388,12 +3382,12 @@
                            .replace(/>/g, '&gt;');
         
         // Format code blocks (```...```)
-        formatted = formatted.replace(/```([a-z]*)\n?([\s\S]*?)```/g, function(match, lang, code) {
+        formatted = formatted.replace(/```([a-zA-Z0-9+-]*)\n?([\s\S]*?)```/g, function(match, lang, code) {
             return `<pre><code class="language-${lang}">${code.trim()}</code></pre>`;
         });
         
         // Format inline code (`...`)
-        formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+        formatted = formatted.replace(/`([^`]*)`/g, '<code>$1</code>');
         
         // Format bold (**...** or __...__)
         formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -3402,6 +3396,7 @@
         // Format bullet points (- ... or * ...)
         const lines = formatted.split('\n');
         let inList = false;
+        let listType = '';
         const processedLines = [];
         
         for (let i = 0; i < lines.length; i++) {
@@ -3410,29 +3405,36 @@
                 if (!inList) {
                     processedLines.push('<ul>');
                     inList = true;
+                    listType = 'ul';
                 }
                 processedLines.push('<li>' + line.replace(/^[\-\*]\s+/, '') + '</li>');
             } else if (line.match(/^\d+\.\s+/)) {
                 if (!inList) {
                     processedLines.push('<ol>');
                     inList = true;
+                    listType = 'ol';
+                } else if (listType === 'ul') {
+                    processedLines.push('</ul>');
+                    processedLines.push('<ol>');
+                    listType = 'ol';
                 }
                 processedLines.push('<li>' + line.replace(/^\d+\.\s+/, '') + '</li>');
             } else {
                 if (inList) {
-                    processedLines.push('</ul>');
+                    processedLines.push(listType === 'ol' ? '</ol>' : '</ul>');
                     inList = false;
+                    listType = '';
                 }
                 if (line.trim()) {
                     processedLines.push('<p>' + line + '</p>');
-                } else {
+                } else if (i > 0 && processedLines.length > 0 && processedLines[processedLines.length - 1] !== '<br>') {
                     processedLines.push('<br>');
                 }
             }
         }
         
         if (inList) {
-            processedLines.push('</ul>');
+            processedLines.push(listType === 'ol' ? '</ol>' : '</ul>');
         }
         
         return processedLines.join('\n');
@@ -3513,9 +3515,13 @@
             Thinking...
         `;
         
-        // Add loading indicator
-        const container = document.getElementById('chatMessagesContainer');
-        const loadingDiv = document.createElement('div');
+        // Add loading indicator - ensure unique ID or remove existing
+        let loadingDiv = document.getElementById('loading-message');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+        
+        loadingDiv = document.createElement('div');
         loadingDiv.className = 'chat-message assistant';
         loadingDiv.id = 'loading-message';
         loadingDiv.innerHTML = `
@@ -3603,7 +3609,15 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
                 loadingMsg.remove();
             }
             
-            addChatMessage('assistant', 'An error occurred while contacting the AI service. Make sure your GitHub token has access to GitHub Models and try again.\n\nError: ' + error.message);
+            // Sanitize error message
+            const safeErrorMessage = String(error && error.message ? error.message : 'Unknown error')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            
+            addChatMessage('assistant', 'An error occurred while contacting the AI service. Make sure your GitHub token has access to GitHub Models and try again.\n\nError: ' + safeErrorMessage);
         } finally {
             // Re-enable send button
             sendBtn.disabled = false;
