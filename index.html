@@ -3288,6 +3288,9 @@
             document.getElementById('githubToken').value = token;
             // Fetch models on load if token exists
             fetchAvailableModels(token);
+        } else {
+            // Initialize with fallback models if no token
+            populateModelPicker(null);
         }
     }
 
@@ -3307,14 +3310,72 @@
                 console.log('Available models:', modelNames);
                 showToast(`${models.length} models available: ${modelNames.substring(0, 100)}...`, 'info', 'Models Loaded', 8000);
                 localStorage.setItem('availableModels', JSON.stringify(models));
+                // Populate the model picker with fetched models
+                populateModelPicker(models);
             } else {
                 console.warn('Could not fetch models:', response.status);
                 showToast('Token saved, but could not fetch models list', 'warning', 'Limited Access');
+                // Use fallback models
+                populateModelPicker(null);
             }
         } catch (error) {
             console.error('Error fetching models:', error);
-            // Don't show error to user, token still works for chat
+            // Use fallback models
+            populateModelPicker(null);
         }
+    }
+
+    // Populate model picker dropdown with available models
+    function populateModelPicker(models) {
+        const modelSelect = document.getElementById('chatModelSelect');
+        if (!modelSelect) return;
+
+        // Save currently selected model
+        const currentSelection = modelSelect.value || localStorage.getItem('selectedModel') || CONFIG.AI_MODEL;
+
+        // Clear existing options
+        modelSelect.innerHTML = '';
+
+        if (models && models.length > 0) {
+            // Use fetched models from GitHub API
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name || model.id;
+                // Display friendly name if available, otherwise use ID
+                option.textContent = model.friendly_name || model.display_name || model.name || model.id;
+                modelSelect.appendChild(option);
+            });
+        } else {
+            // Fallback to hardcoded models if API fetch fails
+            const fallbackModels = [
+                { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
+                { id: 'gpt-4o', name: 'GPT-4o' },
+                { id: 'gpt-4', name: 'GPT-4' },
+                { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
+            ];
+            
+            fallbackModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = model.name;
+                modelSelect.appendChild(option);
+            });
+        }
+
+        // Restore previous selection if it exists in the new list
+        const options = Array.from(modelSelect.options);
+        const matchingOption = options.find(opt => opt.value === currentSelection);
+        if (matchingOption) {
+            modelSelect.value = currentSelection;
+        } else if (modelSelect.options.length > 0) {
+            // Default to first option if previous selection not found
+            modelSelect.selectedIndex = 0;
+        }
+
+        // Save selection when changed
+        modelSelect.addEventListener('change', function() {
+            localStorage.setItem('selectedModel', this.value);
+        });
     }
 
     // Chat window functions
@@ -3496,6 +3557,7 @@
         `;
         
         // Add loading indicator - ensure unique ID or remove existing
+        const container = document.getElementById('chatMessagesContainer');
         let loadingDiv = document.getElementById('loading-message');
         if (loadingDiv) {
             loadingDiv.remove();
@@ -3733,6 +3795,10 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
         if (clearScreenshotBtn) {
             clearScreenshotBtn.addEventListener('click', clearScreenshot);
         }
+        
+        // Initialize model picker with fallback models on page load
+        // Will be updated when token is loaded and models are fetched
+        populateModelPicker(null);
         
         // Set up ticker modal keyboard handling
         const tickerModalInput = document.getElementById('tickerModalInput');
