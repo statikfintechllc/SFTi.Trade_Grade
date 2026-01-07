@@ -1945,11 +1945,8 @@
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                             </svg>
                         </button>
-                        <select id="chatModelSelect" class="chat-model-select" title="Select AI model">
-                            <option value="gpt-4o-mini">GPT-4o Mini</option>
-                            <option value="gpt-4o">GPT-4o</option>
-                            <option value="gpt-4">GPT-4</option>
-                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <select id="chatModelSelect" class="chat-model-select" title="Select AI model" disabled>
+                            <option value="">Loading models...</option>
                         </select>
                         <button class="chat-icon-btn chat-send-icon-btn" onclick="askAI()" id="chatSendBtn" title="Send message" aria-label="Send message">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2020,7 +2017,6 @@
         MAX_GRADES_FOR_REVIEW: 10,
         MAX_GRADES_FOR_PATTERNS: 20,
         CHAT_MESSAGE_PREVIEW_LENGTH: 200,
-        AI_MODEL: 'gpt-4o-mini',
         AI_MAX_TOKENS: 1500,  // Increased for more detailed responses
         AI_TEMPERATURE: 0.7,
         API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions'
@@ -3289,8 +3285,8 @@
             // Fetch models on load if token exists
             fetchAvailableModels(token);
         } else {
-            // Initialize with fallback models if no token
-            populateModelPicker(null);
+            // No token available, clear model picker
+            clearModelPicker();
         }
     }
 
@@ -3308,59 +3304,58 @@
                 const models = await response.json();
                 const modelNames = models.map(m => m.name || m.id).join(', ');
                 console.log('Available models:', modelNames);
-                showToast(`${models.length} models available: ${modelNames.substring(0, 100)}...`, 'info', 'Models Loaded', 8000);
+                showToast(`${models.length} models available`, 'success', 'Models Loaded', 4000);
                 localStorage.setItem('availableModels', JSON.stringify(models));
                 // Populate the model picker with fetched models
                 populateModelPicker(models);
             } else {
-                console.warn('Could not fetch models:', response.status);
-                showToast('Token saved, but could not fetch models list', 'warning', 'Limited Access');
-                // Use fallback models
-                populateModelPicker(null);
+                const errorText = await response.text();
+                console.error('Failed to fetch models:', response.status, errorText);
+                showToast('Failed to fetch models from GitHub API. Please check your token permissions.', 'error', 'API Error');
+                // Clear model picker to indicate no models available
+                clearModelPicker();
             }
         } catch (error) {
             console.error('Error fetching models:', error);
-            // Use fallback models
-            populateModelPicker(null);
+            showToast('Network error while fetching models. Please check your connection and try again.', 'error', 'Connection Error');
+            // Clear model picker to indicate no models available
+            clearModelPicker();
         }
     }
 
-    // Populate model picker dropdown with available models
+    // Populate model picker dropdown with available models from GitHub API
     function populateModelPicker(models) {
         const modelSelect = document.getElementById('chatModelSelect');
         if (!modelSelect) return;
 
         // Save currently selected model
-        const currentSelection = modelSelect.value || localStorage.getItem('selectedModel') || CONFIG.AI_MODEL;
+        const currentSelection = modelSelect.value || localStorage.getItem('selectedModel');
 
         // Clear existing options
         modelSelect.innerHTML = '';
 
-        if (models && models.length > 0) {
-            // Use fetched models from GitHub API
-            models.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.name || model.id;
-                // Display friendly name if available, otherwise use ID
-                option.textContent = model.friendly_name || model.display_name || model.name || model.id;
-                modelSelect.appendChild(option);
-            });
-        } else {
-            // Fallback to hardcoded models if API fetch fails
-            const fallbackModels = [
-                { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
-                { id: 'gpt-4o', name: 'GPT-4o' },
-                { id: 'gpt-4', name: 'GPT-4' },
-                { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
-            ];
-            
-            fallbackModels.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.id;
-                option.textContent = model.name;
-                modelSelect.appendChild(option);
-            });
+        if (!models || models.length === 0) {
+            // No models available
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No models available';
+            option.disabled = true;
+            modelSelect.appendChild(option);
+            modelSelect.disabled = true;
+            return;
         }
+
+        // Enable the select if it was disabled
+        modelSelect.disabled = false;
+
+        // Use fetched models from GitHub API
+        models.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.name || model.id;
+            // Display friendly name if available, otherwise use ID
+            option.textContent = model.friendly_name || model.display_name || model.name || model.id;
+            modelSelect.appendChild(option);
+        });
 
         // Restore previous selection if it exists in the new list
         const options = Array.from(modelSelect.options);
@@ -3370,12 +3365,27 @@
         } else if (modelSelect.options.length > 0) {
             // Default to first option if previous selection not found
             modelSelect.selectedIndex = 0;
+            localStorage.setItem('selectedModel', modelSelect.value);
         }
 
         // Save selection when changed
         modelSelect.addEventListener('change', function() {
             localStorage.setItem('selectedModel', this.value);
         });
+    }
+
+    // Clear model picker when models cannot be fetched
+    function clearModelPicker() {
+        const modelSelect = document.getElementById('chatModelSelect');
+        if (!modelSelect) return;
+
+        modelSelect.innerHTML = '';
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Unable to load models';
+        option.disabled = true;
+        modelSelect.appendChild(option);
+        modelSelect.disabled = true;
     }
 
     // Chat window functions
@@ -3576,7 +3586,24 @@
         container.scrollTop = container.scrollHeight;
 
         try {
-            const selectedModel = document.getElementById('chatModelSelect').value || CONFIG.AI_MODEL;
+            const selectedModel = document.getElementById('chatModelSelect').value;
+            
+            if (!selectedModel) {
+                showToast('No AI model selected. Please save your GitHub token first to load available models.', 'warning', 'No Model Available');
+                // Remove loading indicator
+                if (loadingDiv && loadingDiv.parentNode) {
+                    loadingDiv.remove();
+                }
+                // Re-enable send button
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                `;
+                return;
+            }
             
             const response = await fetch(CONFIG.API_ENDPOINT, {
                 method: 'POST',
@@ -3796,9 +3823,9 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
             clearScreenshotBtn.addEventListener('click', clearScreenshot);
         }
         
-        // Initialize model picker with fallback models on page load
-        // Will be updated when token is loaded and models are fetched
-        populateModelPicker(null);
+        // Initialize model picker state on page load
+        // Will be populated when token is loaded and models are fetched
+        clearModelPicker();
         
         // Set up ticker modal keyboard handling
         const tickerModalInput = document.getElementById('tickerModalInput');
