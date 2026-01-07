@@ -2692,11 +2692,11 @@
                     `}
                 </div>
                 <div class="history-footer">
-                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}" onclick="event.stopPropagation();">
+                    <button class="delete-btn history-analyze-btn" style="flex: 1;" data-index="${index}">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/><circle cx="7.5" cy="14.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="14.5" r="1.5" fill="currentColor"/></svg>
                         Analyze
                     </button>
-                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}" onclick="event.stopPropagation();">
+                    <button class="delete-btn history-delete-btn" style="flex: 1;" data-index="${index}">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Delete
                     </button>
@@ -2713,11 +2713,13 @@
             const deleteButton = event.target.closest('button.history-delete-btn');
 
             if (analyzeButton && historyContainer.contains(analyzeButton)) {
+                event.stopPropagation();
                 const index = parseInt(analyzeButton.getAttribute('data-index'), 10);
                 if (!Number.isNaN(index)) {
                     analyzeGradeWithAI(index);
                 }
             } else if (deleteButton && historyContainer.contains(deleteButton)) {
+                event.stopPropagation();
                 const index = parseInt(deleteButton.getAttribute('data-index'), 10);
                 if (!Number.isNaN(index)) {
                     deleteGrade(index);
