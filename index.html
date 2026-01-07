@@ -3332,9 +3332,6 @@
 
         // Save currently selected model
         const currentSelection = modelSelect.value || localStorage.getItem('selectedModel');
-
-        // Clear existing options
-        modelSelect.innerHTML = '';
         
         // Remove any existing change listeners by cloning the element
         const newModelSelect = modelSelect.cloneNode(false);
@@ -3592,7 +3589,26 @@
         container.scrollTop = container.scrollHeight;
 
         try {
-            const selectedModel = document.getElementById('chatModelSelect').value;
+            const modelSelectElement = document.getElementById('chatModelSelect');
+            
+            if (!modelSelectElement) {
+                showToast('Model selector not found. Please refresh the page.', 'error', 'UI Error');
+                // Remove loading indicator
+                if (loadingDiv && loadingDiv.parentNode) {
+                    loadingDiv.remove();
+                }
+                // Re-enable send button
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                `;
+                return;
+            }
+            
+            const selectedModel = modelSelectElement.value;
             
             if (!selectedModel) {
                 showToast('No AI model selected. Please save your GitHub token first to load available models.', 'warning', 'No Model Available');
