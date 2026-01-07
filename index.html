@@ -1946,7 +1946,7 @@
                             </svg>
                         </button>
                         <select id="chatModelSelect" class="chat-model-select" title="Select AI model" disabled>
-                            <option value="">Loading models...</option>
+                            <option value="">Save GitHub token to load models</option>
                         </select>
                         <button class="chat-icon-btn chat-send-icon-btn" onclick="askAI()" id="chatSendBtn" title="Send message" aria-label="Send message">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3302,9 +3302,11 @@
 
             if (response.ok) {
                 const models = await response.json();
-                const modelNames = models.map(m => m.name || m.id).join(', ');
-                console.log('Available models:', modelNames);
-                showToast(`${models.length} models available`, 'success', 'Models Loaded', 4000);
+                console.log('Available models:', models.length);
+                // Show the first few model names in the toast
+                const modelNamesToShow = models.slice(0, 3).map(m => m.friendly_name || m.display_name || m.name || m.id);
+                const moreText = models.length > 3 ? ` and ${models.length - 3} more` : '';
+                showToast(`Models: ${modelNamesToShow.join(', ')}${moreText}`, 'success', `${models.length} Models Loaded`, 5000);
                 localStorage.setItem('availableModels', JSON.stringify(models));
                 // Populate the model picker with fetched models
                 populateModelPicker(models);
@@ -3333,6 +3335,10 @@
 
         // Clear existing options
         modelSelect.innerHTML = '';
+        
+        // Remove any existing change listeners by cloning the element
+        const newModelSelect = modelSelect.cloneNode(false);
+        modelSelect.parentNode.replaceChild(newModelSelect, modelSelect);
 
         if (!models || models.length === 0) {
             // No models available
@@ -3340,13 +3346,13 @@
             option.value = '';
             option.textContent = 'No models available';
             option.disabled = true;
-            modelSelect.appendChild(option);
-            modelSelect.disabled = true;
+            newModelSelect.appendChild(option);
+            newModelSelect.disabled = true;
             return;
         }
 
         // Enable the select if it was disabled
-        modelSelect.disabled = false;
+        newModelSelect.disabled = false;
 
         // Use fetched models from GitHub API
         models.forEach(model => {
@@ -3354,22 +3360,22 @@
             option.value = model.name || model.id;
             // Display friendly name if available, otherwise use ID
             option.textContent = model.friendly_name || model.display_name || model.name || model.id;
-            modelSelect.appendChild(option);
+            newModelSelect.appendChild(option);
         });
 
         // Restore previous selection if it exists in the new list
-        const options = Array.from(modelSelect.options);
+        const options = Array.from(newModelSelect.options);
         const matchingOption = options.find(opt => opt.value === currentSelection);
         if (matchingOption) {
-            modelSelect.value = currentSelection;
-        } else if (modelSelect.options.length > 0) {
+            newModelSelect.value = currentSelection;
+        } else if (newModelSelect.options.length > 0) {
             // Default to first option if previous selection not found
-            modelSelect.selectedIndex = 0;
-            localStorage.setItem('selectedModel', modelSelect.value);
+            newModelSelect.selectedIndex = 0;
+            localStorage.setItem('selectedModel', newModelSelect.value);
         }
 
-        // Save selection when changed
-        modelSelect.addEventListener('change', function() {
+        // Save selection when changed (single listener)
+        newModelSelect.addEventListener('change', function() {
             localStorage.setItem('selectedModel', this.value);
         });
     }
