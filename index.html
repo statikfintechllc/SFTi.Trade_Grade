@@ -3452,6 +3452,12 @@
         const modelSelect = document.getElementById('chatModelSelect');
         if (!modelSelect) return;
         
+        // Constants for width calculation
+        const PADDING_AND_ARROW_SPACE = 40; // Extra space for padding and dropdown arrow
+        const MIN_WIDTH = 150; // Minimum width in pixels
+        const MAX_WIDTH_PERCENTAGE = 0.9; // Max width as percentage of parent
+        const FALLBACK_MAX_WIDTH = 400; // Fallback max width if no parent
+        
         // Create a temporary span to measure text width
         const tempSpan = document.createElement('span');
         tempSpan.style.visibility = 'hidden';
@@ -3466,17 +3472,23 @@
         const selectedOption = modelSelect.options[modelSelect.selectedIndex];
         tempSpan.textContent = selectedOption ? selectedOption.textContent : '';
         
-        document.body.appendChild(tempSpan);
-        
-        // Calculate width with some padding for dropdown arrow and borders
-        const textWidth = tempSpan.offsetWidth;
-        const paddingAndArrow = 40; // Extra space for padding and dropdown arrow
-        const newWidth = Math.max(textWidth + paddingAndArrow, 150); // Minimum 150px
-        const maxWidth = modelSelect.parentElement ? modelSelect.parentElement.offsetWidth * 0.9 : 400;
-        
-        modelSelect.style.width = Math.min(newWidth, maxWidth) + 'px';
-        
-        document.body.removeChild(tempSpan);
+        try {
+            document.body.appendChild(tempSpan);
+            
+            // Calculate width with some padding for dropdown arrow and borders
+            const textWidth = tempSpan.offsetWidth;
+            const newWidth = Math.max(textWidth + PADDING_AND_ARROW_SPACE, MIN_WIDTH);
+            const maxWidth = modelSelect.parentElement 
+                ? modelSelect.parentElement.offsetWidth * MAX_WIDTH_PERCENTAGE 
+                : FALLBACK_MAX_WIDTH;
+            
+            modelSelect.style.width = Math.min(newWidth, maxWidth) + 'px';
+        } finally {
+            // Always remove the temporary element
+            if (tempSpan.parentNode) {
+                document.body.removeChild(tempSpan);
+            }
+        }
     }
 
     // Clear model picker when models cannot be fetched
