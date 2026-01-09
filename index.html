@@ -2838,13 +2838,14 @@
     function hideGithubTokenModal() {
         const modal = document.getElementById('githubTokenModal');
         modal.classList.remove('active');
-        document.getElementById('githubTokenInput').value = '';
+        // Don't clear the input - preserve it in case user reopens
     }
 
     async function saveGithubToken() {
         const token = document.getElementById('githubTokenInput').value.trim();
         if (token) {
             localStorage.setItem('githubToken', token);
+            document.getElementById('githubTokenInput').value = ''; // Clear for security after save
             hideGithubTokenModal();
             showToast('Token saved, fetching available models...', 'success', 'Token Saved');
             await fetchAvailableModels(token);
