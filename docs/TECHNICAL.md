@@ -48,17 +48,19 @@ The entire application lives in `index.html`:
 1. **Lines 1-1400:** CSS Styles
    - Base styles
    - Component styles
-   - Chat window styles
+   - Chat window styles (model selector bar, messages, input)
+   - Modal styles (token access cards)
    - Responsive design
    - Animations
 
-2. **Lines 1400-1700:** HTML Structure
+2. **Lines 1400-1900:** HTML Structure
    - Header and navigation
    - View containers (Grade, Tracker, Finalize, History, AI)
-   - Modals
-   - Chat window
+   - Token access cards (GitHub and API modals)
+   - Modals (ticker, trade details, finalize, image viewer, GitHub token, API token)
+   - Chat window (model selector bar, messages, input)
 
-3. **Lines 1700-3700:** JavaScript
+3. **Lines 1900-3900:** JavaScript
    - Configuration
    - State management
    - View switching
@@ -67,6 +69,8 @@ The entire application lives in `index.html`:
    - History management
    - AI assistant
    - Chat interface
+   - Modal management (token access)
+   - Model selector dynamic resizing
    - Utility functions
 
 ### Component Breakdown
@@ -76,13 +80,14 @@ The entire application lives in `index.html`:
 - Trade Plan (entry/stop/target)
 - Finalize Trades (outcome tracking)
 - History (search/filter)
-- AI Assistant (chat interface)
+- AI Assistant (chat interface with floating model selector)
 
 **Shared Components:**
 - Header/Navigation
 - Side Menu
 - Toast Notifications
-- Modals (ticker, trade details, finalize, image viewer)
+- Modals (ticker, trade details, finalize, image viewer, GitHub token, API token)
+- Token Access Cards (GitHub and API)
 
 ---
 
@@ -246,6 +251,33 @@ function addChatMessage(role, content)
 // Applies formatting
 // Scrolls to bottom
 // Updates history
+
+// Token modal functions
+function showGithubTokenModal()
+// Opens GitHub token input modal
+// Pre-fills existing token if available
+// Auto-focuses input field
+
+function hideGithubTokenModal()
+// Closes modal
+// Preserves input on cancel
+
+function saveGithubToken()
+// Saves token to localStorage
+// Fetches available models
+// Clears input for security
+
+function showApiTokenModal()
+// Opens API token modal (placeholder)
+
+function hideApiTokenModal()
+// Closes API modal
+
+// Model selector resizing
+function resizeModelSelector()
+// Dynamically adjusts dropdown width
+// Based on selected model name length
+// Maintains responsive max-width
 ```
 
 ---
@@ -287,6 +319,20 @@ linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%)  
 - Subtle borders
 - Hover animations
 - Inner glow on hover
+- Clickable cards with pointer cursor
+
+**Token Access Cards:**
+- Side-by-side flex layout
+- SVG icons (GitHub, API)
+- Modal triggers on click
+- Maintains consistent card height
+
+**Modals:**
+- Centered overlay with backdrop blur
+- Glass morphism container
+- Smooth slide-in animation
+- Red accent shimmer effect
+- Click-outside-to-close
 
 **Buttons:**
 - Gradient backgrounds
@@ -307,18 +353,27 @@ linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%)  
 ```css
 @media (max-width: 480px) {
   /* Mobile optimizations */
-  .chat-window-container { height: 350px; }
+  .chat-window-container { height: 450px; }
+  .chat-model-bar { padding: 6px 8px; }
+  .chat-model-select { font-size: 11px; max-width: 95%; }
   .chat-bubble { max-width: 85%; font-size: 12px; }
-  .chat-input-bar { padding: 10px; }
+  .chat-input-bar { padding: 8px; }
 }
 ```
 
 **Mobile Optimizations:**
 - Reduced chat window height
+- Compact model selector
 - Larger tap targets (44px minimum)
 - Simplified layouts
 - Optimized font sizes
 - Touch-friendly controls
+
+**Chat Window:**
+- Model selector sticky at top
+- Auto-resize based on model name
+- Messages scroll independently
+- Input bar fixed at bottom
 
 ---
 
