@@ -1324,6 +1324,169 @@
         cursor: not-allowed;
     }
 
+    /* Web Search Toggle Styles */
+    .web-search-toggle {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(50, 50, 50, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+    }
+
+    .web-search-toggle:hover {
+        background: rgba(60, 60, 60, 0.8);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .web-search-toggle.active {
+        background: rgba(0, 150, 136, 0.2);
+        border-color: rgba(0, 150, 136, 0.5);
+    }
+
+    .web-search-toggle.active .web-search-icon {
+        color: #00bfa5;
+    }
+
+    .web-search-toggle.active .web-search-label {
+        color: #00bfa5;
+    }
+
+    .web-search-icon {
+        width: 16px;
+        height: 16px;
+        color: #888;
+        transition: color 0.3s ease;
+    }
+
+    .web-search-label {
+        font-size: 11px;
+        color: #888;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    /* Live Status Indicator Styles */
+    .chat-status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        animation: statusFadeIn 0.3s ease-out;
+    }
+
+    @keyframes statusFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .status-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #00bfa5;
+        border-radius: 50%;
+        animation: statusSpin 0.8s linear infinite;
+    }
+
+    @keyframes statusSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    .status-text {
+        font-size: 12px;
+        color: #00bfa5;
+        font-weight: 500;
+    }
+
+    .status-searching .status-spinner {
+        border-top-color: #00bfa5;
+    }
+
+    .status-searching .status-text {
+        color: #00bfa5;
+    }
+
+    .status-crawling .status-spinner {
+        border-top-color: #ff9800;
+    }
+
+    .status-crawling .status-text {
+        color: #ff9800;
+    }
+
+    .status-processing .status-spinner {
+        border-top-color: #9c27b0;
+    }
+
+    .status-processing .status-text {
+        color: #9c27b0;
+    }
+
+    .status-complete .status-spinner {
+        animation: none;
+        border-color: #4caf50;
+        background: #4caf50;
+    }
+
+    .status-complete .status-text {
+        color: #4caf50;
+    }
+
+    /* Citation Styles */
+    .chat-citation {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 6px;
+        background: rgba(0, 150, 136, 0.15);
+        border: 1px solid rgba(0, 150, 136, 0.3);
+        border-radius: 4px;
+        font-size: 10px;
+        color: #00bfa5;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        margin: 2px 4px 2px 0;
+    }
+
+    .chat-citation:hover {
+        background: rgba(0, 150, 136, 0.25);
+        border-color: rgba(0, 150, 136, 0.5);
+    }
+
+    .chat-citations-section {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-citations-label {
+        font-size: 10px;
+        color: #888;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .chat-citations-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
     .chat-model-select {
         background: rgba(26, 26, 26, 0.9);
         border: 1px solid rgba(204, 0, 0, 0.3);
@@ -1924,20 +2087,28 @@
         
         <!-- Token Access Cards - Two side by side -->
         <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <!-- GitHub Token Card -->
-            <div class="card" style="flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 24px 12px;" onclick="showGithubTokenModal()" aria-label="Configure GitHub token">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style="color: #e0e0e0;">
+            <!-- GitHub Token Card - Now with real-time status -->
+            <div class="card" style="flex: 1; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 12px; min-height: 100px;" onclick="showGithubTokenModal()" aria-label="Configure GitHub token">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: #e0e0e0; margin-bottom: 8px;">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
+                <div id="githubTokenStatus" style="text-align: center;">
+                    <div style="font-size: 11px; font-weight: 600; color: #888;">GitHub Token</div>
+                    <div id="githubTokenStatusText" style="font-size: 10px; color: #666; margin-top: 2px;">Click to configure</div>
+                </div>
             </div>
             
-            <!-- API Token Card -->
-            <div class="card" style="flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 24px 12px;" onclick="showApiTokenModal()" aria-label="Configure API token">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #e0e0e0;">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    <circle cx="12" cy="14" r="2"></circle>
+            <!-- Model Status Card - Shows real-time model feedback -->
+            <div class="card" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 12px; min-height: 100px;" aria-label="Model status">
+                <svg id="modelStatusIcon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #888; margin-bottom: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
+                <div id="modelStatus" style="text-align: center;">
+                    <div style="font-size: 11px; font-weight: 600; color: #888;">Models</div>
+                    <div id="modelStatusText" style="font-size: 10px; color: #666; margin-top: 2px;">Not loaded</div>
+                </div>
             </div>
         </div>
         
@@ -1978,7 +2149,21 @@
                 </div>
             </div>
             <div class="chat-input-bar">
+                <!-- Live Status Indicator - shown during web search operations -->
+                <div id="chatStatusIndicator" class="chat-status-indicator" style="display: none;">
+                    <div class="status-spinner"></div>
+                    <span class="status-text">Thinking...</span>
+                </div>
                 <div class="chat-input-wrapper">
+                    <!-- Web Search Toggle -->
+                    <div id="webSearchToggle" class="web-search-toggle" onclick="toggleWebSearch()" title="Toggle web search" aria-label="Toggle web search">
+                        <svg class="web-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                        <span class="web-search-label">Web</span>
+                    </div>
                     <textarea 
                         id="aiPrompt" 
                         class="chat-textarea" 
@@ -2089,8 +2274,17 @@
         CHAT_MESSAGE_PREVIEW_LENGTH: 200,
         AI_MAX_TOKENS: 1500,  // Increased for more detailed responses
         AI_TEMPERATURE: 0.7,
-        API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions'
+        API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions',
+        // Web Search Configuration
+        WEB_SEARCH_ENABLED: false,
+        WEB_SEARCH_MAX_ITERATIONS: 5,  // Maximum tool calling iterations
+        WEB_SEARCH_MAX_RESULTS: 5,     // Max search results to return
+        CORS_PROXY: 'https://api.allorigins.win/raw?url='  // CORS proxy for web fetching
     };
+
+    // Web Search State
+    let webSearchEnabled = false;
+    let currentSearchAbortController = null;
 
     const state = {
         pattern: 10,
@@ -2847,6 +3041,11 @@
             localStorage.setItem('githubToken', token);
             document.getElementById('githubTokenInput').value = ''; // Clear for security after save
             hideGithubTokenModal();
+            
+            // Update status displays
+            updateGithubTokenStatus(true, 'Token configured');
+            updateModelStatus('loading', 'Loading models...', '#ff9800');
+            
             showToast('Token saved, fetching available models...', 'success', 'Token Saved');
             await fetchAvailableModels(token);
         } else {
@@ -3388,18 +3587,49 @@
         // Token saving is handled by saveGithubToken in the modal
     }
 
+    // Update model status display
+    function updateModelStatus(status, message, iconColor) {
+        const statusText = document.getElementById('modelStatusText');
+        const statusIcon = document.getElementById('modelStatusIcon');
+        
+        if (statusText) {
+            statusText.textContent = message;
+            statusText.style.color = iconColor || '#666';
+        }
+        
+        if (statusIcon) {
+            statusIcon.style.color = iconColor || '#888';
+        }
+    }
+
+    // Update GitHub token status display
+    function updateGithubTokenStatus(hasToken, message) {
+        const statusText = document.getElementById('githubTokenStatusText');
+        
+        if (statusText) {
+            statusText.textContent = message || (hasToken ? 'Token configured' : 'Click to configure');
+            statusText.style.color = hasToken ? '#00bfa5' : '#666';
+        }
+    }
+
     function loadToken() {
         const token = localStorage.getItem('githubToken');
         if (token) {
+            // Update token status
+            updateGithubTokenStatus(true, 'Token configured');
             // Fetch models on load if token exists
             fetchAvailableModels(token);
         } else {
             // No token available, clear model picker
+            updateGithubTokenStatus(false);
+            updateModelStatus('none', 'Configure token first', '#666');
             clearModelPicker();
         }
     }
 
     async function fetchAvailableModels(token) {
+        updateModelStatus('loading', 'Loading models...', '#ff9800');
+        
         try {
             // GitHub Models are accessed via Azure AI inference endpoint
             // The models list is publicly available and doesn't require authentication
@@ -3419,6 +3649,7 @@
                 
                 if (chatModels.length === 0) {
                     showToast('No chat models available at this time.', 'warning', 'No Models');
+                    updateModelStatus('error', 'No models available', '#ff4444');
                     clearModelPicker();
                     return;
                 }
@@ -3428,6 +3659,9 @@
                 const moreText = chatModels.length > 3 ? ` and ${chatModels.length - 3} more` : '';
                 showToast(`Models: ${modelNamesToShow.join(', ')}${moreText}`, 'success', `${chatModels.length} Models Loaded`, 5000);
                 
+                // Update status to show models are ready
+                updateModelStatus('ready', `${chatModels.length} models ready`, '#00bfa5');
+                
                 localStorage.setItem('availableModels', JSON.stringify(chatModels));
                 // Populate the model picker with fetched models
                 populateModelPicker(chatModels);
@@ -3435,12 +3669,14 @@
                 const errorText = await response.text();
                 console.error('Failed to fetch models:', response.status, errorText);
                 showToast('Failed to fetch models from GitHub Models service.', 'error', 'API Error');
+                updateModelStatus('error', 'Failed to load', '#ff4444');
                 // Clear model picker to indicate no models available
                 clearModelPicker();
             }
         } catch (error) {
             console.error('Error fetching models:', error);
             showToast('Network error while fetching models. Please check your connection and try again.', 'error', 'Connection Error');
+            updateModelStatus('error', 'Network error', '#ff4444');
             // Clear model picker to indicate no models available
             clearModelPicker();
         }
@@ -3742,6 +3978,405 @@
         `;
     }
 
+    // =============================================
+    // Web Search Toggle and Status Functions
+    // =============================================
+
+    function toggleWebSearch() {
+        webSearchEnabled = !webSearchEnabled;
+        const toggle = document.getElementById('webSearchToggle');
+        if (toggle) {
+            if (webSearchEnabled) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+        }
+        
+        // Update placeholder text based on web search state
+        const textarea = document.getElementById('aiPrompt');
+        if (textarea) {
+            textarea.placeholder = webSearchEnabled 
+                ? 'Search the web or ask about markets...' 
+                : 'Talk about Markets...';
+        }
+    }
+
+    function showChatStatus(statusType, message) {
+        const statusIndicator = document.getElementById('chatStatusIndicator');
+        if (!statusIndicator) return;
+        
+        // Remove all status classes
+        statusIndicator.classList.remove('status-searching', 'status-crawling', 'status-processing', 'status-complete');
+        
+        // Add the appropriate status class
+        statusIndicator.classList.add(`status-${statusType}`);
+        
+        // Update the status text
+        const statusText = statusIndicator.querySelector('.status-text');
+        if (statusText) {
+            statusText.textContent = message;
+        }
+        
+        // Show the indicator
+        statusIndicator.style.display = 'flex';
+    }
+
+    function hideChatStatus() {
+        const statusIndicator = document.getElementById('chatStatusIndicator');
+        if (statusIndicator) {
+            statusIndicator.style.display = 'none';
+        }
+    }
+
+    // =============================================
+    // Web Search Tool Definitions
+    // =============================================
+
+    const webSearchTools = [
+        {
+            type: 'function',
+            function: {
+                name: 'web_search',
+                description: 'Search the web for current information, news, stock prices, market data, or any other real-time information. Use this when the user asks about current events, recent news, live prices, or anything that requires up-to-date information.',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        query: {
+                            type: 'string',
+                            description: 'The search query to find information on the web'
+                        }
+                    },
+                    required: ['query']
+                }
+            }
+        },
+        {
+            type: 'function',
+            function: {
+                name: 'fetch_url',
+                description: 'Fetch and read the content of a specific URL. Use this to get detailed information from a webpage when you have a specific URL to read.',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        url: {
+                            type: 'string',
+                            description: 'The full URL to fetch content from (must start with http:// or https://)'
+                        }
+                    },
+                    required: ['url']
+                }
+            }
+        }
+    ];
+
+    // =============================================
+    // Web Search Implementation Functions
+    // =============================================
+
+    /**
+     * Validates if a string is a valid URL
+     */
+    function isValidUrl(string) {
+        try {
+            const url = new URL(string);
+            return url.protocol === 'http:' || url.protocol === 'https:';
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /**
+     * Performs a web search using DuckDuckGo's HTML interface (CORS-friendly)
+     */
+    async function performWebSearch(query) {
+        showChatStatus('searching', `Searching: "${query}"`);
+        
+        try {
+            // Use DuckDuckGo's instant answer API (JSON, more CORS-friendly)
+            const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+            
+            const response = await fetch(searchUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Search failed: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Build results from DuckDuckGo instant answers
+            const results = [];
+            
+            // Add abstract if available
+            if (data.Abstract) {
+                results.push({
+                    title: data.Heading || 'Summary',
+                    snippet: data.Abstract,
+                    url: data.AbstractURL || data.AbstractSource
+                });
+            }
+            
+            // Add related topics
+            if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+                for (const topic of data.RelatedTopics.slice(0, CONFIG.WEB_SEARCH_MAX_RESULTS - 1)) {
+                    if (topic.Text && topic.FirstURL) {
+                        results.push({
+                            title: topic.Text.split(' - ')[0] || 'Related',
+                            snippet: topic.Text,
+                            url: topic.FirstURL
+                        });
+                    } else if (topic.Topics) {
+                        // Handle nested topics
+                        for (const subtopic of topic.Topics.slice(0, 2)) {
+                            if (subtopic.Text && subtopic.FirstURL) {
+                                results.push({
+                                    title: subtopic.Text.split(' - ')[0] || 'Related',
+                                    snippet: subtopic.Text,
+                                    url: subtopic.FirstURL
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // If no results from instant answers, return a message indicating we need to try fetching directly
+            if (results.length === 0) {
+                return {
+                    success: true,
+                    query: query,
+                    results: [],
+                    message: `No instant results found for "${query}". The AI should provide information from its knowledge or suggest specific URLs to fetch.`
+                };
+            }
+            
+            return {
+                success: true,
+                query: query,
+                results: results.slice(0, CONFIG.WEB_SEARCH_MAX_RESULTS),
+                resultCount: results.length
+            };
+            
+        } catch (error) {
+            console.error('Web search error:', error);
+            return {
+                success: false,
+                query: query,
+                error: error.message || 'Search failed',
+                message: 'Unable to perform web search. Please try again or ask a question that can be answered from AI knowledge.'
+            };
+        }
+    }
+
+    /**
+     * Fetches and parses content from a URL
+     */
+    async function fetchUrlContent(url) {
+        showChatStatus('crawling', `Fetching: ${new URL(url).hostname}`);
+        
+        if (!isValidUrl(url)) {
+            return {
+                success: false,
+                url: url,
+                error: 'Invalid URL format'
+            };
+        }
+        
+        try {
+            // Use CORS proxy for fetching
+            const proxyUrl = CONFIG.CORS_PROXY + encodeURIComponent(url);
+            
+            const response = await fetch(proxyUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch: ${response.status}`);
+            }
+            
+            const html = await response.text();
+            
+            // Parse and extract main content
+            const content = extractMainContent(html, url);
+            
+            return {
+                success: true,
+                url: url,
+                title: content.title,
+                content: content.text,
+                wordCount: content.wordCount
+            };
+            
+        } catch (error) {
+            console.error('URL fetch error:', error);
+            return {
+                success: false,
+                url: url,
+                error: error.message || 'Failed to fetch URL'
+            };
+        }
+    }
+
+    /**
+     * Extracts main content from HTML
+     */
+    function extractMainContent(html, sourceUrl) {
+        // Create a temporary DOM parser
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Get title
+        const title = doc.querySelector('title')?.textContent || 
+                     doc.querySelector('h1')?.textContent || 
+                     'Untitled';
+        
+        // Remove script, style, nav, footer, header, aside elements
+        const elementsToRemove = doc.querySelectorAll('script, style, nav, footer, header, aside, iframe, noscript, .ads, .advertisement, .sidebar, .menu, .navigation');
+        elementsToRemove.forEach(el => el.remove());
+        
+        // Try to find main content areas
+        let mainContent = doc.querySelector('main, article, .content, .post, .article-content, #content, #main');
+        
+        if (!mainContent) {
+            mainContent = doc.body;
+        }
+        
+        // Extract text content
+        let text = mainContent?.textContent || '';
+        
+        // Clean up the text
+        text = text
+            .replace(/\s+/g, ' ')           // Normalize whitespace
+            .replace(/\n\s*\n/g, '\n\n')    // Normalize line breaks
+            .trim();
+        
+        // Truncate if too long (keep first 4000 chars to stay within token limits)
+        const maxLength = 4000;
+        if (text.length > maxLength) {
+            text = text.substring(0, maxLength) + '...[content truncated]';
+        }
+        
+        return {
+            title: title.trim(),
+            text: text,
+            wordCount: text.split(/\s+/).length
+        };
+    }
+
+    /**
+     * Executes a tool call and returns the result
+     */
+    async function executeToolCall(toolCall) {
+        const functionName = toolCall.function.name;
+        let args;
+        
+        try {
+            args = JSON.parse(toolCall.function.arguments);
+        } catch (e) {
+            return {
+                tool_call_id: toolCall.id,
+                role: 'tool',
+                name: functionName,
+                content: JSON.stringify({ error: 'Invalid function arguments' })
+            };
+        }
+        
+        let result;
+        
+        switch (functionName) {
+            case 'web_search':
+                result = await performWebSearch(args.query);
+                break;
+            case 'fetch_url':
+                result = await fetchUrlContent(args.url);
+                break;
+            default:
+                result = { error: `Unknown function: ${functionName}` };
+        }
+        
+        return {
+            tool_call_id: toolCall.id,
+            role: 'tool',
+            name: functionName,
+            content: JSON.stringify(result)
+        };
+    }
+
+    /**
+     * Formats citations from tool results
+     */
+    function formatCitations(toolResults) {
+        const citations = [];
+        
+        for (const result of toolResults) {
+            try {
+                const data = JSON.parse(result.content);
+                
+                if (result.name === 'web_search' && data.results) {
+                    for (const item of data.results) {
+                        if (item.url && !citations.some(c => c.url === item.url)) {
+                            citations.push({
+                                title: item.title || new URL(item.url).hostname,
+                                url: item.url
+                            });
+                        }
+                    }
+                } else if (result.name === 'fetch_url' && data.url) {
+                    if (!citations.some(c => c.url === data.url)) {
+                        citations.push({
+                            title: data.title || new URL(data.url).hostname,
+                            url: data.url
+                        });
+                    }
+                }
+            } catch (e) {
+                // Skip invalid results
+            }
+        }
+        
+        return citations;
+    }
+
+    /**
+     * Adds citations section to message content
+     */
+    function addCitationsToMessage(content, citations) {
+        if (!citations || citations.length === 0) return content;
+        
+        let citationsHtml = '\n\n<div class="chat-citations-section">';
+        citationsHtml += '<div class="chat-citations-label">Sources</div>';
+        citationsHtml += '<div class="chat-citations-list">';
+        
+        for (const citation of citations) {
+            const safeTitle = escapeHtml(citation.title);
+            const safeUrl = encodeURI(citation.url);
+            citationsHtml += `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="chat-citation">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                ${safeTitle}
+            </a>`;
+        }
+        
+        citationsHtml += '</div></div>';
+        
+        return content + citationsHtml;
+    }
+
+    // =============================================
+    // Main AI Request Function with Tool Calling
+    // =============================================
+
     async function askAI() {
         const token = localStorage.getItem('githubToken');
         const prompt = document.getElementById('aiPrompt').value.trim();
@@ -3771,6 +4406,11 @@
         const sendBtn = document.getElementById('chatSendBtn');
         setSendButtonLoading(sendBtn);
         
+        // Show initial status
+        if (webSearchEnabled) {
+            showChatStatus('processing', 'Analyzing your request...');
+        }
+        
         // Add loading indicator - ensure unique ID or remove existing
         const container = document.getElementById('chatMessagesContainer');
         let loadingDiv = document.getElementById('loading-message');
@@ -3784,7 +4424,7 @@
         loadingDiv.innerHTML = `
             <div class="chat-avatar">AI</div>
             <div class="chat-bubble">
-                <span style="opacity: 0.7;">Thinking...</span>
+                <span style="opacity: 0.7;">${webSearchEnabled ? 'Searching...' : 'Thinking...'}</span>
             </div>
         `;
         container.appendChild(loadingDiv);
@@ -3795,12 +4435,11 @@
             
             if (!modelSelectElement) {
                 showToast('Model selector not found. Please refresh the page.', 'error', 'UI Error');
-                // Remove loading indicator
                 if (loadingDiv && loadingDiv.parentNode) {
                     loadingDiv.remove();
                 }
-                // Re-enable send button
                 restoreSendButton(sendBtn);
+                hideChatStatus();
                 return;
             }
             
@@ -3808,27 +4447,51 @@
             
             if (!selectedModel) {
                 showToast('No AI model selected. Please save your GitHub token first to load available models.', 'warning', 'No Model Available');
-                // Remove loading indicator
                 if (loadingDiv && loadingDiv.parentNode) {
                     loadingDiv.remove();
                 }
-                // Re-enable send button
                 restoreSendButton(sendBtn);
+                hideChatStatus();
                 return;
             }
             
-            const response = await fetch(CONFIG.API_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    model: selectedModel,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `You are an expert trading analyst with deep knowledge of technical analysis, fundamental analysis, and market dynamics. 
+            // Build system prompt
+            const systemPrompt = webSearchEnabled 
+                ? `You are an expert trading analyst with deep knowledge of technical analysis, fundamental analysis, and market dynamics. You have access to web search tools to find current information.
+
+Your expertise includes:
+- Technical patterns (breakouts, reversals, support/resistance)
+- Risk management and position sizing
+- Entry/exit timing and strategy development
+- Market psychology and sentiment analysis
+- Current market conditions and sector rotation
+- Real-time news impact on stock movements
+
+IMPORTANT: You have web search capabilities enabled. When the user asks about:
+- Current stock prices or market data
+- Recent news or events
+- Live market conditions
+- Any time-sensitive information
+
+Use the web_search tool to find current information. Use fetch_url if you need to read a specific webpage in detail.
+
+When analyzing trades:
+1. Be specific and actionable - provide exact levels, percentages, and concrete steps
+2. Consider current market environment and sentiment
+3. Reference relevant technical indicators and patterns
+4. Suggest specific risk management rules
+5. Provide both bullish and bearish scenarios
+6. Keep responses detailed but organized with clear sections
+
+Format your responses with:
+- Key findings at the top
+- Detailed analysis in the middle
+- Actionable recommendations at the bottom
+- Use bullet points for clarity
+- Include specific price levels and percentages
+
+Be direct, professional, and avoid generic advice. Treat this as real money at stake. When using web search results, cite your sources.`
+                : `You are an expert trading analyst with deep knowledge of technical analysis, fundamental analysis, and market dynamics. 
 
 Your expertise includes:
 - Technical patterns (breakouts, reversals, support/resistance)
@@ -3853,33 +4516,124 @@ Format your responses with:
 - Use bullet points for clarity
 - Include specific price levels and percentages
 
-Be direct, professional, and avoid generic advice. Treat this as real money at stake.`
-                        },
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
+Be direct, professional, and avoid generic advice. Treat this as real money at stake.`;
+
+            // Build initial messages
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: prompt }
+            ];
+            
+            // Tool calling loop
+            let iteration = 0;
+            let allToolResults = [];
+            let finalResponse = null;
+            
+            while (iteration < CONFIG.WEB_SEARCH_MAX_ITERATIONS) {
+                iteration++;
+                
+                // Build request body
+                const requestBody = {
+                    model: selectedModel,
+                    messages: messages,
                     max_tokens: CONFIG.AI_MAX_TOKENS,
                     temperature: CONFIG.AI_TEMPERATURE
-                })
-            });
+                };
+                
+                // Only include tools if web search is enabled
+                if (webSearchEnabled) {
+                    requestBody.tools = webSearchTools;
+                    requestBody.tool_choice = 'auto';
+                }
+                
+                // Make API call
+                const response = await fetch(CONFIG.API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorData}`);
+                }
+
+                const data = await response.json();
+                const responseMessage = data.choices[0].message;
+                
+                // Add response to messages for context
+                messages.push(responseMessage);
+                
+                // Check if the model wants to call tools
+                if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+                    // Process each tool call
+                    for (const toolCall of responseMessage.tool_calls) {
+                        // Update loading indicator with current action
+                        const funcName = toolCall.function.name;
+                        if (loadingDiv) {
+                            const bubble = loadingDiv.querySelector('.chat-bubble span');
+                            if (bubble) {
+                                bubble.textContent = funcName === 'web_search' ? 'Searching the web...' : 'Reading webpage...';
+                            }
+                        }
+                        
+                        // Execute the tool
+                        const toolResult = await executeToolCall(toolCall);
+                        allToolResults.push(toolResult);
+                        
+                        // Add tool result to messages
+                        messages.push(toolResult);
+                    }
+                    
+                    // Update status
+                    showChatStatus('processing', 'Processing results...');
+                    
+                } else {
+                    // No more tool calls, we have the final response
+                    finalResponse = responseMessage.content;
+                    break;
+                }
+            }
+            
+            // If we hit max iterations without a final response, use the last content
+            if (!finalResponse && messages.length > 0) {
+                const lastAssistantMsg = messages.filter(m => m.role === 'assistant' && m.content).pop();
+                finalResponse = lastAssistantMsg?.content || 'I was unable to complete the request. Please try again.';
+            }
 
             // Remove loading indicator
             if (loadingDiv && loadingDiv.parentNode) {
                 loadingDiv.remove();
             }
-
-            if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(`API Error: ${response.status} - ${errorData}`);
-            }
-
-            const data = await response.json();
-            const aiMessage = data.choices[0].message.content;
             
-            // Add AI response to chat
-            addChatMessage('assistant', aiMessage);
+            // Hide status indicator
+            hideChatStatus();
+            
+            // Format citations if we have tool results
+            const citations = formatCitations(allToolResults);
+            
+            // Add AI response to chat (with citations if available)
+            if (citations.length > 0) {
+                // Use special formatting for messages with citations
+                const formattedContent = formatMessageText(finalResponse);
+                const contentWithCitations = addCitationsToMessage(formattedContent, citations);
+                
+                // Add directly as HTML since we need the citation formatting
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message assistant';
+                messageDiv.innerHTML = `
+                    <div class="chat-avatar">AI</div>
+                    <div class="chat-bubble">${contentWithCitations}</div>
+                `;
+                container.appendChild(messageDiv);
+                container.scrollTop = container.scrollHeight;
+                chatHistory.push({ role: 'assistant', content: finalResponse });
+            } else {
+                addChatMessage('assistant', finalResponse);
+            }
             
         } catch (error) {
             console.error('AI request failed:', error);
@@ -3889,6 +4643,9 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
             if (loadingMsg && loadingMsg.parentNode) {
                 loadingMsg.remove();
             }
+            
+            // Hide status indicator
+            hideChatStatus();
             
             // Sanitize error message
             const safeErrorMessage = String(error && error.message ? error.message : 'Unknown error')
@@ -3902,6 +4659,7 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
         } finally {
             // Re-enable send button
             restoreSendButton(sendBtn);
+            hideChatStatus();
         }
     }
 
