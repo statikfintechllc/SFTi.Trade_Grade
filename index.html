@@ -3458,15 +3458,17 @@
         const MAX_WIDTH_PERCENTAGE = 0.9; // Max width as percentage of parent
         const FALLBACK_MAX_WIDTH = 400; // Fallback max width if no parent
         
+        // Get computed styles once for better performance
+        const computedStyle = window.getComputedStyle(modelSelect);
+        
         // Create a temporary span to measure text width
         const tempSpan = document.createElement('span');
         tempSpan.style.visibility = 'hidden';
         tempSpan.style.position = 'absolute';
         tempSpan.style.whiteSpace = 'nowrap';
-        tempSpan.style.font = window.getComputedStyle(modelSelect).font;
-        tempSpan.style.fontSize = window.getComputedStyle(modelSelect).fontSize;
-        tempSpan.style.fontWeight = window.getComputedStyle(modelSelect).fontWeight;
-        tempSpan.style.padding = window.getComputedStyle(modelSelect).padding;
+        tempSpan.style.font = computedStyle.font;
+        tempSpan.style.fontSize = computedStyle.fontSize;
+        tempSpan.style.fontWeight = computedStyle.fontWeight;
         
         // Get selected option text
         const selectedOption = modelSelect.options[modelSelect.selectedIndex];
