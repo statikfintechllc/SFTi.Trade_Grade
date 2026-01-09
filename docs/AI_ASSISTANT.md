@@ -35,7 +35,8 @@ The AI Assistant in SFTi P.R.E.P integrates with GitHub Models API to provide in
 
 3. **Save Token in App**
    - Navigate to AI Assistant tab
-   - Paste token in "GitHub Token" field
+   - Click the GitHub logo card (left card at top)
+   - Paste token in the modal input field
    - Click "Save Token"
    - Token is stored locally in browser
 
@@ -54,16 +55,21 @@ After saving token, you should see:
 
 The chat window is located at the bottom of the AI Assistant view and contains:
 
-1. **Message Display Area**
-   - Scrollable chat history
+1. **Model Selector Bar** (top - floating)
+   - Sticky positioned at top of chat window
+   - Dynamically sized dropdown based on selected model
+   - Always visible while chat messages scroll behind
+   - Choose from available AI models
+
+2. **Message Display Area**
+   - Scrollable chat history below model selector
    - User messages on right (red theme)
    - AI responses on left (dark theme)
    - Professional message formatting
 
-2. **Input Bar** (bottom)
+3. **Input Bar** (bottom)
    - Text input area with auto-resize
    - File attachment button (coming soon)
-   - Model selector dropdown
    - Send button
 
 ### Sending Messages
@@ -318,10 +324,11 @@ The model picker allows selection between different AI models with varying capab
 
 ### Changing Models
 
-1. Click model dropdown in chat bar
-2. Select desired model
-3. Model applies to next message
-4. Previous messages unaffected
+1. Click model dropdown at top of chat window
+2. Select desired model from the list
+3. Dropdown dynamically resizes to fit model name
+4. Model applies to next message
+5. Previous messages unaffected
 
 ---
 

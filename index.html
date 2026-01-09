@@ -1094,6 +1094,17 @@
         -webkit-backdrop-filter: blur(20px);
         margin-top: 0;
         margin-bottom: 1px;
+        position: relative;
+    }
+
+    .chat-model-bar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 8px 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .chat-messages {
@@ -1314,24 +1325,42 @@
     }
 
     .chat-model-select {
-        background: rgba(26, 26, 26, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid rgba(204, 0, 0, 0.3);
         color: white;
-        padding: 6px 8px;
+        padding: 6px 12px;
         border-radius: 8px;
-        font-size: 11px;
+        font-size: 12px;
+        font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
         outline: none;
+        width: auto;
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
-    .chat-model-select:hover {
-        border-color: rgba(204, 0, 0, 0.5);
+    .chat-model-select:hover:not(:disabled) {
+        border-color: rgba(204, 0, 0, 0.6);
+        background: rgba(13, 13, 13, 0.95);
+        box-shadow: 0 4px 12px rgba(204, 0, 0, 0.2);
     }
 
     .chat-model-select:focus {
         border-color: #cc0000;
-        box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.2);
+        box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.2);
+    }
+
+    .chat-model-select:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .chat-model-select option {
+        background: #1a1a1a;
+        color: white;
+        padding: 8px;
     }
 
     .chat-file-input {
@@ -1367,6 +1396,16 @@
             margin-bottom: 1px;
         }
 
+        .chat-model-bar {
+            padding: 6px 8px;
+        }
+
+        .chat-model-select {
+            font-size: 11px;
+            padding: 5px 10px;
+            max-width: 95%;
+        }
+
         .chat-bubble {
             max-width: 85%;
             font-size: 12px;
@@ -1392,12 +1431,7 @@
             gap: 4px;
             flex-shrink: 0;
         }
-
-        .chat-model-select {
-            font-size: 10px;
-            padding: 4px 6px;
-            min-width: 100px;
-        }
+    }
 
         .chat-icon-btn {
             padding: 4px;
@@ -1887,15 +1921,24 @@
 
     <div id="aiView" style="display: none;">
         <h2 style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 8px;">AI Trading Assistant</h2>
-        <div class="card">
-            <label class="label-text">GitHub Token (for GitHub Models API)</label>
-            <input type="password" class="ticker-input" id="githubToken" placeholder="ghp_..." style="text-transform: none; font-size: 12px;">
-            <button class="save-btn" style="margin-top: 8px; padding: 8px;" onclick="saveToken()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        
+        <!-- Token Access Cards - Two side by side -->
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <!-- GitHub Token Card -->
+            <div class="card" style="flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 24px 12px;" onclick="showGithubTokenModal()" aria-label="Configure GitHub token">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style="color: #e0e0e0;">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
-                Save Token
-            </button>
+            </div>
+            
+            <!-- API Token Card -->
+            <div class="card" style="flex: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 24px 12px;" onclick="showApiTokenModal()" aria-label="Configure API token">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #e0e0e0;">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    <circle cx="12" cy="14" r="2"></circle>
+                </svg>
+            </div>
         </div>
         
         <div class="card">
@@ -1922,6 +1965,11 @@
 
         <!-- Chat Window - Fixed at bottom when AI view is active -->
         <div class="chat-window-container" id="chatWindow" style="display: none;">
+            <div class="chat-model-bar">
+                <select id="chatModelSelect" class="chat-model-select" title="Select AI model" disabled aria-label="AI Model Selector - Save GitHub token to load available models">
+                    <option value="">Save GitHub token to load models</option>
+                </select>
+            </div>
             <div class="chat-messages" id="chatMessagesContainer">
                 <div class="chat-empty-state">
                     <div class="chat-empty-icon">💬</div>
@@ -1945,9 +1993,6 @@
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                             </svg>
                         </button>
-                        <select id="chatModelSelect" class="chat-model-select" title="Select AI model" disabled aria-label="AI Model Selector - Save GitHub token to load available models">
-                            <option value="">Save GitHub token to load models</option>
-                        </select>
                         <button class="chat-icon-btn chat-send-icon-btn" onclick="askAI()" id="chatSendBtn" title="Send message" aria-label="Send message">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -2008,6 +2053,31 @@
         </svg>
     </button>
     <img id="fullScreenImage" src="" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; cursor: default;" onclick="event.stopPropagation();" alt="Full screen view">
+</div>
+
+<!-- GitHub Token Modal -->
+<div class="modal-overlay" id="githubTokenModal">
+    <div class="modal-content">
+        <div class="modal-title">GitHub Token</div>
+        <p style="font-size: 11px; color: #888; margin-bottom: 16px; text-align: center;">Enter your GitHub personal access token for model access</p>
+        <input type="password" class="modal-input" id="githubTokenInput" placeholder="ghp_...">
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="hideGithubTokenModal()">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" onclick="saveGithubToken()">Save Token</button>
+        </div>
+    </div>
+</div>
+
+<!-- API Token Modal -->
+<div class="modal-overlay" id="apiTokenModal">
+    <div class="modal-content">
+        <div class="modal-title">API Configuration</div>
+        <p style="font-size: 11px; color: #888; margin-bottom: 16px; text-align: center;">Coming soon</p>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="hideApiTokenModal()" style="width: 100%;">Close</button>
+        </div>
+    </div>
+</div>
 </div>
 
 <script>
@@ -2752,6 +2822,49 @@
         document.getElementById('fullScreenImage').src = '';
     }
 
+    // GitHub Token Modal functions
+    function showGithubTokenModal() {
+        const modal = document.getElementById('githubTokenModal');
+        const input = document.getElementById('githubTokenInput');
+        // Load existing token if available
+        const token = localStorage.getItem('githubToken');
+        if (token) {
+            input.value = token;
+        }
+        modal.classList.add('active');
+        input.focus();
+    }
+
+    function hideGithubTokenModal() {
+        const modal = document.getElementById('githubTokenModal');
+        modal.classList.remove('active');
+        // Don't clear the input - preserve it in case user reopens
+    }
+
+    async function saveGithubToken() {
+        const token = document.getElementById('githubTokenInput').value.trim();
+        if (token) {
+            localStorage.setItem('githubToken', token);
+            document.getElementById('githubTokenInput').value = ''; // Clear for security after save
+            hideGithubTokenModal();
+            showToast('Token saved, fetching available models...', 'success', 'Token Saved');
+            await fetchAvailableModels(token);
+        } else {
+            showToast('Please enter a valid token', 'warning', 'Invalid Token');
+        }
+    }
+
+    // API Token Modal functions
+    function showApiTokenModal() {
+        const modal = document.getElementById('apiTokenModal');
+        modal.classList.add('active');
+    }
+
+    function hideApiTokenModal() {
+        const modal = document.getElementById('apiTokenModal');
+        modal.classList.remove('active');
+    }
+
     // Load non-finalized trades for finalization
     function loadFinalizeView() {
         const grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
@@ -3269,19 +3382,15 @@
     }
 
     // AI Assistant functions
+    // Legacy function - kept for compatibility but now uses modal
     async function saveToken() {
-        const token = document.getElementById('githubToken').value.trim();
-        if (token) {
-            localStorage.setItem('githubToken', token);
-            showToast('Token saved, fetching available models...', 'success', 'Token Saved');
-            await fetchAvailableModels(token);
-        }
+        // This function is no longer directly called from UI
+        // Token saving is handled by saveGithubToken in the modal
     }
 
     function loadToken() {
         const token = localStorage.getItem('githubToken');
         if (token) {
-            document.getElementById('githubToken').value = token;
             // Fetch models on load if token exists
             fetchAvailableModels(token);
         } else {
@@ -3368,6 +3477,7 @@
             newModelSelect.appendChild(option);
             newModelSelect.disabled = true;
             newModelSelect.setAttribute('aria-label', 'No AI models available - Check token permissions');
+            resizeModelSelector();
             return;
         }
 
@@ -3394,10 +3504,60 @@
             localStorage.setItem('selectedModel', newModelSelect.value);
         }
 
-        // Save selection when changed (single listener)
+        // Save selection when changed and resize (single listener)
         newModelSelect.addEventListener('change', function() {
             localStorage.setItem('selectedModel', this.value);
+            resizeModelSelector();
         });
+        
+        // Initial resize
+        resizeModelSelector();
+    }
+
+    // Dynamically resize model selector based on selected option text
+    function resizeModelSelector() {
+        const modelSelect = document.getElementById('chatModelSelect');
+        if (!modelSelect) return;
+        
+        // Constants for width calculation
+        const PADDING_AND_ARROW_SPACE = 40; // Extra space for padding and dropdown arrow
+        const MIN_WIDTH = 150; // Minimum width in pixels
+        const MAX_WIDTH_PERCENTAGE = 0.9; // Max width as percentage of parent
+        const FALLBACK_MAX_WIDTH = 400; // Fallback max width if no parent
+        
+        // Get computed styles once for better performance
+        const computedStyle = window.getComputedStyle(modelSelect);
+        
+        // Create a temporary span to measure text width
+        const tempSpan = document.createElement('span');
+        tempSpan.style.visibility = 'hidden';
+        tempSpan.style.position = 'absolute';
+        tempSpan.style.whiteSpace = 'nowrap';
+        tempSpan.style.font = computedStyle.font;
+        tempSpan.style.fontSize = computedStyle.fontSize;
+        tempSpan.style.fontWeight = computedStyle.fontWeight;
+        
+        // Get selected option text
+        const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+        tempSpan.textContent = selectedOption ? selectedOption.textContent : '';
+        
+        try {
+            document.body.appendChild(tempSpan);
+            
+            // Calculate width with some padding for dropdown arrow and borders
+            const textWidth = tempSpan.offsetWidth;
+            const newWidth = Math.max(textWidth + PADDING_AND_ARROW_SPACE, MIN_WIDTH);
+            const maxWidth = modelSelect.parentElement 
+                ? modelSelect.parentElement.offsetWidth * MAX_WIDTH_PERCENTAGE 
+                : FALLBACK_MAX_WIDTH;
+            
+            modelSelect.style.width = Math.min(newWidth, maxWidth) + 'px';
+        } finally {
+            // Always remove the temporary element
+            if (tempSpan.parentNode) {
+                document.body.removeChild(tempSpan);
+            }
+        }
     }
 
     // Clear model picker when models cannot be fetched
@@ -3412,6 +3572,7 @@
         option.disabled = true;
         modelSelect.appendChild(option);
         modelSelect.disabled = true;
+        resizeModelSelector();
     }
 
     // Chat window functions
@@ -3918,6 +4079,36 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
             imageViewerModal.addEventListener('click', function(e) {
                 if (e.target === imageViewerModal) {
                     hideImageViewer();
+                }
+            });
+        }
+        
+        // Set up GitHub token modal keyboard handling
+        const githubTokenInput = document.getElementById('githubTokenInput');
+        if (githubTokenInput) {
+            githubTokenInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveGithubToken();
+                }
+            });
+        }
+        
+        // Close GitHub token modal on overlay click
+        const githubTokenModal = document.getElementById('githubTokenModal');
+        if (githubTokenModal) {
+            githubTokenModal.addEventListener('click', function(e) {
+                if (e.target === githubTokenModal) {
+                    hideGithubTokenModal();
+                }
+            });
+        }
+        
+        // Close API token modal on overlay click
+        const apiTokenModal = document.getElementById('apiTokenModal');
+        if (apiTokenModal) {
+            apiTokenModal.addEventListener('click', function(e) {
+                if (e.target === apiTokenModal) {
+                    hideApiTokenModal();
                 }
             });
         }

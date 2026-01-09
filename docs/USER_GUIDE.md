@@ -230,9 +230,17 @@ Get trading insights and analysis using AI in the **AI Assistant** view.
    - Copy the token (starts with `ghp_`)
 
 2. **Save Token**
-   - Paste token in the field
+   - Click the GitHub logo card (left card at top of view)
+   - Paste token in the modal input field
    - Click "Save Token"
    - Token stored locally in browser
+
+### Token Access Cards
+
+Two side-by-side cards at the top:
+
+- **GitHub Card** (left): Opens modal to configure GitHub Models token
+- **API Card** (right): Placeholder for future API configuration
 
 ### Using Quick Actions
 
@@ -245,16 +253,19 @@ Pre-configured AI prompts for common tasks:
 
 ### Chat Interface
 
-1. **Start Conversation**
-   - Type message in the chat bar
-   - Press Enter to send (Shift+Enter for new line)
-
-2. **Select AI Model**
+1. **Select AI Model**
+   - Use dropdown at top of chat window
+   - Always visible, floats above scrolling messages
+   - Dynamically sized based on model name
    - Choose from dropdown:
      - GPT-4o Mini (faster, cheaper)
      - GPT-4o (balanced)
      - GPT-4 (most capable)
      - GPT-3.5 Turbo (fast, basic)
+
+2. **Start Conversation**
+   - Type message in the chat bar at bottom
+   - Press Enter to send (Shift+Enter for new line)
 
 3. **Attach Files (Coming Soon)**
    - Upload chart screenshots
