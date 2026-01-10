@@ -1135,6 +1135,113 @@
         height: 16px;
     }
 
+    /* Fullscreen Chat Button - small floating centered button */
+    .fullscreen-chat-btn {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 44px;
+        width: 24px;
+        height: 14px;
+        background: transparent;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: color 0.2s ease, opacity 0.2s ease;
+        z-index: 10;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .fullscreen-chat-btn:hover {
+        color: #cc0000;
+    }
+
+    .fullscreen-chat-btn:focus {
+        outline: none;
+    }
+
+    .fullscreen-chat-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .fullscreen-chat-btn.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Fullscreen Chat Modal */
+    .fullscreen-chat-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+    }
+
+    .fullscreen-chat-modal.active {
+        display: flex;
+    }
+
+    .fullscreen-chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        border-bottom: 1px solid #cc0000;
+    }
+
+    .fullscreen-chat-title {
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .fullscreen-close-btn {
+        background: transparent;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .fullscreen-close-btn:hover {
+        color: #cc0000;
+    }
+
+    .fullscreen-close-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .fullscreen-chat-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .fullscreen-chat-input-area {
+        padding: 12px 16px;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
     /* Chat History Dropdown */
     .chat-history-dropdown {
         position: absolute;
@@ -1533,13 +1640,14 @@
     }
 
     .chat-icon-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
         color: #cc0000;
     }
 
     .chat-icon-btn svg {
         width: 18px;
         height: 18px;
+        transition: color 0.15s ease;
     }
 
     .chat-send-icon-btn {
@@ -1547,7 +1655,7 @@
     }
 
     .chat-send-icon-btn:hover {
-        background: rgba(204, 0, 0, 0.2);
+        background: transparent;
         color: #ff0000;
     }
 
@@ -1572,7 +1680,7 @@
     }
 
     .web-search-toggle:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
     }
 
     .web-search-toggle:focus {
@@ -1580,7 +1688,7 @@
     }
 
     .web-search-toggle.active {
-        background: rgba(0, 150, 136, 0.2);
+        background: transparent;
     }
 
     .web-search-toggle.active .web-search-icon {
@@ -1617,7 +1725,7 @@
     }
 
     .more-menu-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: transparent;
     }
 
     .more-menu-btn svg {
@@ -2852,6 +2960,12 @@
                     </svg>
                 </button>
             </div>
+            <!-- Fullscreen Toggle Button - centered below model dropdown -->
+            <button id="fullscreenChatBtn" class="fullscreen-chat-btn" onclick="toggleFullscreenChat()" title="Toggle Fullscreen" aria-label="Toggle Fullscreen Chat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+            </button>
             <div class="chat-messages" id="chatMessagesContainer">
                 <div class="chat-empty-state">
                     <div class="chat-empty-icon">💬</div>
@@ -2875,7 +2989,7 @@
                         oninput="autoResizeTextarea(this)"></textarea>
                     <div class="chat-controls">
                         <input type="file" id="chatFileInput" class="chat-file-input" accept="image/*,.pdf,.json,.txt,.csv,.md,.doc,.docx,.xls,.xlsx" onchange="handleChatFileUpload(this)">
-                        <button class="chat-icon-btn" onclick="document.getElementById('chatFileInput').click()" title="Attach file" aria-label="Attach file">
+                        <button id="fileAttachBtn" class="chat-icon-btn" onclick="triggerFileUpload(event)" title="Attach file" aria-label="Attach file">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                             </svg>
@@ -3198,6 +3312,24 @@
         </div>
     </div>
 </div>
+</div>
+
+<!-- Fullscreen Chat Modal -->
+<div class="fullscreen-chat-modal" id="fullscreenChatModal">
+    <div class="fullscreen-chat-header">
+        <span class="fullscreen-chat-title">AI Trading Assistant</span>
+        <button class="fullscreen-close-btn" onclick="toggleFullscreenChat()" title="Exit Fullscreen" aria-label="Exit Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+            </svg>
+        </button>
+    </div>
+    <div class="fullscreen-chat-body" id="fullscreenChatBody">
+        <!-- Messages will be cloned here when entering fullscreen -->
+    </div>
+    <div class="fullscreen-chat-input-area" id="fullscreenChatInputArea">
+        <!-- Chat input will be cloned here when entering fullscreen -->
+    </div>
 </div>
 
 <script>
@@ -5759,6 +5891,9 @@
             trigger.classList.add('active');
             menu.classList.add('active');
         }
+        
+        // Update fullscreen button visibility
+        updateFullscreenBtnVisibility();
     }
 
     // Select a model from the dropdown
@@ -5782,6 +5917,9 @@
         trigger.classList.remove('active');
         menu.classList.remove('active');
         
+        // Show fullscreen button again
+        updateFullscreenBtnVisibility();
+        
         // Save selection
         localStorage.setItem('selectedModel', modelId);
     }
@@ -5792,6 +5930,8 @@
         if (wrapper && !wrapper.contains(event.target)) {
             document.getElementById('modelDropdownTrigger')?.classList.remove('active');
             document.getElementById('modelDropdownMenu')?.classList.remove('active');
+            // Show fullscreen button when dropdown closes
+            updateFullscreenBtnVisibility();
         }
     });
 
@@ -6464,6 +6604,77 @@
             toggle.blur();
         }
         // Placeholder always stays the same - "Review the Markets..."
+    }
+
+    // Trigger file upload with proper focus handling
+    function triggerFileUpload(event) {
+        // Prevent default behavior and stop propagation
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        // Blur the button immediately to prevent highlight sticking
+        const fileBtn = document.getElementById('fileAttachBtn');
+        if (fileBtn) {
+            fileBtn.blur();
+        }
+        
+        // Trigger the file input click
+        document.getElementById('chatFileInput').click();
+    }
+
+    // Fullscreen chat state
+    let isFullscreenChat = false;
+
+    // Toggle fullscreen chat modal
+    function toggleFullscreenChat() {
+        const modal = document.getElementById('fullscreenChatModal');
+        const fullscreenBtn = document.getElementById('fullscreenChatBtn');
+        const messagesContainer = document.getElementById('chatMessagesContainer');
+        const fullscreenBody = document.getElementById('fullscreenChatBody');
+        
+        if (!modal) return;
+        
+        isFullscreenChat = !isFullscreenChat;
+        
+        if (isFullscreenChat) {
+            // Enter fullscreen
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Clone messages to fullscreen modal
+            if (messagesContainer && fullscreenBody) {
+                fullscreenBody.innerHTML = messagesContainer.innerHTML;
+                // Scroll to bottom in fullscreen
+                fullscreenBody.scrollTop = fullscreenBody.scrollHeight;
+            }
+        } else {
+            // Exit fullscreen
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Sync messages back to main chat
+            if (messagesContainer && fullscreenBody) {
+                // In case any messages were added in fullscreen, sync them back
+                messagesContainer.innerHTML = fullscreenBody.innerHTML;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+    }
+
+    // Hide fullscreen button when model dropdown is open
+    function updateFullscreenBtnVisibility() {
+        const fullscreenBtn = document.getElementById('fullscreenChatBtn');
+        const modelDropdownMenu = document.getElementById('modelDropdownMenu');
+        
+        if (fullscreenBtn && modelDropdownMenu) {
+            if (modelDropdownMenu.classList.contains('active')) {
+                fullscreenBtn.classList.add('hidden');
+            } else {
+                fullscreenBtn.classList.remove('hidden');
+            }
+        }
     }
 
     function showChatStatus(statusType, message) {
