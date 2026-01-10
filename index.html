@@ -1550,18 +1550,18 @@
         justify-content: center;
         padding: 6px;
         border-radius: 6px;
-        background: none;
+        background: transparent !important;
         border: none;
         cursor: pointer;
         transition: all 0.2s ease;
     }
 
     .web-search-toggle:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.1) !important;
     }
 
     .web-search-toggle.active {
-        background: rgba(0, 150, 136, 0.2);
+        background: rgba(0, 150, 136, 0.2) !important;
     }
 
     .web-search-toggle.active .web-search-icon {
@@ -1577,6 +1577,10 @@
 
     .web-search-toggle:hover .web-search-icon {
         color: #00bfa5;
+    }
+
+    .web-search-toggle:not(.active):not(:hover) .web-search-icon {
+        color: #888;
     }
 
     /* More Menu Button Styles */
@@ -2846,7 +2850,7 @@
                     <textarea 
                         id="aiPrompt" 
                         class="chat-textarea" 
-                        placeholder="Talk about Markets..."
+                        placeholder="Review the Markets..."
                         rows="1"
                         onkeydown="handleChatKeyPress(event)"
                         oninput="autoResizeTextarea(this)"></textarea>
@@ -6428,18 +6432,13 @@
         if (toggle) {
             if (webSearchEnabled) {
                 toggle.classList.add('active');
+                toggle.style.background = 'rgba(0, 150, 136, 0.2)';
             } else {
                 toggle.classList.remove('active');
+                toggle.style.background = '';
             }
         }
-        
-        // Update placeholder text based on web search state
-        const textarea = document.getElementById('aiPrompt');
-        if (textarea) {
-            textarea.placeholder = webSearchEnabled 
-                ? 'Search the web or ask about markets...' 
-                : 'Talk about Markets...';
-        }
+        // Placeholder always stays the same - "Review the Markets..."
     }
 
     function showChatStatus(statusType, message) {
