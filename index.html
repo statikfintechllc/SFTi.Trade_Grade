@@ -1147,6 +1147,19 @@
         flex-shrink: 0;
         font-size: 14px;
         font-weight: 600;
+        overflow: hidden;
+    }
+
+    .chat-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .chat-avatar svg {
+        width: 20px;
+        height: 20px;
     }
 
     .chat-message.user .chat-avatar {
@@ -1155,8 +1168,8 @@
     }
 
     .chat-message.assistant .chat-avatar {
-        background: linear-gradient(135deg, #00ff00 0%, #00aa00 100%);
-        color: #000;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        color: white;
     }
 
     .chat-bubble {
@@ -3215,10 +3228,52 @@
             updateModelStatus('loading', 'Loading models...', '#ff9800');
             
             showToast('Token saved, fetching available models...', 'success', 'Token Saved');
+            
+            // Fetch and cache user avatar
+            await fetchAndCacheUserAvatar(token);
+            
             await fetchAvailableModels(token);
         } else {
             showToast('Please enter a valid token', 'warning', 'Invalid Token');
         }
+    }
+
+    // Fetch and cache GitHub user avatar
+    async function fetchAndCacheUserAvatar(token) {
+        try {
+            const response = await fetch('https://api.github.com/user', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            
+            if (response.ok) {
+                const userData = await response.json();
+                if (userData.avatar_url) {
+                    // Cache the avatar URL and username
+                    localStorage.setItem('githubAvatarUrl', userData.avatar_url);
+                    localStorage.setItem('githubUsername', userData.login || 'User');
+                    console.log('GitHub avatar cached:', userData.avatar_url);
+                }
+            } else {
+                console.warn('Could not fetch GitHub user info:', response.status);
+            }
+        } catch (error) {
+            console.error('Error fetching GitHub user avatar:', error);
+        }
+    }
+
+    // Get cached user avatar URL
+    function getUserAvatarUrl() {
+        return localStorage.getItem('githubAvatarUrl');
+    }
+
+    // Get Copilot SVG for AI avatar
+    function getCopilotSvg() {
+        return `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>`;
     }
 
     // API Token Modal functions
@@ -3853,6 +3908,10 @@
         if (token) {
             // Update token status
             updateGithubTokenStatus(true, 'Token configured');
+            // Fetch avatar if not already cached
+            if (!localStorage.getItem('githubAvatarUrl')) {
+                fetchAndCacheUserAvatar(token);
+            }
             // Fetch models on load if token exists
             fetchAvailableModels(token);
         } else {
@@ -4166,7 +4225,23 @@
         
         const avatarDiv = document.createElement('div');
         avatarDiv.className = 'chat-avatar';
-        avatarDiv.textContent = role === 'user' ? 'U' : 'AI';
+        
+        if (role === 'user') {
+            // User avatar - use GitHub avatar if available
+            const avatarUrl = getUserAvatarUrl();
+            if (avatarUrl) {
+                const img = document.createElement('img');
+                img.src = avatarUrl;
+                img.alt = 'User';
+                img.onerror = function() { this.parentElement.textContent = 'U'; };
+                avatarDiv.appendChild(img);
+            } else {
+                avatarDiv.textContent = 'U';
+            }
+        } else {
+            // AI avatar - use Copilot SVG
+            avatarDiv.innerHTML = getCopilotSvg();
+        }
         
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'chat-bubble';
@@ -4658,7 +4733,7 @@
         loadingDiv.className = 'chat-message assistant';
         loadingDiv.id = 'loading-message';
         loadingDiv.innerHTML = `
-            <div class="chat-avatar">AI</div>
+            <div class="chat-avatar">${getCopilotSvg()}</div>
             <div class="chat-bubble">
                 <span style="opacity: 0.7;">${webSearchEnabled ? 'Searching...' : 'Thinking...'}</span>
             </div>
@@ -4871,7 +4946,7 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'chat-message assistant';
                 messageDiv.innerHTML = `
-                    <div class="chat-avatar">AI</div>
+                    <div class="chat-avatar">${getCopilotSvg()}</div>
                     <div class="chat-bubble">${contentWithCitations}</div>
                 `;
                 container.appendChild(messageDiv);
