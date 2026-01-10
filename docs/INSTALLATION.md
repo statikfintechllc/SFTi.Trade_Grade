@@ -196,7 +196,7 @@ server {
 
 ## Configuration
 
-### GitHub Models API (Optional)
+### GitHub Models API (Required for AI)
 
 For AI Assistant features:
 
@@ -209,14 +209,35 @@ For AI Assistant features:
 2. **Configure in App**
    - Open app
    - Navigate to AI Assistant tab
+   - Click GitHub card
    - Paste token in field
    - Click "Save Token"
+
+### OAuth Setup (Optional - For Copilot Models)
+
+For access to advanced models (Claude, Gemini, GPT-5):
+
+1. **Create GitHub OAuth App**
+   - Go to GitHub → Settings → Developer settings → OAuth Apps
+   - Click "New OAuth App"
+   - Application name: Your choice
+   - Homepage URL: `https://yourusername.github.io/SFTi.Trade_Grade/`
+   - Callback URL: `https://yourusername.github.io/SFTi.Trade_Grade/auth/callback`
+   - Register application
+   - Note the Client ID
+   - Generate a Client Secret
+
+2. **Configure in App**
+   - Click GitHub card
+   - Enter Client ID
+   - Enter Client Secret (40-character hex)
+   - Use Device Flow (recommended) or Web Flow
 
 ### Customization (Optional)
 
 **Edit Configuration:**
 
-Open `index.html` and find the `CONFIG` object (around line 1668):
+Open `index.html` and find the `CONFIG` object:
 
 ```javascript
 const CONFIG = {
@@ -227,13 +248,14 @@ const CONFIG = {
     AI_MODEL: 'gpt-4o-mini',              // Default AI model
     AI_MAX_TOKENS: 1500,                  // Response length
     AI_TEMPERATURE: 0.7,                  // Creativity (0-1)
+    MAX_TOOL_ITERATIONS: 5,               // Web search iterations
     API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions'
 };
 ```
 
 **Customize Theme:**
 
-Colors defined in `<style>` section (starting around line 17):
+Colors defined in `<style>` section:
 
 ```css
 /* Main theme colors */
@@ -287,8 +309,10 @@ Colors defined in `<style>` section (starting around line 17):
 - Trade plans and outcomes
 - Screenshots (compressed)
 - GitHub API token (encrypted)
+- OAuth credentials (encrypted)
 - User preferences
-- Chat history (temporary)
+- Chat history (persistent)
+- Usage statistics
 
 ### Storage Management
 
@@ -524,4 +548,4 @@ Include in bug report:
 ---
 
 **Last Updated:** January 2026  
-**Version:** 1.0.0
+**Version:** 2.0.0
