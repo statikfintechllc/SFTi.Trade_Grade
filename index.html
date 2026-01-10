@@ -1637,9 +1637,22 @@
 
     .chat-icon-btn:focus {
         outline: none;
+        background: transparent;
+        color: #888;
+    }
+
+    .chat-icon-btn:focus-visible {
+        outline: none;
+        background: transparent;
+        color: #888;
     }
 
     .chat-icon-btn:hover {
+        background: transparent;
+        color: #cc0000;
+    }
+
+    .chat-icon-btn:active {
         background: transparent;
         color: #cc0000;
     }
@@ -6122,6 +6135,12 @@
 
     // Handle file upload for chat - full implementation
     function handleChatFileUpload(input) {
+        // Blur the file button after file dialog interaction
+        const fileBtn = document.getElementById('fileAttachBtn');
+        if (fileBtn) {
+            fileBtn.blur();
+        }
+        
         const file = input.files[0];
         if (!file) return;
         
@@ -6613,14 +6632,28 @@
             event.stopPropagation();
         }
         
-        // Blur the button immediately to prevent highlight sticking
         const fileBtn = document.getElementById('fileAttachBtn');
+        const fileInput = document.getElementById('chatFileInput');
+        
+        // Blur the button immediately
         if (fileBtn) {
             fileBtn.blur();
         }
         
+        // Add one-time focus listener to blur button when file dialog closes
+        const blurOnReturn = () => {
+            // Small delay to ensure focus has returned to the page
+            setTimeout(() => {
+                if (fileBtn && document.activeElement === fileBtn) {
+                    fileBtn.blur();
+                }
+            }, 50);
+            window.removeEventListener('focus', blurOnReturn);
+        };
+        window.addEventListener('focus', blurOnReturn);
+        
         // Trigger the file input click
-        document.getElementById('chatFileInput').click();
+        fileInput.click();
     }
 
     // Fullscreen chat state
