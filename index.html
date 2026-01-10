@@ -1469,35 +1469,35 @@
         color: #cc0000;
     }
 
-    /* Usage Stats Card Styles */
+    /* Usage Stats Card Styles - Compact */
     .usage-stats-card {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        gap: 8px;
     }
 
     .usage-stat-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 12px 8px;
+        padding: 8px 6px;
         background: rgba(40, 40, 40, 0.4);
-        border-radius: 8px;
+        border-radius: 6px;
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .usage-stat-value {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 700;
         color: #00bfa5;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
     }
 
     .usage-stat-label {
-        font-size: 9px;
+        font-size: 8px;
         color: #888;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
     }
 
     /* Live Status Indicator Styles */
@@ -2213,24 +2213,24 @@
     </div>
 
     <div id="aiView" style="display: none;">
-        <h2 style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 8px;">AI Trading Assistant</h2>
+        <h2 style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 6px;">AI Trading Assistant</h2>
         
-        <!-- Token Access Cards - Two side by side -->
-        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <!-- GitHub Token Card - Now with real-time status -->
-            <div class="card" style="flex: 1; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 12px; min-height: 100px;" onclick="showGithubTokenModal()" aria-label="Configure GitHub token">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: #e0e0e0; margin-bottom: 8px;">
+        <!-- Token Access Cards - Two side by side (compact) -->
+        <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+            <!-- GitHub Token Card - Compact with real-time status -->
+            <div class="card" style="flex: 1; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 8px;" onclick="showGithubTokenModal()" aria-label="Configure GitHub token">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="color: #e0e0e0; margin-bottom: 4px;">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
                 <div id="githubTokenStatus" style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 600; color: #888;">GitHub Token</div>
-                    <div id="githubTokenStatusText" style="font-size: 10px; color: #666; margin-top: 2px;">Click to configure</div>
+                    <div style="font-size: 10px; font-weight: 600; color: #888;">GitHub Token</div>
+                    <div id="githubTokenStatusText" style="font-size: 9px; color: #666; margin-top: 1px;">Click to configure</div>
                 </div>
             </div>
             
-            <!-- Market API Card - Starlink-style with Coming Soon modal -->
-            <div class="card" style="flex: 1; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 12px; min-height: 100px;" onclick="showMarketApiModal()" aria-label="Configure Market API">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #e0e0e0; margin-bottom: 8px;">
+            <!-- Market API Card - Compact Starlink-style with Coming Soon modal -->
+            <div class="card" style="flex: 1; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 8px;" onclick="showMarketApiModal()" aria-label="Configure Market API">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #e0e0e0; margin-bottom: 4px;">
                     <!-- Starlink-inspired satellite/connection icon -->
                     <circle cx="12" cy="12" r="3" fill="currentColor"/>
                     <path d="M12 2v3" stroke-linecap="round"/>
@@ -2244,15 +2244,15 @@
                     <circle cx="12" cy="12" r="8" stroke-dasharray="4 2"/>
                 </svg>
                 <div id="marketApiStatus" style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 600; color: #888;">Market API</div>
-                    <div id="marketApiStatusText" style="font-size: 10px; color: #666; margin-top: 2px;">Token Needed</div>
+                    <div style="font-size: 10px; font-weight: 600; color: #888;">Market API</div>
+                    <div id="marketApiStatusText" style="font-size: 9px; color: #666; margin-top: 1px;">Token Needed</div>
                 </div>
             </div>
         </div>
         
-        <!-- Usage & Stats Card -->
-        <div class="card" style="margin-bottom: 8px;">
-            <label class="label-text">Usage & Stats</label>
+        <!-- Usage & Stats Card (compact) -->
+        <div class="card" style="margin-bottom: 6px; padding: 8px 12px;">
+            <label class="label-text" style="margin-bottom: 6px;">Usage & Stats</label>
             <div class="usage-stats-card">
                 <div class="usage-stat-item">
                     <div class="usage-stat-value" id="statMessages">0</div>
