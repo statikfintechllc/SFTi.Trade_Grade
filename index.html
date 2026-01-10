@@ -2874,7 +2874,7 @@
 <!-- GitHub Token Modal -->
 <!-- GitHub Token Modal - Mirrors Market API Modal Structure -->
 <div class="modal-overlay" id="githubTokenModal">
-    <div class="modal-content" style="max-width: 420px; position: relative;">
+    <div class="modal-content" style="max-width: 420px; position: relative; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <!-- Close X Button -->
         <button onclick="hideGithubTokenModal()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px;" aria-label="Close modal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round">
@@ -3858,6 +3858,9 @@
         }
         modal.classList.add('active');
         input.focus();
+        // Load OAuth credentials
+        updateOAuthUI();
+        updateStaticBackendStatus();
     }
 
     function hideGithubTokenModal() {
