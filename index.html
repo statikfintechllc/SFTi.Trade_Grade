@@ -2647,12 +2647,12 @@
     </div>
 </div>
 
-<!-- Market API Modal - Coming Soon -->
+<!-- Market API Modal - OAuth Configuration -->
 <div class="modal-overlay" id="marketApiModal">
-    <div class="modal-content">
-        <div class="modal-title">Market API</div>
-        <div style="text-align: center; padding: 20px 0;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #00bfa5; margin-bottom: 16px;">
+    <div class="modal-content" style="max-width: 420px;">
+        <div class="modal-title">Market API & OAuth</div>
+        <div style="text-align: center; padding: 12px 0;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #00bfa5; margin-bottom: 8px;">
                 <!-- Starlink-inspired satellite/connection icon -->
                 <circle cx="12" cy="12" r="3" fill="currentColor"/>
                 <path d="M12 2v3" stroke-linecap="round"/>
@@ -2666,33 +2666,97 @@
                 <circle cx="12" cy="12" r="8" stroke-dasharray="4 2"/>
             </svg>
         </div>
-        <p style="font-size: 13px; color: #00bfa5; margin-bottom: 8px; text-align: center; font-weight: 600;">Coming Soon</p>
-        <p style="font-size: 11px; color: #888; margin-bottom: 16px; text-align: center;">Real-time market data integration will be available in a future update.</p>
         
         <!-- Static Backend Status -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-            <div style="font-size: 10px; font-weight: 600; color: #00bfa5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Static Backend Server</div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span style="font-size: 11px; color: #888;">Status:</span>
-                <span id="staticBackendStatus" style="font-size: 11px; color: #4caf50;">● Active</span>
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+            <div style="font-size: 9px; font-weight: 600; color: #00bfa5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Static Backend Server</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="font-size: 10px; color: #888;">Status:</span>
+                <span id="staticBackendStatus" style="font-size: 10px; color: #4caf50;">● Active</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span style="font-size: 11px; color: #888;">Azure Models:</span>
-                <span style="font-size: 11px; color: #fff;">3 Available</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="font-size: 10px; color: #888;">Azure Models:</span>
+                <span style="font-size: 10px; color: #fff;">3 Available</span>
             </div>
             <div style="display: flex; justify-content: space-between;">
-                <span style="font-size: 11px; color: #888;">Copilot Models:</span>
-                <span id="copilotModelStatus" style="font-size: 11px; color: #888;">Auth Required</span>
+                <span style="font-size: 10px; color: #888;">Copilot Models:</span>
+                <span id="copilotModelStatus" style="font-size: 10px; color: #888;">Auth Required</span>
             </div>
         </div>
         
-        <!-- Copilot Auth Section (Future) -->
-        <div style="background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-            <div style="font-size: 10px; font-weight: 600; color: #cc0000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">GitHub Copilot Integration</div>
-            <p style="font-size: 10px; color: #888; margin-bottom: 8px;">Connect your GitHub Copilot subscription to unlock Claude, Gemini, and GPT-5 models.</p>
-            <button onclick="initiateCopilotAuth()" style="width: 100%; padding: 8px; background: linear-gradient(135deg, #cc0000 0%, #990000 100%); border: none; border-radius: 6px; color: white; font-size: 11px; font-weight: 600; cursor: pointer; opacity: 0.5;" disabled>
-                Coming Soon - Connect Copilot
-            </button>
+        <!-- OAuth Client ID Configuration -->
+        <div style="background: rgba(0,191,165,0.1); border: 1px solid rgba(0,191,165,0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+            <div style="font-size: 9px; font-weight: 600; color: #00bfa5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">GitHub OAuth App</div>
+            <p style="font-size: 9px; color: #888; margin-bottom: 8px;">Enter your OAuth App Client ID from GitHub Settings → Developer Settings → OAuth Apps</p>
+            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                <input type="text" id="oauthClientIdInput" placeholder="Iv1.xxxxxxxxxxxx or Ov23li..." 
+                    style="flex: 1; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-size: 11px; font-family: monospace;"
+                    value="">
+                <button onclick="saveOAuthClientId()" style="padding: 8px 12px; background: linear-gradient(135deg, #00bfa5 0%, #009688 100%); border: none; border-radius: 6px; color: white; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                    Save
+                </button>
+            </div>
+            <div id="oauthClientIdStatus" style="font-size: 9px; color: #666;"></div>
+        </div>
+        
+        <!-- GitHub Copilot OAuth Section -->
+        <div style="background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+            <div style="font-size: 9px; font-weight: 600; color: #cc0000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">GitHub Copilot Integration</div>
+            <p style="font-size: 9px; color: #888; margin-bottom: 8px;">Connect your GitHub account to unlock additional AI models including Claude, Gemini, and GPT-5.</p>
+            
+            <!-- OAuth Flow Selection -->
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <button id="btnWebFlowAuth" onclick="startWebFlowAuth()" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #cc0000 0%, #990000 100%); border: none; border-radius: 6px; color: white; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" disabled>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    Web Flow
+                </button>
+                <button id="btnDeviceFlowAuth" onclick="startDeviceFlowAuth()" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #333 0%, #222 100%); border: 1px solid #444; border-radius: 6px; color: white; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" disabled>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                        <line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                    Device Flow
+                </button>
+            </div>
+            
+            <!-- Device Flow Code Display -->
+            <div id="deviceFlowSection" style="display: none; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px; margin-top: 8px;">
+                <p style="font-size: 9px; color: #888; margin-bottom: 6px;">Enter this code at:</p>
+                <a id="deviceFlowUri" href="#" target="_blank" style="font-size: 10px; color: #00bfa5; display: block; margin-bottom: 8px; word-break: break-all;"></a>
+                <div style="background: #1a1a1a; border-radius: 4px; padding: 12px; text-align: center; margin-bottom: 8px;">
+                    <span id="deviceFlowCode" style="font-size: 20px; font-weight: 700; font-family: monospace; letter-spacing: 4px; color: #fff;"></span>
+                </div>
+                <div id="deviceFlowStatus" style="font-size: 9px; color: #888; text-align: center;"></div>
+                <button onclick="cancelDeviceFlow()" style="width: 100%; margin-top: 8px; padding: 6px; background: transparent; border: 1px solid #444; border-radius: 4px; color: #888; font-size: 9px; cursor: pointer;">
+                    Cancel
+                </button>
+            </div>
+            
+            <!-- Connected Status -->
+            <div id="copilotConnectedSection" style="display: none; background: rgba(0,255,0,0.1); border-radius: 6px; padding: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 10px; color: #4caf50; display: flex; align-items: center; gap: 4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Copilot Connected
+                    </span>
+                    <button onclick="disconnectCopilot()" style="padding: 4px 8px; background: transparent; border: 1px solid #cc0000; border-radius: 4px; color: #cc0000; font-size: 9px; cursor: pointer;">
+                        Disconnect
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Market Data (Coming Soon) -->
+        <div style="background: rgba(100,100,100,0.1); border: 1px solid rgba(100,100,100,0.2); border-radius: 8px; padding: 10px; margin-bottom: 12px; opacity: 0.6;">
+            <div style="font-size: 9px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Market Data API</div>
+            <p style="font-size: 9px; color: #555;">Real-time market data integration coming in a future update.</p>
         </div>
         
         <div class="modal-buttons">
@@ -3550,6 +3614,7 @@
         const modal = document.getElementById('marketApiModal');
         modal.classList.add('active');
         updateStaticBackendStatus();
+        updateOAuthUI();
     }
 
     function hideMarketApiModal() {
@@ -3575,17 +3640,191 @@
         }
     }
     
-    // Initiate GitHub Copilot OAuth (placeholder for future implementation)
-    async function initiateCopilotAuth() {
-        try {
-            showToast('Copilot authentication is coming soon!', 'info', 'Coming Soon');
-            // Future: Will use GitHub OAuth Device Flow
-            // const authInfo = await StaticBackend.initiateCopilotAuth();
-            // Show user code and verification URL
-        } catch (error) {
-            console.error('Copilot auth error:', error);
-            showToast('Unable to initiate Copilot authentication.', 'error', 'Auth Error');
+    // Update OAuth UI based on current state
+    function updateOAuthUI() {
+        const clientIdInput = document.getElementById('oauthClientIdInput');
+        const clientIdStatus = document.getElementById('oauthClientIdStatus');
+        const webFlowBtn = document.getElementById('btnWebFlowAuth');
+        const deviceFlowBtn = document.getElementById('btnDeviceFlowAuth');
+        const connectedSection = document.getElementById('copilotConnectedSection');
+        const deviceSection = document.getElementById('deviceFlowSection');
+        
+        // Load saved client ID
+        const savedClientId = localStorage.getItem('oauth_client_id');
+        if (clientIdInput && savedClientId) {
+            clientIdInput.value = savedClientId;
         }
+        
+        // Update status
+        if (clientIdStatus) {
+            if (savedClientId) {
+                clientIdStatus.textContent = '✓ Client ID configured';
+                clientIdStatus.style.color = '#4caf50';
+            } else {
+                clientIdStatus.textContent = 'Enter your OAuth App Client ID from GitHub';
+                clientIdStatus.style.color = '#666';
+            }
+        }
+        
+        // Enable/disable auth buttons based on client ID
+        const hasClientId = !!savedClientId;
+        if (webFlowBtn) {
+            webFlowBtn.disabled = !hasClientId;
+            webFlowBtn.style.opacity = hasClientId ? '1' : '0.5';
+        }
+        if (deviceFlowBtn) {
+            deviceFlowBtn.disabled = !hasClientId;
+            deviceFlowBtn.style.opacity = hasClientId ? '1' : '0.5';
+        }
+        
+        // Show connected status if Copilot token exists
+        const hasCopilotToken = !!localStorage.getItem('copilotToken');
+        if (connectedSection) {
+            connectedSection.style.display = hasCopilotToken ? 'block' : 'none';
+        }
+        if (deviceSection && !deviceFlowPolling) {
+            deviceSection.style.display = 'none';
+        }
+    }
+    
+    // Save OAuth Client ID
+    function saveOAuthClientId() {
+        const input = document.getElementById('oauthClientIdInput');
+        const clientId = input.value.trim();
+        
+        if (!clientId) {
+            showToast('Please enter a Client ID', 'warning', 'Missing Client ID');
+            return;
+        }
+        
+        // Validate format (should start with Iv1. or Ov23li)
+        if (!clientId.startsWith('Iv1.') && !clientId.startsWith('Ov23li')) {
+            showToast('Client ID should start with "Iv1." or "Ov23li"', 'warning', 'Invalid Format');
+            // Still save it in case GitHub changes format
+        }
+        
+        localStorage.setItem('oauth_client_id', clientId);
+        StaticBackend.setOAuthClientId(clientId);
+        showToast('OAuth Client ID saved!', 'success', 'Saved');
+        updateOAuthUI();
+    }
+    
+    // Start Web Flow OAuth
+    async function startWebFlowAuth() {
+        try {
+            const clientId = localStorage.getItem('oauth_client_id');
+            if (!clientId) {
+                showToast('Please configure OAuth Client ID first', 'warning', 'Missing Client ID');
+                return;
+            }
+            
+            showToast('Redirecting to GitHub...', 'info', 'OAuth');
+            StaticBackend.initiateWebFlowAuth();
+        } catch (error) {
+            console.error('Web Flow auth error:', error);
+            showToast(error.message, 'error', 'Auth Error');
+        }
+    }
+    
+    // Device Flow state
+    let deviceFlowPolling = false;
+    let deviceFlowAbort = null;
+    
+    // Start Device Flow OAuth
+    async function startDeviceFlowAuth() {
+        try {
+            const clientId = localStorage.getItem('oauth_client_id');
+            if (!clientId) {
+                showToast('Please configure OAuth Client ID first', 'warning', 'Missing Client ID');
+                return;
+            }
+            
+            const deviceSection = document.getElementById('deviceFlowSection');
+            const codeEl = document.getElementById('deviceFlowCode');
+            const uriEl = document.getElementById('deviceFlowUri');
+            const statusEl = document.getElementById('deviceFlowStatus');
+            
+            // Show device flow section
+            deviceSection.style.display = 'block';
+            statusEl.textContent = 'Requesting device code...';
+            
+            // Initiate device flow
+            const authInfo = await StaticBackend.initiateCopilotAuth();
+            
+            // Display code
+            codeEl.textContent = authInfo.user_code;
+            uriEl.href = authInfo.verification_uri_complete || authInfo.verification_uri;
+            uriEl.textContent = authInfo.verification_uri;
+            statusEl.textContent = 'Enter the code above at the link, then wait...';
+            
+            // Start polling
+            deviceFlowPolling = true;
+            
+            const result = await StaticBackend.startDeviceFlowPolling(
+                authInfo.device_code,
+                authInfo.interval,
+                (progress) => {
+                    statusEl.textContent = `Waiting for authorization... (${progress.attempts}/${progress.maxAttempts})`;
+                }
+            );
+            
+            deviceFlowPolling = false;
+            
+            if (result.success) {
+                showToast('GitHub Copilot connected successfully!', 'success', 'Connected');
+                deviceSection.style.display = 'none';
+                updateOAuthUI();
+                updateStaticBackendStatus();
+                
+                // Refresh models
+                fetchModels();
+            } else {
+                showToast(result.error || 'Authentication failed', 'error', 'Auth Failed');
+                statusEl.textContent = result.error || 'Authentication failed. Please try again.';
+            }
+        } catch (error) {
+            deviceFlowPolling = false;
+            console.error('Device Flow auth error:', error);
+            showToast(error.message, 'error', 'Auth Error');
+            
+            const statusEl = document.getElementById('deviceFlowStatus');
+            if (statusEl) {
+                statusEl.textContent = error.message;
+            }
+        }
+    }
+    
+    // Cancel device flow polling
+    function cancelDeviceFlow() {
+        deviceFlowPolling = false;
+        localStorage.removeItem('device_code_data');
+        
+        const deviceSection = document.getElementById('deviceFlowSection');
+        if (deviceSection) {
+            deviceSection.style.display = 'none';
+        }
+        
+        showToast('Device flow cancelled', 'info', 'Cancelled');
+    }
+    
+    // Disconnect Copilot
+    function disconnectCopilot() {
+        localStorage.removeItem('copilotToken');
+        localStorage.removeItem('copilotTokenExpiry');
+        StaticBackend.tokens.copilot = null;
+        StaticBackend.tokens.copilotExpiry = null;
+        
+        showToast('Copilot disconnected', 'info', 'Disconnected');
+        updateOAuthUI();
+        updateStaticBackendStatus();
+        
+        // Refresh models to show only Azure models
+        fetchModels();
+    }
+    
+    // Legacy function - now uses new OAuth system
+    async function initiateCopilotAuth() {
+        showMarketApiModal();
     }
 
     // Quick Actions Popup functions
@@ -4219,6 +4458,26 @@
     // =============================================
     
     const StaticBackend = {
+        // =============================================
+        // STATIC BACKEND SERVER - OAuth Configuration
+        // =============================================
+        // GitHub OAuth App ID: 2631011
+        // Homepage: https://statikfintechllc.github.io/SFTi.Trade_Grade/
+        // Callback: https://statikfintechllc.github.io/SFTi.Trade_Grade/auth/callback
+        
+        // OAuth Configuration
+        OAUTH_CONFIG: {
+            APP_ID: '2631011',
+            // Client ID format: Iv23li + base64(app_id) or from GitHub App settings
+            // The user needs to provide their actual Client ID from GitHub App settings
+            CLIENT_ID: localStorage.getItem('oauth_client_id') || '',
+            REDIRECT_URI: 'https://statikfintechllc.github.io/SFTi.Trade_Grade/auth/callback',
+            SCOPES: ['read:user', 'user:email', 'copilot'],
+            AUTH_URL: 'https://github.com/login/oauth/authorize',
+            TOKEN_URL: 'https://github.com/login/oauth/access_token',
+            DEVICE_CODE_URL: 'https://github.com/login/device/code'
+        },
+        
         // API Endpoints
         ENDPOINTS: {
             // GitHub Models API (via Azure inference)
@@ -4427,102 +4686,328 @@
             }
         },
         
+        // Set OAuth Client ID (from GitHub App settings)
+        setOAuthClientId(clientId) {
+            this.OAUTH_CONFIG.CLIENT_ID = clientId;
+            localStorage.setItem('oauth_client_id', clientId);
+            console.log('[StaticBackend] OAuth Client ID configured');
+        },
+        
+        // Get OAuth Client ID
+        getOAuthClientId() {
+            return this.OAUTH_CONFIG.CLIENT_ID || localStorage.getItem('oauth_client_id');
+        },
+        
+        // Generate random state for CSRF protection
+        generateState() {
+            const array = new Uint8Array(32);
+            crypto.getRandomValues(array);
+            return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+        },
+        
+        // =============================================
+        // OAuth Web Flow (Redirect-based)
+        // =============================================
+        initiateWebFlowAuth() {
+            const clientId = this.getOAuthClientId();
+            
+            if (!clientId) {
+                throw new Error('OAuth Client ID not configured. Please enter your GitHub OAuth App Client ID.');
+            }
+            
+            // Generate and store state for CSRF protection
+            const state = this.generateState();
+            localStorage.setItem('oauth_state', state);
+            
+            // Build authorization URL
+            const authUrl = new URL(this.OAUTH_CONFIG.AUTH_URL);
+            authUrl.searchParams.set('client_id', clientId);
+            authUrl.searchParams.set('redirect_uri', this.OAUTH_CONFIG.REDIRECT_URI);
+            authUrl.searchParams.set('scope', this.OAUTH_CONFIG.SCOPES.join(' '));
+            authUrl.searchParams.set('state', state);
+            authUrl.searchParams.set('allow_signup', 'true');
+            
+            console.log('[StaticBackend] Initiating OAuth Web Flow:', authUrl.toString());
+            
+            // Redirect to GitHub authorization page
+            window.location.href = authUrl.toString();
+        },
+        
+        // Open OAuth in popup window (alternative to redirect)
+        initiatePopupAuth() {
+            const clientId = this.getOAuthClientId();
+            
+            if (!clientId) {
+                throw new Error('OAuth Client ID not configured. Please enter your GitHub OAuth App Client ID.');
+            }
+            
+            // Generate and store state for CSRF protection
+            const state = this.generateState();
+            localStorage.setItem('oauth_state', state);
+            
+            // Build authorization URL
+            const authUrl = new URL(this.OAUTH_CONFIG.AUTH_URL);
+            authUrl.searchParams.set('client_id', clientId);
+            authUrl.searchParams.set('redirect_uri', this.OAUTH_CONFIG.REDIRECT_URI);
+            authUrl.searchParams.set('scope', this.OAUTH_CONFIG.SCOPES.join(' '));
+            authUrl.searchParams.set('state', state);
+            
+            // Open popup
+            const width = 600;
+            const height = 700;
+            const left = (window.screen.width - width) / 2;
+            const top = (window.screen.height - height) / 2;
+            
+            const popup = window.open(
+                authUrl.toString(),
+                'github-oauth',
+                `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
+            );
+            
+            if (!popup) {
+                throw new Error('Popup blocked. Please allow popups or use redirect flow.');
+            }
+            
+            // Listen for OAuth completion message from callback
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('OAuth timeout. Please try again.'));
+                }, 300000); // 5 minute timeout
+                
+                const messageHandler = (event) => {
+                    // Verify origin
+                    if (!event.origin.includes('github.io') && !event.origin.includes('localhost')) {
+                        return;
+                    }
+                    
+                    if (event.data.type === 'OAUTH_SUCCESS') {
+                        clearTimeout(timeout);
+                        window.removeEventListener('message', messageHandler);
+                        
+                        // Store token
+                        this.tokens.copilot = event.data.token;
+                        localStorage.setItem('copilotToken', event.data.token);
+                        this.broadcastTokenUpdate('copilot', event.data.token);
+                        
+                        resolve({ success: true, token: event.data.token });
+                    }
+                    
+                    if (event.data.type === 'OAUTH_ERROR') {
+                        clearTimeout(timeout);
+                        window.removeEventListener('message', messageHandler);
+                        reject(new Error(event.data.error));
+                    }
+                };
+                
+                window.addEventListener('message', messageHandler);
+                
+                // Check if popup was closed without completing
+                const checkClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkClosed);
+                        clearTimeout(timeout);
+                        window.removeEventListener('message', messageHandler);
+                        
+                        // Check if token was stored (callback completed)
+                        const token = localStorage.getItem('copilotToken');
+                        if (token && token !== this.tokens.copilot) {
+                            this.tokens.copilot = token;
+                            resolve({ success: true, token });
+                        } else {
+                            reject(new Error('OAuth cancelled or failed.'));
+                        }
+                    }
+                }, 1000);
+            });
+        },
+        
+        // =============================================
         // GitHub OAuth Device Flow for Copilot
         // This allows authentication without a backend server!
+        // =============================================
         async initiateCopilotAuth() {
-            // Note: This requires a registered GitHub OAuth App with device flow enabled
-            // The client_id should be for an app that has Copilot API access
-            const CLIENT_ID = 'Iv1.XXXXXXXXXXXXXXXX'; // Placeholder - needs real app
+            const clientId = this.getOAuthClientId();
+            
+            if (!clientId) {
+                throw new Error('OAuth Client ID not configured. Please enter your GitHub OAuth App Client ID in the Market API settings.');
+            }
             
             try {
                 // Step 1: Request device code
-                const codeResponse = await fetch('https://github.com/login/device/code', {
+                const codeResponse = await fetch(this.OAUTH_CONFIG.DEVICE_CODE_URL, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        client_id: CLIENT_ID,
-                        scope: 'copilot'
+                        client_id: clientId,
+                        scope: this.OAUTH_CONFIG.SCOPES.join(' ')
                     })
                 });
                 
                 if (!codeResponse.ok) {
-                    throw new Error('Failed to initiate device flow');
+                    const errorText = await codeResponse.text();
+                    throw new Error(`Failed to initiate device flow: ${errorText}`);
                 }
                 
                 const codeData = await codeResponse.json();
+                
+                // Store device code data for callback handler
+                localStorage.setItem('device_code_data', JSON.stringify({
+                    device_code: codeData.device_code,
+                    user_code: codeData.user_code,
+                    expires_at: Date.now() + (codeData.expires_in * 1000)
+                }));
                 
                 // Return device code info for user to complete auth
                 return {
                     device_code: codeData.device_code,
                     user_code: codeData.user_code,
                     verification_uri: codeData.verification_uri,
+                    verification_uri_complete: codeData.verification_uri_complete,
                     expires_in: codeData.expires_in,
-                    interval: codeData.interval
+                    interval: codeData.interval || 5
                 };
             } catch (error) {
-                console.error('[StaticBackend] OAuth initiation failed:', error);
+                console.error('[StaticBackend] OAuth Device Flow initiation failed:', error);
                 throw error;
             }
         },
         
-        // Poll for OAuth completion
+        // Poll for OAuth Device Flow completion
         async pollCopilotAuth(deviceCode, interval = 5) {
-            const CLIENT_ID = 'Iv1.XXXXXXXXXXXXXXXX'; // Placeholder
+            const clientId = this.getOAuthClientId();
+            
+            if (!clientId) {
+                return { success: false, error: 'OAuth Client ID not configured' };
+            }
             
             const poll = async () => {
-                const response = await fetch('https://github.com/login/oauth/access_token', {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        client_id: CLIENT_ID,
-                        device_code: deviceCode,
-                        grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.access_token) {
-                    // Success! Store the token
-                    this.tokens.copilot = data.access_token;
-                    localStorage.setItem('copilotToken', data.access_token);
+                try {
+                    const response = await fetch(this.OAUTH_CONFIG.TOKEN_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            client_id: clientId,
+                            device_code: deviceCode,
+                            grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
+                        })
+                    });
                     
-                    if (data.expires_in) {
-                        const expiry = Date.now() + (data.expires_in * 1000);
-                        this.tokens.copilotExpiry = expiry;
-                        localStorage.setItem('copilotTokenExpiry', expiry.toString());
+                    const data = await response.json();
+                    
+                    if (data.access_token) {
+                        // Success! Store the token
+                        this.tokens.copilot = data.access_token;
+                        localStorage.setItem('copilotToken', data.access_token);
+                        
+                        // Clear device code data
+                        localStorage.removeItem('device_code_data');
+                        
+                        if (data.expires_in) {
+                            const expiry = Date.now() + (data.expires_in * 1000);
+                            this.tokens.copilotExpiry = expiry;
+                            localStorage.setItem('copilotTokenExpiry', expiry.toString());
+                        }
+                        
+                        this.broadcastTokenUpdate('copilot', data.access_token);
+                        return { success: true, token: data.access_token };
                     }
                     
-                    this.broadcastTokenUpdate('copilot', data.access_token);
-                    return { success: true, token: data.access_token };
+                    if (data.error === 'authorization_pending') {
+                        // User hasn't completed auth yet, keep polling
+                        return { success: false, pending: true };
+                    }
+                    
+                    if (data.error === 'slow_down') {
+                        // Need to slow down polling
+                        return { success: false, pending: true, slowDown: true, newInterval: interval + 5 };
+                    }
+                    
+                    if (data.error === 'expired_token') {
+                        localStorage.removeItem('device_code_data');
+                        return { success: false, error: 'Device code expired. Please try again.' };
+                    }
+                    
+                    if (data.error === 'access_denied') {
+                        localStorage.removeItem('device_code_data');
+                        return { success: false, error: 'Access denied by user.' };
+                    }
+                    
+                    // Other errors
+                    return { success: false, error: data.error_description || data.error };
+                } catch (error) {
+                    return { success: false, error: error.message };
                 }
-                
-                if (data.error === 'authorization_pending') {
-                    // User hasn't completed auth yet, keep polling
-                    return { success: false, pending: true };
-                }
-                
-                if (data.error === 'slow_down') {
-                    // Need to slow down polling
-                    return { success: false, pending: true, slowDown: true };
-                }
-                
-                // Other errors
-                return { success: false, error: data.error_description || data.error };
             };
             
             return poll();
+        },
+        
+        // Start continuous polling for device flow
+        async startDeviceFlowPolling(deviceCode, interval = 5, onUpdate = null) {
+            let currentInterval = interval;
+            const maxAttempts = 60; // 5 minutes max
+            let attempts = 0;
+            
+            const doPoll = async () => {
+                attempts++;
+                
+                if (attempts > maxAttempts) {
+                    return { success: false, error: 'Polling timeout. Please try again.' };
+                }
+                
+                const result = await this.pollCopilotAuth(deviceCode, currentInterval);
+                
+                if (result.success) {
+                    return result;
+                }
+                
+                if (result.error && !result.pending) {
+                    return result;
+                }
+                
+                if (result.slowDown) {
+                    currentInterval = result.newInterval || currentInterval + 5;
+                }
+                
+                if (onUpdate) {
+                    onUpdate({ attempts, maxAttempts, interval: currentInterval });
+                }
+                
+                // Wait and poll again
+                await new Promise(resolve => setTimeout(resolve, currentInterval * 1000));
+                return doPoll();
+            };
+            
+            return doPoll();
         }
     };
     
     // Initialize Static Backend on page load
     StaticBackend.init();
+    
+    // Listen for OAuth callback messages
+    window.addEventListener('message', (event) => {
+        // Verify origin
+        if (!event.origin.includes('github.io') && !event.origin.includes('localhost')) {
+            return;
+        }
+        
+        if (event.data.type === 'TOKEN_UPDATE') {
+            StaticBackend.tokens[event.data.tokenType] = event.data.token;
+            console.log('[StaticBackend] Token updated via message:', event.data.tokenType);
+            
+            // Refresh models if copilot token received
+            if (event.data.tokenType === 'copilot') {
+                fetchModels();
+            }
+        }
+    });
     
     // =============================================
     // Model Fetching with Static Backend Integration
