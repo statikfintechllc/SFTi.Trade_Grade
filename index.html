@@ -3193,7 +3193,11 @@
         WEB_SEARCH_ENABLED: false,
         WEB_SEARCH_MAX_ITERATIONS: 5,  // Maximum tool calling iterations
         WEB_SEARCH_MAX_RESULTS: 5,     // Max search results to return
-        CORS_PROXY: 'https://api.allorigins.win/raw?url='  // CORS proxy for web fetching
+        CORS_PROXY: 'https://api.allorigins.win/raw?url=',  // CORS proxy for web fetching
+        // File Upload Configuration
+        MAX_FILE_SIZE: 10 * 1024 * 1024,  // 10MB max file size
+        MAX_TEXT_FILE_CONTENT: 10000,     // Max characters for text file content
+        VISION_MODELS: ['gpt-4o', 'gpt-4-vision', 'gemini', 'claude']  // Models with vision support
     };
 
     // Web Search State
@@ -5959,8 +5963,7 @@
         const file = input.files[0];
         if (!file) return;
         
-        const maxSize = 10 * 1024 * 1024; // 10MB limit
-        if (file.size > maxSize) {
+        if (file.size > CONFIG.MAX_FILE_SIZE) {
             showToast('File too large. Maximum size is 10MB.', 'error', 'File Error');
             input.value = '';
             return;
@@ -6160,9 +6163,8 @@
         // For images, use multimodal format if model supports it
         if (attachment.type === 'image') {
             // Check if current model supports vision
-            const visionModels = ['gpt-4o', 'gpt-4-vision', 'gemini', 'claude'];
-            const currentModel = document.getElementById('modelDropdownTrigger')?.dataset?.model || '';
-            const supportsVision = visionModels.some(v => currentModel.toLowerCase().includes(v));
+            const currentModel = document.getElementById('chatModelSelect')?.value || '';
+            const supportsVision = CONFIG.VISION_MODELS.some(v => currentModel.toLowerCase().includes(v));
             
             if (supportsVision) {
                 // Build multimodal message
@@ -6190,8 +6192,8 @@
         
         // For text files, include the content
         if (attachment.type === 'text') {
-            const fileContent = attachment.content.length > 10000 
-                ? attachment.content.substring(0, 10000) + '\n\n... [truncated, file too large]'
+            const fileContent = attachment.content.length > CONFIG.MAX_TEXT_FILE_CONTENT 
+                ? attachment.content.substring(0, CONFIG.MAX_TEXT_FILE_CONTENT) + '\n\n... [truncated, file too large]'
                 : attachment.content;
             return `Here is the content of ${attachment.name}:\n\n\`\`\`\n${fileContent}\n\`\`\`\n\n${userMessage}`;
         }
