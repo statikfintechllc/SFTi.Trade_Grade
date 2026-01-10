@@ -1677,6 +1677,55 @@
         cursor: not-allowed;
     }
 
+    /* File Attach Button Styles - Match web toggle behavior */
+    .file-attach-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .file-attach-btn:hover {
+        background: transparent;
+    }
+
+    .file-attach-btn:focus {
+        outline: none;
+        background: transparent;
+    }
+
+    .file-attach-btn:focus-visible {
+        outline: none;
+        background: transparent;
+    }
+
+    .file-attach-icon {
+        width: 18px;
+        height: 18px;
+        color: #888;
+        transition: color 0.15s ease;
+    }
+
+    .file-attach-btn:hover .file-attach-icon {
+        color: #cc0000;
+    }
+
+    .file-attach-btn:focus .file-attach-icon,
+    .file-attach-btn:focus-visible .file-attach-icon {
+        color: #888;
+    }
+
+    .file-attach-btn:active .file-attach-icon {
+        color: #cc0000;
+    }
+
     /* Web Search Toggle Styles - Icon only button */
     .web-search-toggle {
         display: flex;
@@ -3002,8 +3051,8 @@
                         oninput="autoResizeTextarea(this)"></textarea>
                     <div class="chat-controls">
                         <input type="file" id="chatFileInput" class="chat-file-input" accept="image/*,.pdf,.json,.txt,.csv,.md,.doc,.docx,.xls,.xlsx" onchange="handleChatFileUpload(this)">
-                        <button id="fileAttachBtn" class="chat-icon-btn" onclick="triggerFileUpload(event)" title="Attach file" aria-label="Attach file">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button id="fileAttachBtn" class="chat-icon-btn file-attach-btn" onclick="triggerFileUpload(event)" ontouchend="this.blur()" title="Attach file" aria-label="Attach file">
+                            <svg class="file-attach-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                             </svg>
                         </button>
@@ -6135,10 +6184,18 @@
 
     // Handle file upload for chat - full implementation
     function handleChatFileUpload(input) {
-        // Blur the file button after file dialog interaction
+        // Aggressively blur the file button after file dialog interaction
         const fileBtn = document.getElementById('fileAttachBtn');
         if (fileBtn) {
             fileBtn.blur();
+            // Use requestAnimationFrame for better timing
+            requestAnimationFrame(() => {
+                fileBtn.blur();
+            });
+            // Also with a small delay for stubborn browsers
+            setTimeout(() => {
+                fileBtn.blur();
+            }, 50);
         }
         
         const file = input.files[0];
@@ -6635,22 +6692,45 @@
         const fileBtn = document.getElementById('fileAttachBtn');
         const fileInput = document.getElementById('chatFileInput');
         
-        // Blur the button immediately
+        // Blur the button immediately using multiple approaches for mobile compatibility
         if (fileBtn) {
             fileBtn.blur();
+            // Also use requestAnimationFrame to ensure blur after current event loop
+            requestAnimationFrame(() => {
+                fileBtn.blur();
+            });
         }
         
         // Add one-time focus listener to blur button when file dialog closes
         const blurOnReturn = () => {
-            // Small delay to ensure focus has returned to the page
-            setTimeout(() => {
-                if (fileBtn && document.activeElement === fileBtn) {
+            // Use requestAnimationFrame for smoother blur after dialog closes
+            requestAnimationFrame(() => {
+                if (fileBtn) {
                     fileBtn.blur();
+                    // Double-blur with small delay for stubborn mobile browsers
+                    setTimeout(() => {
+                        fileBtn.blur();
+                        // Also reset any lingering active element focus
+                        if (document.activeElement === fileBtn) {
+                            document.body.focus();
+                        }
+                    }, 100);
                 }
-            }, 50);
+            });
             window.removeEventListener('focus', blurOnReturn);
         };
         window.addEventListener('focus', blurOnReturn);
+        
+        // Also add a visibility change listener as backup for when file dialog closes
+        const blurOnVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && fileBtn) {
+                setTimeout(() => {
+                    fileBtn.blur();
+                }, 50);
+                document.removeEventListener('visibilitychange', blurOnVisibilityChange);
+            }
+        };
+        document.addEventListener('visibilitychange', blurOnVisibilityChange);
         
         // Trigger the file input click
         fileInput.click();
