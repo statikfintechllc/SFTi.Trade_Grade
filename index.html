@@ -3312,7 +3312,6 @@
         </div>
     </div>
 </div>
-</div>
 
 <!-- Fullscreen Chat Modal -->
 <div class="fullscreen-chat-modal" id="fullscreenChatModal">
@@ -6643,9 +6642,13 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
-            // Clone messages to fullscreen modal
+            // Clone messages to fullscreen modal using cloneNode for better event handling
             if (messagesContainer && fullscreenBody) {
-                fullscreenBody.innerHTML = messagesContainer.innerHTML;
+                // Clear and clone all children
+                fullscreenBody.innerHTML = '';
+                Array.from(messagesContainer.children).forEach(child => {
+                    fullscreenBody.appendChild(child.cloneNode(true));
+                });
                 // Scroll to bottom in fullscreen
                 fullscreenBody.scrollTop = fullscreenBody.scrollHeight;
             }
@@ -6654,10 +6657,13 @@
             modal.classList.remove('active');
             document.body.style.overflow = '';
             
-            // Sync messages back to main chat
+            // Sync messages back to main chat using cloneNode
             if (messagesContainer && fullscreenBody) {
-                // In case any messages were added in fullscreen, sync them back
-                messagesContainer.innerHTML = fullscreenBody.innerHTML;
+                // Clear and clone all children back
+                messagesContainer.innerHTML = '';
+                Array.from(fullscreenBody.children).forEach(child => {
+                    messagesContainer.appendChild(child.cloneNode(true));
+                });
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
         }
