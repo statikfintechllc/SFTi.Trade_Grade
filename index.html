@@ -2674,19 +2674,31 @@
             </div>
         </div>
         
-        <!-- OAuth Client ID Configuration -->
+        <!-- OAuth Client ID & Secret Configuration -->
         <div style="background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
             <div style="font-size: 9px; font-weight: 600; color: #cc0000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">GitHub OAuth App</div>
-            <p style="font-size: 9px; color: #888; margin-bottom: 8px;">Enter your OAuth App Client ID from GitHub Settings → Developer Settings → OAuth Apps</p>
-            <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                <input type="text" id="oauthClientIdInput" placeholder="Iv1.xxxxxxxxxxxx or Ov23li..." 
-                    style="flex: 1; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-size: 11px; font-family: monospace;"
+            <p style="font-size: 9px; color: #888; margin-bottom: 8px;">Enter your OAuth App credentials from GitHub Settings → Developer Settings → OAuth Apps</p>
+            
+            <!-- Client ID -->
+            <div style="margin-bottom: 8px;">
+                <label style="font-size: 8px; color: #666; display: block; margin-bottom: 3px;">Client ID</label>
+                <input type="text" id="oauthClientIdInput" placeholder="Ov23li..." 
+                    style="width: 100%; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-size: 11px; font-family: monospace; box-sizing: border-box;"
                     value="">
-                <button onclick="saveOAuthClientId()" style="padding: 8px 12px; background: linear-gradient(135deg, #cc0000 0%, #990000 100%); border: none; border-radius: 6px; color: white; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-                    Save
-                </button>
             </div>
-            <div id="oauthClientIdStatus" style="font-size: 9px; color: #666;"></div>
+            
+            <!-- Client Secret -->
+            <div style="margin-bottom: 8px;">
+                <label style="font-size: 8px; color: #666; display: block; margin-bottom: 3px;">Client Secret</label>
+                <input type="password" id="oauthClientSecretInput" placeholder="40-character hex string" 
+                    style="width: 100%; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-size: 11px; font-family: monospace; box-sizing: border-box;"
+                    value="">
+            </div>
+            
+            <button onclick="saveOAuthCredentials()" style="width: 100%; padding: 8px 12px; background: linear-gradient(135deg, #cc0000 0%, #990000 100%); border: none; border-radius: 6px; color: white; font-size: 10px; font-weight: 600; cursor: pointer;">
+                Save Credentials
+            </button>
+            <div id="oauthClientIdStatus" style="font-size: 9px; color: #666; margin-top: 6px;"></div>
         </div>
         
         <!-- GitHub Copilot OAuth Section -->
@@ -3708,36 +3720,47 @@
     // Update OAuth UI based on current state
     function updateOAuthUI() {
         const clientIdInput = document.getElementById('oauthClientIdInput');
+        const clientSecretInput = document.getElementById('oauthClientSecretInput');
         const clientIdStatus = document.getElementById('oauthClientIdStatus');
         const webFlowBtn = document.getElementById('btnWebFlowAuth');
         const deviceFlowBtn = document.getElementById('btnDeviceFlowAuth');
         const connectedSection = document.getElementById('copilotConnectedSection');
         const deviceSection = document.getElementById('deviceFlowSection');
         
-        // Load saved client ID
+        // Load saved credentials
         const savedClientId = localStorage.getItem('oauth_client_id');
+        const savedClientSecret = localStorage.getItem('oauth_client_secret');
+        
         if (clientIdInput && savedClientId) {
             clientIdInput.value = savedClientId;
+        }
+        if (clientSecretInput && savedClientSecret) {
+            clientSecretInput.value = savedClientSecret;
         }
         
         // Update status
         if (clientIdStatus) {
-            if (savedClientId) {
-                clientIdStatus.textContent = '✓ Client ID configured';
+            if (savedClientId && savedClientSecret) {
+                clientIdStatus.textContent = '✓ OAuth credentials configured';
                 clientIdStatus.style.color = '#4caf50';
+            } else if (savedClientId) {
+                clientIdStatus.textContent = '⚠ Client Secret needed';
+                clientIdStatus.style.color = '#ffa000';
             } else {
-                clientIdStatus.textContent = 'Enter your OAuth App Client ID from GitHub';
+                clientIdStatus.textContent = 'Enter your OAuth App credentials from GitHub';
                 clientIdStatus.style.color = '#666';
             }
         }
         
-        // Enable/disable auth buttons based on client ID
-        const hasClientId = !!savedClientId;
+        // Enable/disable auth buttons based on complete credentials
+        const hasCredentials = !!(savedClientId && savedClientSecret);
         if (webFlowBtn) {
-            webFlowBtn.disabled = !hasClientId;
-            webFlowBtn.style.opacity = hasClientId ? '1' : '0.5';
+            webFlowBtn.disabled = !hasCredentials;
+            webFlowBtn.style.opacity = hasCredentials ? '1' : '0.5';
         }
         if (deviceFlowBtn) {
+            // Device flow only needs Client ID
+            const hasClientId = !!savedClientId;
             deviceFlowBtn.disabled = !hasClientId;
             deviceFlowBtn.style.opacity = hasClientId ? '1' : '0.5';
         }
@@ -3752,26 +3775,47 @@
         }
     }
     
-    // Save OAuth Client ID
-    function saveOAuthClientId() {
-        const input = document.getElementById('oauthClientIdInput');
-        const clientId = input.value.trim();
+    // Save OAuth Credentials (Client ID and Secret)
+    function saveOAuthCredentials() {
+        const clientIdInput = document.getElementById('oauthClientIdInput');
+        const clientSecretInput = document.getElementById('oauthClientSecretInput');
+        const clientId = clientIdInput.value.trim();
+        const clientSecret = clientSecretInput.value.trim();
         
         if (!clientId) {
             showToast('Please enter a Client ID', 'warning', 'Missing Client ID');
             return;
         }
         
-        // Validate format (should start with Iv1. or Ov23li)
-        if (!clientId.startsWith('Iv1.') && !clientId.startsWith('Ov23li')) {
-            showToast('Client ID should start with "Iv1." or "Ov23li"', 'warning', 'Invalid Format');
-            // Still save it in case GitHub changes format
+        if (!clientSecret) {
+            showToast('Please enter a Client Secret', 'warning', 'Missing Client Secret');
+            return;
+        }
+        
+        // Validate Client ID format (should start with Ov23li or similar)
+        // GitHub OAuth App Client IDs can have various formats
+        if (clientId.length < 10) {
+            showToast('Client ID seems too short', 'warning', 'Check Format');
+            return;
+        }
+        
+        // Validate Client Secret format (40-character hex string)
+        const hexRegex = /^[a-f0-9]{40}$/i;
+        if (!hexRegex.test(clientSecret)) {
+            showToast('Client Secret should be a 40-character hex string', 'warning', 'Invalid Format');
+            return;
         }
         
         localStorage.setItem('oauth_client_id', clientId);
+        localStorage.setItem('oauth_client_secret', clientSecret);
         StaticBackend.setOAuthClientId(clientId);
-        showToast('OAuth Client ID saved!', 'success', 'Saved');
+        showToast('OAuth credentials saved!', 'success', 'Saved');
         updateOAuthUI();
+    }
+    
+    // Legacy function for backwards compatibility
+    function saveOAuthClientId() {
+        saveOAuthCredentials();
     }
     
     // Start Web Flow OAuth
