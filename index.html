@@ -1474,6 +1474,7 @@
         border: 2px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
         padding: 8px 12px;
+        min-height: 46px;
         transition: all 0.3s ease;
     }
 
@@ -1489,15 +1490,18 @@
         border: none;
         outline: none;
         color: white;
-        font-size: 14px;
+        font-size: 16px;
         font-family: inherit;
         resize: none;
         max-height: 100px;
-        min-height: 24px;
+        min-height: 30px;
+        line-height: 30px;
+        padding: 0;
     }
 
     .chat-textarea::placeholder {
-        color: #555;
+        color: #666;
+        line-height: 30px;
     }
 
     .chat-controls {
@@ -1517,6 +1521,15 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .chat-icon-btn:focus {
+        outline: none;
     }
 
     .chat-icon-btn:hover {
@@ -1550,18 +1563,24 @@
         justify-content: center;
         padding: 6px;
         border-radius: 6px;
-        background: transparent !important;
+        background: transparent;
         border: none;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: background 0.15s ease, color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
 
     .web-search-toggle:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .web-search-toggle:focus {
+        outline: none;
     }
 
     .web-search-toggle.active {
-        background: rgba(0, 150, 136, 0.2) !important;
+        background: rgba(0, 150, 136, 0.2);
     }
 
     .web-search-toggle.active .web-search-icon {
@@ -1572,14 +1591,14 @@
         width: 18px;
         height: 18px;
         color: #888;
-        transition: color 0.2s ease;
+        transition: color 0.15s ease;
     }
 
     .web-search-toggle:hover .web-search-icon {
         color: #00bfa5;
     }
 
-    .web-search-toggle:not(.active):not(:hover) .web-search-icon {
+    .web-search-toggle:not(.active) .web-search-icon {
         color: #888;
     }
 
@@ -2862,13 +2881,13 @@
                             </svg>
                         </button>
                         <!-- Web Search Toggle - SVG only -->
-                        <div id="webSearchToggle" class="web-search-toggle chat-icon-btn" onclick="toggleWebSearch()" title="Toggle web search" aria-label="Toggle web search">
+                        <button id="webSearchToggle" class="web-search-toggle chat-icon-btn" type="button" onclick="toggleWebSearch(event)" title="Toggle web search" aria-label="Toggle web search">
                             <svg class="web-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="2" y1="12" x2="22" y2="12"></line>
                                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                             </svg>
-                        </div>
+                        </button>
                         <!-- More Menu Button - Quick Actions -->
                         <div class="more-menu-btn" onclick="toggleQuickActionsPopup(event)" title="Quick Actions" aria-label="Quick Actions">
                             <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
@@ -6426,17 +6445,23 @@
     // Web Search Toggle and Status Functions
     // =============================================
 
-    function toggleWebSearch() {
+    function toggleWebSearch(event) {
+        // Prevent default behavior and stop propagation to avoid keyboard/focus glitches
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
         webSearchEnabled = !webSearchEnabled;
         const toggle = document.getElementById('webSearchToggle');
         if (toggle) {
             if (webSearchEnabled) {
                 toggle.classList.add('active');
-                toggle.style.background = 'rgba(0, 150, 136, 0.2)';
             } else {
                 toggle.classList.remove('active');
-                toggle.style.background = '';
             }
+            // Immediately blur to remove focus state and prevent highlight sticking
+            toggle.blur();
         }
         // Placeholder always stays the same - "Review the Markets..."
     }
