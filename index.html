@@ -1103,8 +1103,155 @@
         z-index: 10;
         padding: 8px 12px;
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
+        gap: 8px;
+    }
+
+    /* Floating Chat Buttons */
+    .chat-floating-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #888;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .chat-floating-btn:hover {
+        background: rgba(204, 0, 0, 0.2);
+        border-color: rgba(204, 0, 0, 0.4);
+        color: #cc0000;
+    }
+
+    .chat-floating-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Chat History Dropdown */
+    .chat-history-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 12px;
+        margin-top: 4px;
+        background: linear-gradient(135deg, rgba(30, 30, 30, 0.98) 0%, rgba(20, 20, 20, 0.99) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        min-width: 240px;
+        max-height: 300px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 100;
+        display: none;
+        animation: dropdownFadeIn 0.2s ease-out;
+    }
+
+    .chat-history-dropdown.active {
+        display: block;
+    }
+
+    @keyframes dropdownFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .chat-history-header {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #888;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .chat-history-list {
+        max-height: 250px;
+        overflow-y: auto;
+    }
+
+    .chat-history-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-history-item:hover {
+        background: rgba(204, 0, 0, 0.15);
+    }
+
+    .chat-history-item-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-history-item-title {
+        font-size: 12px;
+        color: #e0e0e0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chat-history-item-date {
+        font-size: 10px;
+        color: #666;
+        margin-top: 2px;
+    }
+
+    .chat-history-item-delete {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.2s ease;
+    }
+
+    .chat-history-item:hover .chat-history-item-delete {
+        opacity: 1;
+    }
+
+    .chat-history-item-delete:hover {
+        background: rgba(255, 0, 0, 0.2);
+        color: #ff4444;
+    }
+
+    .chat-history-item-delete svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .chat-history-empty {
+        padding: 20px 16px;
+        text-align: center;
+        color: #666;
+        font-size: 12px;
     }
 
     .chat-messages {
@@ -1220,6 +1367,65 @@
         background: none;
         padding: 0;
     }
+
+    /* Code block header with language label */
+    .chat-bubble .code-block-wrapper {
+        position: relative;
+        margin: 8px 0;
+    }
+
+    .chat-bubble .code-block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(60, 60, 60, 0.8);
+        padding: 6px 12px;
+        border-radius: 6px 6px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
+    }
+
+    .chat-bubble .code-lang-label {
+        font-size: 10px;
+        color: #00bfa5;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .chat-bubble .code-copy-btn {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        padding: 2px 6px;
+        font-size: 10px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .chat-bubble .code-copy-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .chat-bubble .code-block-wrapper pre {
+        margin: 0;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    /* Syntax highlighting colors */
+    .chat-bubble code .keyword { color: #ff79c6; }
+    .chat-bubble code .string { color: #f1fa8c; }
+    .chat-bubble code .number { color: #bd93f9; }
+    .chat-bubble code .comment { color: #6272a4; font-style: italic; }
+    .chat-bubble code .function { color: #50fa7b; }
+    .chat-bubble code .operator { color: #ff79c6; }
+    .chat-bubble code .property { color: #66d9ef; }
+    .chat-bubble code .tag { color: #ff79c6; }
+    .chat-bubble code .attr-name { color: #50fa7b; }
+    .chat-bubble code .attr-value { color: #f1fa8c; }
 
     .chat-bubble p {
         margin: 8px 0;
@@ -2276,9 +2482,32 @@
         <!-- Chat Window - Fixed at bottom when AI view is active -->
         <div class="chat-window-container" id="chatWindow" style="display: none;">
             <div class="chat-model-bar">
+                <!-- Chat History Button (Left) -->
+                <button class="chat-floating-btn chat-history-btn" onclick="toggleChatHistoryDropdown(event)" title="Chat History" aria-label="Chat History">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </button>
+                <!-- Chat History Dropdown -->
+                <div id="chatHistoryDropdown" class="chat-history-dropdown">
+                    <div class="chat-history-header">Chat History</div>
+                    <div id="chatHistoryList" class="chat-history-list">
+                        <!-- Chat history items will be populated dynamically -->
+                    </div>
+                </div>
+                
                 <select id="chatModelSelect" class="chat-model-select" title="Select AI model" disabled aria-label="AI Model Selector - Save GitHub token to load available models">
                     <option value="">Save GitHub token to load models</option>
                 </select>
+                
+                <!-- New Chat Button (Right) -->
+                <button class="chat-floating-btn chat-new-btn" onclick="startNewChat()" title="New Chat" aria-label="New Chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
             </div>
             <div class="chat-messages" id="chatMessagesContainer">
                 <div class="chat-empty-state">
@@ -3925,6 +4154,35 @@
     async function fetchAvailableModels(token) {
         updateModelStatus('loading', 'Loading models...', '#ff9800');
         
+        // Known working models for GitHub Models inference API
+        // These are verified to work with the chat completions endpoint
+        const SUPPORTED_MODELS = [
+            'gpt-4o',
+            'gpt-4o-mini', 
+            'gpt-4-turbo',
+            'gpt-4',
+            'gpt-3.5-turbo',
+            'Mistral-Nemo',
+            'Mistral-large',
+            'Mistral-large-2407',
+            'Mistral-small',
+            'Meta-Llama-3.1-405B-Instruct',
+            'Meta-Llama-3.1-70B-Instruct',
+            'Meta-Llama-3.1-8B-Instruct',
+            'Meta-Llama-3-70B-Instruct',
+            'Meta-Llama-3-8B-Instruct',
+            'Phi-3.5-mini-instruct',
+            'Phi-3.5-MoE-instruct',
+            'Phi-3-mini-128k-instruct',
+            'Phi-3-mini-4k-instruct',
+            'Phi-3-medium-128k-instruct',
+            'Phi-3-medium-4k-instruct',
+            'Phi-3-small-128k-instruct',
+            'Phi-3-small-8k-instruct',
+            'Cohere-command-r',
+            'Cohere-command-r-plus'
+        ];
+        
         try {
             // GitHub Models are accessed via Azure AI inference endpoint
             // The models list is publicly available and doesn't require authentication
@@ -3937,8 +4195,16 @@
             if (response.ok) {
                 const models = await response.json();
                 
-                // Filter to only chat-completion models (suitable for our AI assistant)
-                const chatModels = models.filter(m => m.task === 'chat-completion');
+                // Filter to only chat-completion models that are known to work
+                const chatModels = models.filter(m => {
+                    if (m.task !== 'chat-completion') return false;
+                    const modelName = m.name || m.id;
+                    // Check if model is in supported list (case-insensitive partial match)
+                    return SUPPORTED_MODELS.some(supported => 
+                        modelName.toLowerCase().includes(supported.toLowerCase()) ||
+                        supported.toLowerCase().includes(modelName.toLowerCase())
+                    );
+                });
                 
                 console.log('Available chat models:', chatModels.length);
                 
@@ -4144,6 +4410,49 @@
         }
     }
 
+    // Simple syntax highlighter for code blocks
+    function highlightCode(code, lang) {
+        if (!lang) return code;
+        
+        const langLower = lang.toLowerCase();
+        
+        // Keywords by language
+        const keywords = {
+            javascript: /\b(const|let|var|function|return|if|else|for|while|class|import|export|from|default|async|await|try|catch|throw|new|this|typeof|instanceof|null|undefined|true|false)\b/g,
+            js: /\b(const|let|var|function|return|if|else|for|while|class|import|export|from|default|async|await|try|catch|throw|new|this|typeof|instanceof|null|undefined|true|false)\b/g,
+            python: /\b(def|class|if|elif|else|for|while|return|import|from|as|try|except|finally|with|lambda|True|False|None|and|or|not|in|is|self)\b/g,
+            py: /\b(def|class|if|elif|else|for|while|return|import|from|as|try|except|finally|with|lambda|True|False|None|and|or|not|in|is|self)\b/g,
+            html: /\b(html|head|body|div|span|p|a|img|script|style|link|meta|title|h[1-6]|ul|ol|li|table|tr|td|th|form|input|button|select|option)\b/g,
+            css: /\b(color|background|margin|padding|border|font|width|height|display|position|flex|grid|transform|transition|animation)\b/g,
+            ruby: /\b(def|class|module|if|elsif|else|unless|case|when|while|until|for|do|end|return|yield|begin|rescue|ensure|raise|nil|true|false|self|require|include)\b/g,
+            sql: /\b(SELECT|FROM|WHERE|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TABLE|INDEX|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AND|OR|NOT|NULL|AS|ORDER|BY|GROUP|HAVING|LIMIT)\b/gi,
+            json: /("[\w]+")(?=\s*:)/g,
+            bash: /\b(if|then|else|fi|for|while|do|done|case|esac|function|return|echo|exit|cd|ls|mkdir|rm|cp|mv|cat|grep|sed|awk)\b/g,
+            sh: /\b(if|then|else|fi|for|while|do|done|case|esac|function|return|echo|exit|cd|ls|mkdir|rm|cp|mv|cat|grep|sed|awk)\b/g
+        };
+        
+        let highlighted = code;
+        
+        // Highlight strings (must do first to avoid conflicts)
+        highlighted = highlighted.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, '<span class="string">$&</span>');
+        
+        // Highlight comments
+        highlighted = highlighted.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/|#.*$)/gm, '<span class="comment">$&</span>');
+        
+        // Highlight numbers
+        highlighted = highlighted.replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>');
+        
+        // Highlight keywords based on language
+        if (keywords[langLower]) {
+            highlighted = highlighted.replace(keywords[langLower], '<span class="keyword">$&</span>');
+        }
+        
+        // Highlight function calls
+        highlighted = highlighted.replace(/\b([a-zA-Z_]\w*)\s*\(/g, '<span class="function">$1</span>(');
+        
+        return highlighted;
+    }
+
     // Format text to HTML with markdown-like features
     function formatMessageText(text) {
         // Escape HTML first
@@ -4151,9 +4460,18 @@
                            .replace(/</g, '&lt;')
                            .replace(/>/g, '&gt;');
         
-        // Format code blocks (```...```)
+        // Format code blocks (```...```) with syntax highlighting
         formatted = formatted.replace(/```([a-zA-Z0-9+-]*)\n?([\s\S]*?)```/g, function(match, lang, code) {
-            return `<pre><code class="language-${lang}">${code.trim()}</code></pre>`;
+            const langLabel = lang || 'code';
+            const highlightedCode = highlightCode(code.trim(), lang);
+            const codeId = 'code-' + Math.random().toString(36).substr(2, 9);
+            return `<div class="code-block-wrapper">
+                <div class="code-block-header">
+                    <span class="code-lang-label">${langLabel}</span>
+                    <button class="code-copy-btn" onclick="copyCodeBlock('${codeId}')">Copy</button>
+                </div>
+                <pre><code id="${codeId}" class="language-${lang}">${highlightedCode}</code></pre>
+            </div>`;
         });
         
         // Format inline code (`...`)
@@ -4208,6 +4526,21 @@
         }
         
         return processedLines.join('\n');
+    }
+
+    // Copy code block content to clipboard
+    function copyCodeBlock(codeId) {
+        const codeElement = document.getElementById(codeId);
+        if (codeElement) {
+            // Get text content (without HTML tags)
+            const code = codeElement.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Code copied to clipboard!', 'success', 'Copied');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showToast('Failed to copy code', 'error', 'Error');
+            });
+        }
     }
 
     // Add a message to the chat
@@ -4952,8 +5285,16 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
                 container.appendChild(messageDiv);
                 container.scrollTop = container.scrollHeight;
                 chatHistory.push({ role: 'assistant', content: finalResponse });
+                
+                // Auto-save chat after response
+                if (!currentChatId) currentChatId = generateChatId();
+                saveCurrentChat();
             } else {
                 addChatMessage('assistant', finalResponse);
+                
+                // Auto-save chat after response
+                if (!currentChatId) currentChatId = generateChatId();
+                saveCurrentChat();
             }
             
         } catch (error) {
@@ -4997,6 +5338,201 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
         }
         chatHistory = [];
     }
+
+    // Chat History Management
+    let allChats = JSON.parse(localStorage.getItem('chatSessions') || '[]');
+    let currentChatId = null;
+
+    function generateChatId() {
+        return 'chat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function startNewChat() {
+        // Save current chat first if it has messages
+        if (chatHistory.length > 0 && currentChatId) {
+            saveCurrentChat();
+        }
+        
+        // Create new chat
+        currentChatId = generateChatId();
+        clearChat();
+        
+        // Reset stats for new conversation
+        usageStats.messages = 0;
+        document.getElementById('statMessages').textContent = '0';
+        
+        showToast('New conversation started', 'success', 'New Chat');
+        hideChatHistoryDropdown();
+    }
+
+    function saveCurrentChat() {
+        if (!currentChatId || chatHistory.length === 0) return;
+        
+        // Generate title from first user message
+        const firstUserMsg = chatHistory.find(m => m.role === 'user');
+        const title = firstUserMsg 
+            ? firstUserMsg.content.substring(0, 40) + (firstUserMsg.content.length > 40 ? '...' : '')
+            : 'New Chat';
+        
+        const chatData = {
+            id: currentChatId,
+            title: title,
+            messages: chatHistory,
+            timestamp: Date.now()
+        };
+        
+        // Update or add to allChats
+        const existingIndex = allChats.findIndex(c => c.id === currentChatId);
+        if (existingIndex >= 0) {
+            allChats[existingIndex] = chatData;
+        } else {
+            allChats.unshift(chatData); // Add to beginning
+        }
+        
+        // Keep only last 20 chats
+        if (allChats.length > 20) {
+            allChats = allChats.slice(0, 20);
+        }
+        
+        localStorage.setItem('chatSessions', JSON.stringify(allChats));
+    }
+
+    function loadChat(chatId) {
+        // Save current chat first
+        if (chatHistory.length > 0 && currentChatId) {
+            saveCurrentChat();
+        }
+        
+        const chat = allChats.find(c => c.id === chatId);
+        if (!chat) return;
+        
+        currentChatId = chatId;
+        chatHistory = chat.messages || [];
+        
+        // Render the chat
+        const container = document.getElementById('chatMessagesContainer');
+        container.innerHTML = '';
+        
+        chatHistory.forEach(msg => {
+            if (msg.role === 'user' || msg.role === 'assistant') {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${msg.role}`;
+                
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'chat-avatar';
+                
+                if (msg.role === 'user') {
+                    const avatarUrl = getUserAvatarUrl();
+                    if (avatarUrl) {
+                        const img = document.createElement('img');
+                        img.src = avatarUrl;
+                        img.alt = 'User';
+                        img.onerror = function() { this.parentElement.textContent = 'U'; };
+                        avatarDiv.appendChild(img);
+                    } else {
+                        avatarDiv.textContent = 'U';
+                    }
+                } else {
+                    avatarDiv.innerHTML = getCopilotSvg();
+                }
+                
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = 'chat-bubble';
+                
+                if (msg.role === 'user') {
+                    bubbleDiv.textContent = msg.content;
+                } else {
+                    bubbleDiv.innerHTML = formatMessageText(msg.content);
+                }
+                
+                messageDiv.appendChild(avatarDiv);
+                messageDiv.appendChild(bubbleDiv);
+                container.appendChild(messageDiv);
+            }
+        });
+        
+        container.scrollTop = container.scrollHeight;
+        hideChatHistoryDropdown();
+    }
+
+    function deleteChat(chatId, event) {
+        event.stopPropagation();
+        
+        allChats = allChats.filter(c => c.id !== chatId);
+        localStorage.setItem('chatSessions', JSON.stringify(allChats));
+        
+        // If deleting current chat, start new one
+        if (chatId === currentChatId) {
+            startNewChat();
+        }
+        
+        renderChatHistoryList();
+        showToast('Chat deleted', 'info', 'Deleted');
+    }
+
+    function toggleChatHistoryDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('chatHistoryDropdown');
+        dropdown.classList.toggle('active');
+        
+        if (dropdown.classList.contains('active')) {
+            renderChatHistoryList();
+            document.addEventListener('click', closeChatHistoryOnOutsideClick);
+        } else {
+            document.removeEventListener('click', closeChatHistoryOnOutsideClick);
+        }
+    }
+
+    function hideChatHistoryDropdown() {
+        const dropdown = document.getElementById('chatHistoryDropdown');
+        if (dropdown) {
+            dropdown.classList.remove('active');
+        }
+        document.removeEventListener('click', closeChatHistoryOnOutsideClick);
+    }
+
+    function closeChatHistoryOnOutsideClick(event) {
+        const dropdown = document.getElementById('chatHistoryDropdown');
+        const btn = event.target.closest('.chat-history-btn');
+        if (!dropdown.contains(event.target) && !btn) {
+            hideChatHistoryDropdown();
+        }
+    }
+
+    function renderChatHistoryList() {
+        const list = document.getElementById('chatHistoryList');
+        if (!list) return;
+        
+        if (allChats.length === 0) {
+            list.innerHTML = '<div class="chat-history-empty">No chat history yet</div>';
+            return;
+        }
+        
+        list.innerHTML = allChats.map(chat => {
+            const date = new Date(chat.timestamp);
+            const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const isActive = chat.id === currentChatId ? 'background: rgba(204, 0, 0, 0.1);' : '';
+            
+            return `
+                <div class="chat-history-item" style="${isActive}" onclick="loadChat('${chat.id}')">
+                    <div class="chat-history-item-content">
+                        <div class="chat-history-item-title">${escapeHtml(chat.title)}</div>
+                        <div class="chat-history-item-date">${dateStr}</div>
+                    </div>
+                    <button class="chat-history-item-delete" onclick="deleteChat('${chat.id}', event)" title="Delete chat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Auto-save chat when sending messages
+    const originalAddChatMessage = addChatMessage;
+    // We'll hook into the chat to auto-save periodically
 
     // Quick action functions - now populate chat instead of separate card
     function reviewGrades() {
