@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI Assistant in SFTi P.R.E.P integrates with GitHub Models API to provide intelligent trading insights, analysis, and decision support through a conversational chat interface.
+The AI Assistant in SFTi P.R.E.P integrates with GitHub Models API to provide intelligent trading insights, analysis, and decision support through a conversational chat interface. Features include web search capabilities, syntax-highlighted code blocks, and persistent chat history.
 
 ---
 
@@ -10,12 +10,15 @@ The AI Assistant in SFTi P.R.E.P integrates with GitHub Models API to provide in
 
 1. [Setup and Configuration](#setup-and-configuration)
 2. [Chat Interface](#chat-interface)
-3. [Quick Actions](#quick-actions)
-4. [Best Practices](#best-practices)
-5. [Model Selection](#model-selection)
-6. [Sample Queries](#sample-queries)
-7. [Advanced Usage](#advanced-usage)
-8. [Troubleshooting](#troubleshooting)
+3. [Web Search Tool](#web-search-tool)
+4. [Quick Actions](#quick-actions)
+5. [Best Practices](#best-practices)
+6. [Model Selection](#model-selection)
+7. [Sample Queries](#sample-queries)
+8. [Chat History](#chat-history)
+9. [Advanced Usage](#advanced-usage)
+10. [Static Backend Server](#static-backend-server)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -40,6 +43,22 @@ The AI Assistant in SFTi P.R.E.P integrates with GitHub Models API to provide in
    - Click "Save Token"
    - Token is stored locally in browser
 
+### OAuth Setup (For Copilot Models)
+
+For access to advanced Copilot models (Claude, Gemini, GPT-5):
+
+1. **Create GitHub OAuth App**
+   - Go to GitHub Developer Settings → OAuth Apps
+   - Click "New OAuth App"
+   - Set Homepage URL: `https://yourdomain.github.io/yourrepo/`
+   - Set Callback URL: `https://yourdomain.github.io/yourrepo/auth/callback`
+
+2. **Configure in App**
+   - Click GitHub card to open modal
+   - Enter OAuth Client ID
+   - Enter OAuth Client Secret (40-character hex)
+   - Use Device Flow (recommended) or Web Flow (popup)
+
 ### Verify Setup
 
 After saving token, you should see:
@@ -58,17 +77,23 @@ The chat window is located at the bottom of the AI Assistant view and contains:
 1. **Model Selector Bar** (top - floating)
    - Sticky positioned at top of chat window
    - Dynamically sized dropdown based on selected model
+   - Chat History button (clock icon, top-left)
+   - New Chat button (plus icon, top-right)
    - Always visible while chat messages scroll behind
    - Choose from available AI models
 
 2. **Message Display Area**
    - Scrollable chat history below model selector
-   - User messages on right (red theme)
-   - AI responses on left (dark theme)
+   - User messages on right (with GitHub avatar)
+   - AI responses on left (with Copilot icon)
+   - Syntax-highlighted code blocks with language labels
+   - Copy button on code blocks
    - Professional message formatting
 
 3. **Input Bar** (bottom)
    - Text input area with auto-resize
+   - Web Search toggle (globe icon)
+   - More Actions menu (three dots)
    - File attachment button (coming soon)
    - Send button
 
@@ -95,17 +120,60 @@ AI responses support rich formatting:
 
 **Code Blocks:**
 ```python
-# Python code is syntax highlighted
+# Python code is syntax highlighted with language header
 def calculate_risk_reward(entry, stop, target):
     risk = entry - stop
     reward = target - entry
     return reward / risk
 ```
 
+Code blocks feature:
+- Language detection and header label
+- Copy button for quick copying
+- Syntax highlighting by language
+- Dark theme styling
+
 **Tables and Lists:**
 - Markdown-style tables rendered
 - Bullet points formatted cleanly
 - Numbered lists preserved
+
+---
+
+## Web Search Tool
+
+The AI Assistant includes a web search tool for real-time information retrieval.
+
+### Enabling Web Search
+
+1. **Toggle Web Search**
+   - Click the globe icon in the input bar
+   - Icon turns teal when active
+   - AI can now search the web during responses
+
+2. **How It Works**
+   - User sends message with web search enabled
+   - AI determines if web search is needed
+   - Tool executes search via DuckDuckGo API (CORS-friendly)
+   - Results returned to AI for synthesis
+   - Final response includes citations
+
+### Web Search Features
+
+- **Search Query Execution**: AI formulates and executes search queries
+- **URL Crawling**: Fetches and parses web page content
+- **Content Extraction**: Extracts relevant text from HTML
+- **Citation Support**: Sources cited in AI responses
+- **Rate Limiting**: Built-in rate limiting for API calls
+- **Caching**: Response caching to reduce redundant requests
+
+### Tool Calling Loop
+
+1. User → AI (with tool availability)
+2. AI → Tool (search/crawl request)
+3. Tool → AI (formatted results)
+4. Loop 2-3 until sufficient (max 5 iterations)
+5. AI → User (final response with citations)
 
 ---
 
@@ -284,31 +352,27 @@ Risk management: Trail stop to breakeven at $515.
 
 ### Available Models
 
-The model picker allows selection between different AI models with varying capabilities:
+The model picker allows selection between different AI models:
 
-**GPT-4o Mini** (Default)
-- Fastest response time
-- Lower cost per request
-- Good for quick questions
-- Adequate for most trading queries
+**Azure Inference Models (Working):**
+- OpenAI GPT-4o
+- OpenAI GPT-4o mini
+- Mistral Nemo
 
-**GPT-4o**
-- Balanced performance
-- Better reasoning
-- Good for complex analysis
-- Recommended for detailed reviews
+**Copilot Models (Require OAuth):**
+- Claude 3.5 Sonnet
+- Claude Opus 4.5
+- Google Gemini 2.5 Pro
+- OpenAI GPT-5 series
+- xAI Grok
 
-**GPT-4**
-- Most capable model
-- Best reasoning ability
-- Slower responses
-- Use for critical decisions
+### Model Comparison
 
-**GPT-3.5 Turbo**
-- Very fast
-- Basic capabilities
-- Good for simple questions
-- Lower quality analysis
+| Model | Speed | Quality | Best For |
+|-------|-------|---------|----------|
+| GPT-4o mini | ⚡⚡⚡ | ⭐⭐⭐ | Quick queries, general chat |
+| GPT-4o | ⚡⚡ | ⭐⭐⭐⭐ | Balanced performance |
+| Mistral Nemo | ⚡⚡⚡ | ⭐⭐⭐ | Fast responses, efficient |
 
 ### When to Use Each Model
 
@@ -318,9 +382,8 @@ The model picker allows selection between different AI models with varying capab
 | Daily market sentiment | GPT-4o Mini |
 | Trade plan review | GPT-4o |
 | Pattern analysis | GPT-4o |
-| Monthly performance review | GPT-4 |
-| Complex multi-factor analysis | GPT-4 |
-| Simple definitions | GPT-3.5 Turbo |
+| Complex multi-factor analysis | GPT-4o |
+| Code generation | GPT-4o |
 
 ### Changing Models
 
@@ -394,6 +457,47 @@ my dollar risk?
 
 ---
 
+## Chat History
+
+### Managing Conversations
+
+**Chat History Button** (top-left clock icon):
+- Opens dropdown with saved conversations
+- Shows last 20 chats
+- Click to load a previous chat
+- Swipe left to delete a chat
+
+**New Chat Button** (top-right plus icon):
+- Starts a fresh conversation
+- Current chat is auto-saved
+- Clears message display
+- Resets context
+
+### Auto-Save Feature
+
+- Chats auto-save after each AI response
+- Last 20 conversations retained
+- Stored in browser localStorage
+- Survives page refresh
+
+### Chat Management
+
+1. **Load Previous Chat**
+   - Click chat history button
+   - Select chat from dropdown
+   - Conversation loads with full history
+
+2. **Delete Chat**
+   - Click chat history button
+   - Swipe left on chat item
+   - Tap delete icon to confirm
+
+3. **Start New Chat**
+   - Click plus button (top-right)
+   - Or use Quick Actions after loading history
+
+---
+
 ## Advanced Usage
 
 ### Multi-Turn Conversations
@@ -431,6 +535,17 @@ What patterns do you see? Why are some
 A-grade trades losing?
 ```
 
+### Using Web Search
+
+Enable web search for real-time data:
+
+```
+[With web search enabled]
+What is the current price of NVDA and recent news?
+```
+
+The AI will search the web and cite sources in its response.
+
 ### Strategy Development
 
 ```
@@ -457,6 +572,73 @@ be higher?
 
 ---
 
+## Static Backend Server
+
+### Overview
+
+The Static Backend Server is a client-side "server" architecture built entirely in JavaScript. It enables features like OAuth authentication and intelligent API routing without requiring a traditional backend server.
+
+### Architecture
+
+```javascript
+const StaticBackend = {
+    ENDPOINTS: {
+        AZURE_INFERENCE: 'https://models.inference.ai.azure.com',
+        COPILOT_CHAT: 'https://api.githubcopilot.com/chat/completions'
+    },
+    // Intelligent routing, token management, cross-tab sync
+}
+```
+
+### Features
+
+**BroadcastChannel** - Cross-tab token synchronization
+**Intelligent Router** - Routes requests to correct endpoint based on model
+**Token Validator** - Validates GitHub tokens before API calls
+**Model Registry** - Curated model list with endpoint mapping
+
+### CORS Widget
+
+The CORS Widget enables CORS-bypassed requests from static sites:
+
+```javascript
+CorsWidget: {
+    PROXIES: [
+        { name: 'corsproxy.io', supportsPost: true },
+        { name: 'cors.sh', supportsPost: true },
+        { name: 'crossorigin.me', supportsPost: true }
+    ],
+    async postForm(url, data) { /* CORS-bypassed POST */ },
+    async fetch(url, options) { /* CORS-bypassed fetch */ }
+}
+```
+
+**Used For:**
+- OAuth token exchange (POST)
+- Device Flow polling (POST)
+- Web search/crawling (GET)
+- Any external API needing CORS bypass
+
+### OAuth Flows
+
+**Device Flow (Recommended):**
+1. Click "Device Flow" button
+2. Get user code (e.g., `ABCD-1234`)
+3. Go to github.com/login/device
+4. Enter the code
+5. App polls for completion
+6. Token stored and synced
+
+**Web Flow (Popup):**
+1. Click "Web (Popup)" button
+2. Popup opens with GitHub auth
+3. User authorizes app
+4. Callback exchanges code for token
+5. Token sent to parent via postMessage
+6. Popup closes automatically
+
+---
+
 ## Troubleshooting
 
 ### AI Not Responding
@@ -476,6 +658,36 @@ be higher?
 - Check browser console for errors
 - Verify GitHub API status
 
+### Web Search Not Working
+
+**Check Toggle:**
+- Verify globe icon is active (teal color)
+- Try toggling off and on
+
+**Check CORS Proxies:**
+- CORS Widget auto-switches proxies
+- May need to wait for proxy fallback
+- Check console for proxy errors
+
+**Rate Limiting:**
+- DuckDuckGo has rate limits
+- Wait a moment between searches
+- Reduce search frequency
+
+### OAuth Errors
+
+**Device Flow Issues:**
+- Ensure Client ID is correct
+- Check for typos in user code
+- Code expires after 15 minutes
+- Try generating new code
+
+**Web Flow Issues:**
+- Popup may be blocked - enable popups
+- Verify callback URL matches OAuth App settings
+- Check Client Secret format (40-char hex)
+- Try Device Flow instead
+
 ### Poor Quality Responses
 
 **Improve Prompts:**
@@ -484,9 +696,9 @@ be higher?
 - Include relevant numbers
 
 **Try Different Model:**
-- GPT-4 for complex analysis
-- GPT-4o for balanced results
-- Avoid GPT-3.5 Turbo for trading
+- GPT-4o for complex analysis
+- Mistral Nemo for speed
+- Avoid unsupported models
 
 **Break Down Questions:**
 - Ask one thing at a time
@@ -504,11 +716,24 @@ be higher?
 - Switch to different model
 - Reduce message frequency
 
+### Chat History Issues
+
+**Chats Not Saving:**
+- Check browser localStorage is enabled
+- Not in incognito/private mode
+- Storage may be full
+
+**Can't Delete Chat:**
+- Swipe left on the chat item
+- Tap the delete icon
+- Try refreshing the page
+
 ### Formatting Issues
 
 **Code Blocks:**
 - AI uses triple backticks
-- Should render in gray box
+- Should render with language header
+- Copy button should appear
 - Report if not displaying
 
 **Lists:**
@@ -522,31 +747,42 @@ be higher?
 
 ### Data Storage
 - Token stored locally in browser
-- Chat history not persisted
-- No data sent to servers (except GitHub API)
+- Chat history persisted in localStorage
+- OAuth tokens encrypted by browser
+- No data sent to external servers (except APIs)
 
 ### Best Practices
 - Don't share your API token
 - Don't include personal financial details
 - Use tickers, not account numbers
 - Clear chat when using shared devices
+- Rotate tokens periodically
 
 ### Token Security
 - Rotate tokens periodically
 - Revoke if compromised
 - Use minimum required permissions
 - Monitor API usage
+- OAuth tokens auto-refresh
 
 ---
 
 ## Feature Roadmap
 
+### Implemented ✅
+- Web Search tool with citations
+- Chat History with persistence
+- New Chat button
+- Syntax highlighting with copy
+- Static Backend Server
+- OAuth Device Flow
+- OAuth Web Flow (popup)
+- CORS Widget for API calls
+
 ### Coming Soon
 - File attachment support
-- Chat history persistence
 - Export conversations
 - Custom system prompts
-- Multiple chat threads
 - Voice input (mobile)
 
 ### Under Consideration
@@ -564,22 +800,32 @@ be higher?
    - Learn from AI responses
    - Build up to complex queries
 
-2. **Be Patient**
+2. **Use Web Search**
+   - Enable for real-time data
+   - Get current prices and news
+   - Verify information with sources
+
+3. **Manage Chat History**
+   - Start new chats for new topics
+   - Keep related queries in same chat
+   - Delete old chats to save space
+
+4. **Be Patient**
    - Some models take time
    - Quality over speed
    - Let AI finish thinking
 
-3. **Iterate**
+5. **Iterate**
    - Follow up on responses
    - Ask clarifying questions
    - Refine your prompts
 
-4. **Stay Critical**
+6. **Stay Critical**
    - AI is a tool, not a guru
    - Verify important information
    - Make your own decisions
 
-5. **Track Results**
+7. **Track Results**
    - Note which prompts work
    - Save effective queries
    - Build your prompt library
@@ -587,4 +833,4 @@ be higher?
 ---
 
 **Last Updated:** January 2026  
-**Version:** 1.0.0
+**Version:** 2.0.0

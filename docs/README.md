@@ -4,7 +4,7 @@
 
 </div>
 
-A Progressive Web App (PWA) for grading trades using the PREPARE methodology.
+A Progressive Web App (PWA) for grading trades using the PREPARE methodology, featuring AI-powered analysis with web search capabilities.
 
 ## Features
 
@@ -12,6 +12,11 @@ A Progressive Web App (PWA) for grading trades using the PREPARE methodology.
 - **Trade Tracker**: Plan builder with entry price, stop loss (5-10%), and profit target (15-30%) sliders
 - **Trade History**: Search and filter saved trades with detailed trade plan display
 - **AI Assistant**: Integration with GitHub Models API for trade analysis
+  - **Web Search Tool**: AI-powered web search and URL crawling with citations
+  - **Static Backend Server**: Client-side OAuth authentication for GitHub Copilot models
+  - **CORS Widget**: Bypass CORS restrictions for static site API calls
+  - **Chat History**: Persistent conversation history with chat management
+  - **Syntax Highlighting**: Code blocks with language detection and copy buttons
 
 ## Project Structure
 
@@ -19,9 +24,17 @@ A Progressive Web App (PWA) for grading trades using the PREPARE methodology.
 ├── LICENSE
 ├── docs/
 │   ├── README.md
-│   └── (documentation files)
+│   ├── AI_ASSISTANT.md
+│   ├── API_REFERENCE.md
+│   ├── INSTALLATION.md
+│   ├── PREPARE_METHODOLOGY.md
+│   ├── TECHNICAL.md
+│   └── USER_GUIDE.md
 │
-├── index.html
+├── index.html              # Main application (Static Backend + CORS Widget)
+├── auth/
+│   └── callback/
+│       └── index.html      # OAuth callback handler
 └── system/
     ├── img/
     │   ├── icon-192.png

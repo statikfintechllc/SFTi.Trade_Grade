@@ -2,15 +2,15 @@
 
 ## Overview
 
-This document covers the external APIs used by SFTi P.R.E.P and internal JavaScript APIs available for customization.
+This document covers the external APIs used by SFTi P.R.E.P and internal JavaScript APIs available for customization. The application uses a "Static Backend Server" pattern to handle OAuth and CORS-restricted API calls.
 
 ---
 
 ## External APIs
 
-### GitHub Models API
+### Azure Inference API
 
-The application integrates with GitHub Models API for AI-powered trading assistance.
+Primary API for AI chat completions using GitHub tokens.
 
 #### Base URL
 ```
@@ -19,7 +19,7 @@ https://models.inference.ai.azure.com
 
 #### Authentication
 
-**Method:** Bearer Token
+**Method:** Bearer Token (GitHub Personal Access Token)
 
 ```javascript
 headers: {
@@ -33,6 +33,179 @@ headers: {
 2. Generate new token (classic)
 3. Required scopes: `read:packages` + model access
 4. Copy token (starts with `ghp_`)
+
+### GitHub Copilot API
+
+Advanced API for Copilot models (Claude, Gemini, GPT-5) requiring OAuth.
+
+#### Base URL
+```
+https://api.githubcopilot.com
+```
+
+#### Authentication
+
+**Method:** Bearer Token (OAuth Token)
+
+```javascript
+headers: {
+  'Authorization': 'Bearer ghu_xxxxx...',
+  'Content-Type': 'application/json',
+  'Copilot-Integration-Id': 'vscode-chat'
+}
+```
+
+**Getting OAuth Token:**
+1. Create GitHub OAuth App
+2. Use Device Flow or Web Flow
+3. Exchange code for token
+4. Token starts with `ghu_`
+
+### GitHub OAuth Endpoints
+
+**Device Code Request:**
+```
+POST https://github.com/login/device/code
+```
+
+**Token Exchange:**
+```
+POST https://github.com/login/oauth/access_token
+```
+
+---
+
+## CORS Widget API
+
+The CORS Widget enables CORS-bypassed requests from static sites.
+
+### CorsWidget Object
+
+```javascript
+const CorsWidget = {
+    PROXIES: [
+        { name: 'corsproxy.io', url: 'https://corsproxy.io/?', supportsPost: true },
+        { name: 'cors.sh', url: 'https://cors.sh/', supportsPost: true },
+        { name: 'crossorigin.me', url: 'https://crossorigin.me/', supportsPost: true }
+    ],
+    workingProxy: null
+}
+```
+
+### Methods
+
+#### fetch(url, options)
+
+CORS-bypassed fetch request.
+
+```javascript
+const response = await CorsWidget.fetch('https://api.example.com/data', {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+});
+```
+
+#### postForm(url, data)
+
+POST form-urlencoded data via CORS proxy.
+
+```javascript
+const response = await CorsWidget.postForm(
+    'https://github.com/login/oauth/access_token',
+    {
+        client_id: 'xxx',
+        client_secret: 'xxx',
+        code: 'auth_code'
+    }
+);
+```
+
+#### postJson(url, data)
+
+POST JSON data via CORS proxy.
+
+```javascript
+const response = await CorsWidget.postJson(
+    'https://api.example.com/endpoint',
+    { key: 'value' }
+);
+```
+
+---
+
+## Static Backend API
+
+### StaticBackend Object
+
+```javascript
+const StaticBackend = {
+    APP_ID: '2631011',
+    ENDPOINTS: {
+        AZURE_INFERENCE: 'https://models.inference.ai.azure.com',
+        COPILOT_CHAT: 'https://api.githubcopilot.com/chat/completions',
+        GITHUB_DEVICE_CODE: 'https://github.com/login/device/code',
+        GITHUB_OAUTH_TOKEN: 'https://github.com/login/oauth/access_token'
+    },
+    MODELS: {
+        AZURE: ['gpt-4o', 'gpt-4o-mini', 'Mistral-Nemo-2407'],
+        COPILOT: ['claude-3.5-sonnet', 'gemini-2.5-pro', 'gpt-5', ...]
+    }
+}
+```
+
+### Methods
+
+#### init()
+
+Initialize the Static Backend, set up BroadcastChannel for cross-tab sync.
+
+```javascript
+StaticBackend.init();
+```
+
+#### validateToken(token)
+
+Validate a GitHub token.
+
+```javascript
+const isValid = await StaticBackend.validateToken('ghp_xxx');
+// Returns: { valid: true, scopes: [...] } or { valid: false, error: '...' }
+```
+
+#### routeRequest(model, messages)
+
+Route API request to correct endpoint based on model.
+
+```javascript
+const response = await StaticBackend.routeRequest('gpt-4o', messages);
+```
+
+#### initiateDeviceFlow(clientId)
+
+Start OAuth Device Flow.
+
+```javascript
+const deviceData = await StaticBackend.initiateDeviceFlow('Iv1.xxx');
+// Returns: { device_code, user_code, verification_uri, expires_in }
+```
+
+#### pollDeviceFlow(clientId, deviceCode)
+
+Poll for Device Flow completion.
+
+```javascript
+const token = await StaticBackend.pollDeviceFlow('Iv1.xxx', 'xxx');
+// Returns: OAuth token or null (pending)
+```
+
+#### initiateWebFlow(clientId)
+
+Open OAuth Web Flow in popup window.
+
+```javascript
+StaticBackend.initiateWebFlow('Iv1.xxx');
+// Opens popup, callback handles token exchange
+```
 
 ---
 
@@ -184,38 +357,74 @@ const aiMessage = data.choices[0].message.content;
 
 ### Model Comparison
 
-| Model | Speed | Quality | Cost | Best For |
-|-------|-------|---------|------|----------|
-| gpt-4o-mini | ⚡⚡⚡ | ⭐⭐⭐ | $ | Quick queries, general chat |
-| gpt-4o | ⚡⚡ | ⭐⭐⭐⭐ | $$ | Balanced performance |
-| gpt-4 | ⚡ | ⭐⭐⭐⭐⭐ | $$$ | Complex analysis, critical decisions |
-| gpt-3.5-turbo | ⚡⚡⚡ | ⭐⭐ | $ | Basic queries, high volume |
+| Model | Endpoint | Speed | Quality | Best For |
+|-------|----------|-------|---------|----------|
+| gpt-4o-mini | Azure | ⚡⚡⚡ | ⭐⭐⭐ | Quick queries, general chat |
+| gpt-4o | Azure | ⚡⚡ | ⭐⭐⭐⭐ | Balanced performance |
+| Mistral-Nemo | Azure | ⚡⚡⚡ | ⭐⭐⭐ | Fast, efficient |
+| claude-3.5-sonnet | Copilot | ⚡⚡ | ⭐⭐⭐⭐⭐ | Complex analysis |
+| gemini-2.5-pro | Copilot | ⚡⚡ | ⭐⭐⭐⭐ | Multimodal tasks |
+| gpt-5 | Copilot | ⚡ | ⭐⭐⭐⭐⭐ | Critical decisions |
 
-### Model Selection Guide
+### Azure Models (GitHub Token)
 
-**Use GPT-4o Mini when:**
-- Quick ticker checks
-- Simple market sentiment
-- High-frequency queries
-- Cost is a concern
+Available immediately with a GitHub token:
+- `gpt-4o` - Balanced performance
+- `gpt-4o-mini` - Fast and efficient
+- `Mistral-Nemo-2407` - Alternative model
 
-**Use GPT-4o when:**
-- Trade plan review
-- Pattern analysis
-- Balanced needs
-- Most use cases
+### Copilot Models (OAuth Required)
 
-**Use GPT-4 when:**
-- Complex multi-factor analysis
-- Critical trade decisions
-- Monthly performance reviews
-- Need highest accuracy
+Require OAuth authentication:
+- `claude-3.5-sonnet` - Anthropic Claude
+- `claude-opus-4.5` - Advanced Claude
+- `gemini-2.5-pro` - Google Gemini
+- `gpt-5` - Latest OpenAI
+- `grok-code-fast-1` - xAI Grok
 
-**Use GPT-3.5 Turbo when:**
-- Very simple questions
-- Basic definitions
-- Maximum speed needed
-- Low-cost testing
+---
+
+## Web Tools API
+
+### WebTools Object
+
+```javascript
+const WebTools = {
+    // Rate limiting
+    lastSearch: 0,
+    MIN_INTERVAL: 2000,
+    cache: new Map()
+}
+```
+
+### Methods
+
+#### search(query)
+
+Execute web search via DuckDuckGo API.
+
+```javascript
+const results = await WebTools.search('AAPL stock news');
+// Returns: Array of { title, url, snippet }
+```
+
+#### crawl(url)
+
+Fetch and parse web page content.
+
+```javascript
+const content = await WebTools.crawl('https://example.com/article');
+// Returns: { title, content, url }
+```
+
+#### isValidUrl(url)
+
+Validate URL format.
+
+```javascript
+const valid = WebTools.isValidUrl('https://example.com');
+// Returns: boolean
+```
 
 ---
 
@@ -227,8 +436,6 @@ const aiMessage = data.choices[0].message.content;
 
 Global configuration object for application settings.
 
-**Location:** `index.html` (line ~1670)
-
 ```javascript
 const CONFIG = {
   MAX_SCREENSHOT_SIZE: 2 * 1024 * 1024,  // 2MB
@@ -238,7 +445,9 @@ const CONFIG = {
   AI_MODEL: 'gpt-4o-mini',
   AI_MAX_TOKENS: 1500,
   AI_TEMPERATURE: 0.7,
-  API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions'
+  API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions',
+  MAX_TOOL_ITERATIONS: 5,
+  WEB_SEARCH_RATE_LIMIT: 2000  // ms between searches
 };
 ```
 
@@ -501,8 +710,13 @@ const safe = escapeHtml('<script>alert("xss")</script>');
 | Key | Type | Description |
 |-----|------|-------------|
 | `prepareGrades` | JSON array | All saved trades |
-| `githubToken` | string | GitHub API token |
+| `githubToken` | string | GitHub API token (ghp_) |
+| `oauthClientId` | string | OAuth App Client ID |
+| `oauthClientSecret` | string | OAuth App Client Secret |
+| `copilotToken` | string | Copilot OAuth token (ghu_) |
 | `availableModels` | JSON array | Fetched model list |
+| `chatHistory` | JSON array | Saved chat conversations |
+| `usageStats` | JSON object | Usage statistics |
 
 ### Data Structures
 
@@ -733,4 +947,4 @@ function escapeHtml(text) {
 ---
 
 **Last Updated:** January 2026  
-**Version:** 1.0.0
+**Version:** 2.0.0

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>SFTi P.R.E.P - OAuth Callback</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #e0e0e0;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-container {
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .status {
+            font-size: 16px;
+            margin-bottom: 24px;
+            color: #888;
+        }
+
+        .status.success {
+            color: #00cc66;
+        }
+
+        .status.error {
+            color: #cc0000;
+        }
+
+        .status.processing {
+            color: #00bcd4;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(204, 0, 0, 0.2);
+            border-top-color: #cc0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+        }
+
+        .icon.success {
+            color: #00cc66;
+        }
+
+        .icon.error {
+            color: #cc0000;
+        }
+
+        .message {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .debug-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #666;
+            text-align: left;
+            word-break: break-all;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
+        }
+
+        .countdown {
+            font-size: 12px;
+            color: #666;
+            margin-top: 16px;
+        }
+
+        /* Hidden states */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <!-- Logo -->
+            <div class="logo-container">
+                <svg class="logo" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="6" fill="#cc0000"/>
+                    <path d="M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z" fill="#ff6666"/>
+                    <circle cx="22" cy="12" r="4" fill="#00ff00"/>
+                    <path d="M22 10v4m-2-2h4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <h1>SFTi P.R.E.P</h1>
+
+            <!-- Processing State -->
+            <div id="state-processing">
+                <div class="spinner"></div>
+                <p class="status processing">Processing OAuth...</p>
+                <p class="message">Please wait while we complete authentication.</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="state-success" class="hidden">
+                <svg class="icon success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+                <p class="status success">Authentication Successful!</p>
+                <p class="message">Your GitHub Copilot access has been configured. You can now use all available AI models.</p>
+                <a href="../../index.html" class="btn">Return to App</a>
+                <p class="countdown">Redirecting in <span id="countdown">5</span> seconds...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="state-error" class="hidden">
+                <svg class="icon error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M15 9l-6 6M9 9l6 6"/>
+                </svg>
+                <p class="status error">Authentication Failed</p>
+                <p class="message" id="error-message">An error occurred during authentication.</p>
+                <a href="../../index.html" class="btn">Return to App</a>
+                <div class="debug-info" id="debug-info"></div>
+            </div>
+
+            <!-- No Code State -->
+            <div id="state-no-code" class="hidden">
+                <svg class="icon" style="color: #888;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v4M12 16h.01"/>
+                </svg>
+                <p class="status">No Authorization Code</p>
+                <p class="message">No OAuth authorization code was found. Please start the authentication process from the app.</p>
+                <a href="../../index.html" class="btn">Go to App</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * SFTi P.R.E.P - Static OAuth Callback Handler
+         * 
+         * This file handles the OAuth callback for GitHub authentication.
+         * It's designed to work entirely client-side on GitHub Pages.
+         * 
+         * The flow:
+         * 1. User clicks "Connect with GitHub" in the main app
+         * 2. User is redirected to GitHub's OAuth authorization page
+         * 3. After authorization, GitHub redirects back here with a code
+         * 4. We exchange the code for an access token using CORS proxy
+         * 5. Token is stored and user is redirected back to the app
+         */
+
+        // CORS Widget - Same as main app for consistency
+        const CorsWidget = {
+            PROXIES: [
+                {
+                    name: 'corsproxy.io',
+                    urlBuilder: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    supportsPost: true,
+                    headers: {}
+                },
+                {
+                    name: 'cors.sh',
+                    urlBuilder: (url) => `https://proxy.cors.sh/${url}`,
+                    supportsPost: true,
+                    headers: { 'x-cors-api-key': 'temp_demo' }
+                },
+                {
+                    name: 'crossorigin.me',
+                    urlBuilder: (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                    supportsPost: true,
+                    headers: {}
+                }
+            ],
+            activeProxyIndex: 0,
+            
+            async postForm(url, data) {
+                const formData = new URLSearchParams();
+                for (const [key, value] of Object.entries(data)) {
+                    formData.append(key, value);
+                }
+                
+                let lastError = null;
+                for (let i = 0; i < this.PROXIES.length; i++) {
+                    const proxyIndex = (this.activeProxyIndex + i) % this.PROXIES.length;
+                    const proxy = this.PROXIES[proxyIndex];
+                    
+                    try {
+                        const proxyUrl = proxy.urlBuilder(url);
+                        const response = await fetch(proxyUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Accept': 'application/json',
+                                ...proxy.headers
+                            },
+                            body: formData.toString()
+                        });
+                        
+                        if (response.ok) {
+                            this.activeProxyIndex = proxyIndex;
+                            console.log(`[CorsWidget] Success with ${proxy.name}`);
+                            return response.json();
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        console.log(`[CorsWidget] ${proxy.name} failed:`, error.message);
+                    }
+                }
+                
+                throw new Error(`All CORS proxies failed. Last error: ${lastError?.message}`);
+            }
+        };
+
+        const OAuthCallbackHandler = {
+            // Configuration
+            config: {
+                // Storage keys
+                STORAGE_KEYS: {
+                    PENDING_STATE: 'oauth_pending_state',
+                    COPILOT_TOKEN: 'copilotToken',
+                    COPILOT_EXPIRY: 'copilotTokenExpiry',
+                    GITHUB_TOKEN: 'githubToken',
+                    OAUTH_STATE: 'oauth_state',
+                    DEVICE_CODE: 'device_code_data'
+                },
+                
+                // GitHub OAuth endpoints
+                TOKEN_URL: 'https://github.com/login/oauth/access_token',
+                
+                // Redirect delay after success
+                REDIRECT_DELAY: 5000,
+                
+                // Main app URL
+                APP_URL: '../../index.html'
+            },
+
+            // State management
+            setState(state) {
+                document.getElementById('state-processing').classList.add('hidden');
+                document.getElementById('state-success').classList.add('hidden');
+                document.getElementById('state-error').classList.add('hidden');
+                document.getElementById('state-no-code').classList.add('hidden');
+                document.getElementById(`state-${state}`).classList.remove('hidden');
+            },
+
+            // Show success state with countdown
+            showSuccess(token, tokenType = 'copilot') {
+                this.setState('success');
+                
+                // Store token
+                if (tokenType === 'copilot') {
+                    localStorage.setItem(this.config.STORAGE_KEYS.COPILOT_TOKEN, token);
+                    // Set expiry to 8 hours from now (GitHub Copilot tokens)
+                    const expiry = Date.now() + (8 * 60 * 60 * 1000);
+                    localStorage.setItem(this.config.STORAGE_KEYS.COPILOT_EXPIRY, expiry.toString());
+                } else {
+                    localStorage.setItem(this.config.STORAGE_KEYS.GITHUB_TOKEN, token);
+                }
+                
+                // Broadcast to other tabs via BroadcastChannel
+                if ('BroadcastChannel' in window) {
+                    const channel = new BroadcastChannel('sfti-backend');
+                    channel.postMessage({
+                        type: 'TOKEN_UPDATE',
+                        tokenType: tokenType,
+                        token: token
+                    });
+                    channel.close();
+                }
+                
+                // Notify opener window if exists (popup flow)
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({
+                        type: 'OAUTH_SUCCESS',
+                        token: token,
+                        tokenType: tokenType
+                    }, '*');
+                }
+                
+                // Clear pending OAuth state
+                localStorage.removeItem(this.config.STORAGE_KEYS.PENDING_STATE);
+                localStorage.removeItem(this.config.STORAGE_KEYS.OAUTH_STATE);
+                localStorage.removeItem(this.config.STORAGE_KEYS.DEVICE_CODE);
+                
+                // Start countdown and redirect
+                this.startCountdown();
+            },
+
+            // Show error state
+            showError(message, debugData = null) {
+                this.setState('error');
+                document.getElementById('error-message').textContent = message;
+                
+                if (debugData) {
+                    const debugEl = document.getElementById('debug-info');
+                    debugEl.textContent = typeof debugData === 'string' 
+                        ? debugData 
+                        : JSON.stringify(debugData, null, 2);
+                    debugEl.classList.remove('hidden');
+                }
+                
+                // Notify opener window if exists
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({
+                        type: 'OAUTH_ERROR',
+                        error: message
+                    }, '*');
+                }
+            },
+
+            // Countdown timer for redirect
+            startCountdown() {
+                let seconds = 5;
+                const countdownEl = document.getElementById('countdown');
+                
+                const timer = setInterval(() => {
+                    seconds--;
+                    countdownEl.textContent = seconds;
+                    
+                    if (seconds <= 0) {
+                        clearInterval(timer);
+                        this.redirect();
+                    }
+                }, 1000);
+            },
+
+            // Redirect to main app
+            redirect() {
+                // Close popup if in popup mode
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                } else {
+                    window.location.href = this.config.APP_URL;
+                }
+            },
+
+            // Parse URL parameters
+            getURLParams() {
+                const params = new URLSearchParams(window.location.search);
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                
+                return {
+                    code: params.get('code') || hashParams.get('code'),
+                    state: params.get('state') || hashParams.get('state'),
+                    error: params.get('error') || hashParams.get('error'),
+                    error_description: params.get('error_description') || hashParams.get('error_description'),
+                    access_token: hashParams.get('access_token'),
+                    token_type: hashParams.get('token_type')
+                };
+            },
+
+            // Validate state parameter (CSRF protection)
+            validateState(receivedState) {
+                const storedState = localStorage.getItem(this.config.STORAGE_KEYS.OAUTH_STATE);
+                
+                if (!storedState) {
+                    console.warn('No stored state found');
+                    return true; // Allow if no state stored (first time use)
+                }
+                
+                return receivedState === storedState;
+            },
+
+            // Exchange authorization code for token using CORS Widget
+            async exchangeCodeForToken(code) {
+                // Get stored OAuth app credentials
+                const clientId = localStorage.getItem('oauth_client_id');
+                const clientSecret = localStorage.getItem('oauth_client_secret');
+                
+                if (!clientId) {
+                    throw new Error('OAuth Client ID not configured. Please set up your GitHub OAuth App credentials in the main application.');
+                }
+                
+                if (!clientSecret) {
+                    throw new Error('OAuth Client Secret not configured. GitHub OAuth Web Flow requires both Client ID and Client Secret.');
+                }
+                
+                console.log('[Callback] Exchanging code for token via CORS proxy...');
+                
+                try {
+                    // Use CORS Widget to exchange code for token
+                    const tokenData = await CorsWidget.postForm(this.config.TOKEN_URL, {
+                        client_id: clientId,
+                        client_secret: clientSecret,
+                        code: code,
+                        redirect_uri: window.location.origin + window.location.pathname
+                    });
+                    
+                    console.log('[Callback] Token exchange response:', tokenData);
+                    return tokenData;
+                } catch (error) {
+                    console.error('[Callback] Token exchange failed:', error);
+                    throw new Error(`Token exchange failed: ${error.message}. Try using Device Flow instead.`);
+                }
+            },
+
+            // Handle implicit grant flow (token in URL hash)
+            handleImplicitGrant(accessToken, tokenType) {
+                console.log('Handling implicit grant token');
+                this.showSuccess(accessToken, 'copilot');
+            },
+
+            // Handle authorization code flow
+            async handleCodeFlow(code, state) {
+                console.log('Handling authorization code flow');
+                
+                // Validate state
+                if (state && !this.validateState(state)) {
+                    this.showError('Invalid state parameter. This could be a CSRF attack.', { 
+                        received: state,
+                        expected: localStorage.getItem(this.config.STORAGE_KEYS.OAUTH_STATE)
+                    });
+                    return;
+                }
+                
+                try {
+                    const tokenData = await this.exchangeCodeForToken(code);
+                    
+                    if (tokenData.access_token) {
+                        this.showSuccess(tokenData.access_token, 'copilot');
+                    } else if (tokenData.error) {
+                        this.showError(
+                            tokenData.error_description || tokenData.error,
+                            tokenData
+                        );
+                    } else {
+                        this.showError(
+                            'Failed to obtain access token',
+                            tokenData
+                        );
+                    }
+                } catch (error) {
+                    this.showError(error.message, { 
+                        code: code.substring(0, 10) + '...',
+                        error: error.toString()
+                    });
+                }
+            },
+
+            // Main initialization
+            async init() {
+                console.log('OAuth Callback Handler initializing...');
+                
+                const params = this.getURLParams();
+                
+                // Handle errors from GitHub
+                if (params.error) {
+                    this.showError(
+                        params.error_description || params.error,
+                        { error: params.error, description: params.error_description }
+                    );
+                    return;
+                }
+                
+                // Handle implicit grant (token in URL hash)
+                if (params.access_token) {
+                    this.handleImplicitGrant(params.access_token, params.token_type);
+                    return;
+                }
+                
+                // Handle authorization code flow
+                if (params.code) {
+                    await this.handleCodeFlow(params.code, params.state);
+                    return;
+                }
+                
+                // No code or token found
+                this.setState('no-code');
+            }
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            OAuthCallbackHandler.init();
+        });
+
+        // Handle messages from opener window (for token exchange)
+        window.addEventListener('message', (event) => {
+            // Verify origin for security
+            if (!event.origin.includes('github.io') && !event.origin.includes('localhost')) {
+                return;
+            }
+            
+            if (event.data.type === 'CHECK_CALLBACK') {
+                // Opener is checking if we're ready
+                event.source.postMessage({ type: 'CALLBACK_READY' }, event.origin);
+            }
+        });
+    </script>
+</body>
+</html>

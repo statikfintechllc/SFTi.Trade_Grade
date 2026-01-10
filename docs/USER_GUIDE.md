@@ -235,16 +235,22 @@ Get trading insights and analysis using AI in the **AI Assistant** view.
    - Click "Save Token"
    - Token stored locally in browser
 
+3. **OAuth Setup (Optional - For Copilot Models)**
+   - Enter OAuth Client ID in the GitHub modal
+   - Enter OAuth Client Secret (40-char hex)
+   - Use Device Flow (recommended) or Web Flow (popup)
+   - Access advanced models like Claude, Gemini, GPT-5
+
 ### Token Access Cards
 
 Two side-by-side cards at the top:
 
-- **GitHub Card** (left): Opens modal to configure GitHub Models token
-- **API Card** (right): Placeholder for future API configuration
+- **GitHub Card** (left): Opens modal to configure GitHub Models token and OAuth
+- **Market API Card** (right): Placeholder for future market data API configuration
 
 ### Using Quick Actions
 
-Pre-configured AI prompts for common tasks:
+Pre-configured AI prompts for common tasks. Access via "More" menu (three dots in input bar):
 
 - **Review Grades**: Analyze recent trade grades
 - **Find Patterns**: Identify trends in your trading
@@ -255,26 +261,30 @@ Pre-configured AI prompts for common tasks:
 
 1. **Select AI Model**
    - Use dropdown at top of chat window
-   - Always visible, floats above scrolling messages
-   - Dynamically sized based on model name
-   - Choose from dropdown:
-     - GPT-4o Mini (faster, cheaper)
+   - Available models:
+     - GPT-4o mini (faster)
      - GPT-4o (balanced)
-     - GPT-4 (most capable)
-     - GPT-3.5 Turbo (fast, basic)
+     - Mistral Nemo (efficient)
+     - Plus Copilot models if OAuth configured
 
 2. **Start Conversation**
    - Type message in the chat bar at bottom
    - Press Enter to send (Shift+Enter for new line)
 
-3. **Attach Files (Coming Soon)**
-   - Upload chart screenshots
-   - Share trade analysis
+3. **Enable Web Search**
+   - Click globe icon to toggle web search
+   - AI can search the web for real-time information
+   - Responses include citations
 
-4. **View Responses**
-   - User messages: Right side, red theme
-   - AI responses: Left side, formatted
-   - Code blocks and lists rendered properly
+4. **Manage Chat History**
+   - Clock icon (top-left): Open saved chats
+   - Plus icon (top-right): Start new conversation
+   - Chats auto-save after each AI response
+
+5. **Code Blocks**
+   - AI responses include syntax-highlighted code
+   - Language label shown in header
+   - Copy button for quick copying
 
 ### Sample AI Queries
 
@@ -284,12 +294,18 @@ Pre-configured AI prompts for common tasks:
 - "What's the current market sentiment for tech stocks?"
 - "Should I take a C-grade trade with a 3:1 R:R?"
 
+With web search enabled:
+- "What is the current price of NVDA?"
+- "Latest news on AAPL earnings"
+- "Market sentiment for semiconductor stocks today"
+
 ### Tips for Best Results
 
 - **Be Specific**: Include ticker, timeframe, and context
 - **Ask Follow-ups**: Build on previous responses
 - **Share Scores**: Mention PREPARE grades for context
 - **Request Analysis**: Ask for both bull and bear cases
+- **Use Web Search**: Enable for real-time data and news
 
 ---
 
@@ -342,6 +358,17 @@ Pre-configured AI prompts for common tasks:
 - Try different model from dropdown
 - Check browser console for errors
 
+### Web Search Not Working
+- Ensure globe icon is active (teal color)
+- May be rate limited - wait a moment
+- Check internet connection
+
+### OAuth Errors
+- Verify Client ID is correct
+- Check Client Secret format (40-char hex)
+- Try Device Flow instead of Web Flow
+- Enable popups for Web Flow
+
 ### Data Not Saving
 - Ensure browser allows local storage
 - Check available storage space
@@ -366,4 +393,4 @@ For issues or questions:
 ---
 
 **Last Updated:** January 2026  
-**Version:** 1.0.0
+**Version:** 2.0.0
