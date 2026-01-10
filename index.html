@@ -2668,6 +2668,33 @@
         </div>
         <p style="font-size: 13px; color: #00bfa5; margin-bottom: 8px; text-align: center; font-weight: 600;">Coming Soon</p>
         <p style="font-size: 11px; color: #888; margin-bottom: 16px; text-align: center;">Real-time market data integration will be available in a future update.</p>
+        
+        <!-- Static Backend Status -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <div style="font-size: 10px; font-weight: 600; color: #00bfa5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Static Backend Server</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-size: 11px; color: #888;">Status:</span>
+                <span id="staticBackendStatus" style="font-size: 11px; color: #4caf50;">● Active</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-size: 11px; color: #888;">Azure Models:</span>
+                <span style="font-size: 11px; color: #fff;">3 Available</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 11px; color: #888;">Copilot Models:</span>
+                <span id="copilotModelStatus" style="font-size: 11px; color: #888;">Auth Required</span>
+            </div>
+        </div>
+        
+        <!-- Copilot Auth Section (Future) -->
+        <div style="background: rgba(204,0,0,0.1); border: 1px solid rgba(204,0,0,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <div style="font-size: 10px; font-weight: 600; color: #cc0000; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">GitHub Copilot Integration</div>
+            <p style="font-size: 10px; color: #888; margin-bottom: 8px;">Connect your GitHub Copilot subscription to unlock Claude, Gemini, and GPT-5 models.</p>
+            <button onclick="initiateCopilotAuth()" style="width: 100%; padding: 8px; background: linear-gradient(135deg, #cc0000 0%, #990000 100%); border: none; border-radius: 6px; color: white; font-size: 11px; font-weight: 600; cursor: pointer; opacity: 0.5;" disabled>
+                Coming Soon - Connect Copilot
+            </button>
+        </div>
+        
         <div class="modal-buttons">
             <button class="modal-btn modal-btn-cancel" onclick="hideMarketApiModal()" style="width: 100%;">Close</button>
         </div>
@@ -2684,7 +2711,9 @@
         CHAT_MESSAGE_PREVIEW_LENGTH: 200,
         AI_MAX_TOKENS: 1500,  // Increased for more detailed responses
         AI_TEMPERATURE: 0.7,
+        // API Endpoints - Routed through StaticBackend
         API_ENDPOINT: 'https://models.inference.ai.azure.com/chat/completions',
+        COPILOT_ENDPOINT: 'https://api.githubcopilot.com/chat/completions',
         // Web Search Configuration
         WEB_SEARCH_ENABLED: false,
         WEB_SEARCH_MAX_ITERATIONS: 5,  // Maximum tool calling iterations
@@ -3520,11 +3549,43 @@
     function showMarketApiModal() {
         const modal = document.getElementById('marketApiModal');
         modal.classList.add('active');
+        updateStaticBackendStatus();
     }
 
     function hideMarketApiModal() {
         const modal = document.getElementById('marketApiModal');
         modal.classList.remove('active');
+    }
+    
+    // Update Static Backend status display
+    function updateStaticBackendStatus() {
+        const statusEl = document.getElementById('staticBackendStatus');
+        const copilotEl = document.getElementById('copilotModelStatus');
+        
+        if (statusEl) {
+            const hasToken = !!localStorage.getItem('githubToken');
+            statusEl.innerHTML = hasToken ? '● Active' : '○ No Token';
+            statusEl.style.color = hasToken ? '#4caf50' : '#888';
+        }
+        
+        if (copilotEl) {
+            const hasCopilot = !!localStorage.getItem('copilotToken');
+            copilotEl.textContent = hasCopilot ? '4 Available' : 'Auth Required';
+            copilotEl.style.color = hasCopilot ? '#00bfa5' : '#888';
+        }
+    }
+    
+    // Initiate GitHub Copilot OAuth (placeholder for future implementation)
+    async function initiateCopilotAuth() {
+        try {
+            showToast('Copilot authentication is coming soon!', 'info', 'Coming Soon');
+            // Future: Will use GitHub OAuth Device Flow
+            // const authInfo = await StaticBackend.initiateCopilotAuth();
+            // Show user code and verification URL
+        } catch (error) {
+            console.error('Copilot auth error:', error);
+            showToast('Unable to initiate Copilot authentication.', 'error', 'Auth Error');
+        }
     }
 
     // Quick Actions Popup functions
@@ -4151,79 +4212,377 @@
         }
     }
 
-    async function fetchAvailableModels(token) {
-        updateModelStatus('loading', 'Loading models...', '#ff9800');
+    // =============================================
+    // STATIC BACKEND SERVER
+    // A client-side "server" that enables GitHub Copilot model access
+    // Uses GitHub's API endpoints with proper authentication
+    // =============================================
+    
+    const StaticBackend = {
+        // API Endpoints
+        ENDPOINTS: {
+            // GitHub Models API (via Azure inference)
+            AZURE_INFERENCE: 'https://models.inference.ai.azure.com',
+            // GitHub Copilot API (requires Copilot subscription)
+            COPILOT_CHAT: 'https://api.githubcopilot.com/chat/completions',
+            // GitHub REST API for models catalog
+            GITHUB_MODELS: 'https://api.github.com/marketplace_listing/plans'
+        },
         
-        // Verified working models via Azure inference API with GitHub token
-        // These are the only models confirmed to work with GitHub Models
-        const VERIFIED_MODELS = [
-            {
-                name: 'gpt-4o',
-                friendly_name: 'OpenAI GPT-4o',
-                task: 'chat-completion',
-                provider: 'OpenAI'
-            },
-            {
-                name: 'gpt-4o-mini',
-                friendly_name: 'OpenAI GPT-4o mini',
-                task: 'chat-completion',
-                provider: 'OpenAI'
-            },
-            {
-                name: 'Mistral-Nemo',
-                friendly_name: 'Mistral Nemo',
-                task: 'chat-completion',
-                provider: 'Mistral AI'
+        // All available models - curated list from GitHub Models
+        ALL_MODELS: {
+            // Azure Inference Models (work with GitHub PAT)
+            azure: [
+                { name: 'gpt-4o', friendly_name: 'OpenAI GPT-4o', provider: 'OpenAI', endpoint: 'azure' },
+                { name: 'gpt-4o-mini', friendly_name: 'OpenAI GPT-4o mini', provider: 'OpenAI', endpoint: 'azure' },
+                { name: 'Mistral-Nemo', friendly_name: 'Mistral Nemo', provider: 'Mistral AI', endpoint: 'azure' }
+            ],
+            // GitHub Copilot Models (require Copilot subscription + OAuth)
+            copilot: [
+                { name: 'gpt-4', friendly_name: 'OpenAI GPT-4 (Copilot)', provider: 'OpenAI', endpoint: 'copilot' },
+                { name: 'gpt-4o', friendly_name: 'OpenAI GPT-4o (Copilot)', provider: 'OpenAI', endpoint: 'copilot' },
+                { name: 'claude-3.5-sonnet', friendly_name: 'Claude 3.5 Sonnet', provider: 'Anthropic', endpoint: 'copilot' },
+                { name: 'gemini-1.5-pro', friendly_name: 'Gemini 1.5 Pro', provider: 'Google', endpoint: 'copilot' }
+            ]
+        },
+        
+        // Token storage
+        tokens: {
+            github: null,      // GitHub PAT (Personal Access Token)
+            copilot: null,     // Copilot OAuth token
+            copilotExpiry: null
+        },
+        
+        // Initialize the static backend
+        async init() {
+            console.log('[StaticBackend] Initializing...');
+            
+            // Load saved tokens
+            this.tokens.github = localStorage.getItem('githubToken');
+            this.tokens.copilot = localStorage.getItem('copilotToken');
+            this.tokens.copilotExpiry = localStorage.getItem('copilotTokenExpiry');
+            
+            // Check if Copilot token is expired
+            if (this.tokens.copilotExpiry && Date.now() > parseInt(this.tokens.copilotExpiry)) {
+                console.log('[StaticBackend] Copilot token expired, clearing...');
+                this.tokens.copilot = null;
+                localStorage.removeItem('copilotToken');
+                localStorage.removeItem('copilotTokenExpiry');
             }
-        ];
+            
+            // Set up message channel for cross-tab communication
+            if ('BroadcastChannel' in window) {
+                this.channel = new BroadcastChannel('sfti-backend');
+                this.channel.onmessage = (event) => this.handleMessage(event.data);
+            }
+            
+            console.log('[StaticBackend] Initialized', {
+                hasGitHubToken: !!this.tokens.github,
+                hasCopilotToken: !!this.tokens.copilot
+            });
+            
+            return this;
+        },
         
-        try {
-            // Validate the token by making a test request to the inference API
-            const testResponse = await fetch('https://models.inference.ai.azure.com/chat/completions', {
+        // Handle cross-tab messages
+        handleMessage(data) {
+            if (data.type === 'TOKEN_UPDATE') {
+                this.tokens[data.tokenType] = data.token;
+            }
+        },
+        
+        // Broadcast token updates to other tabs
+        broadcastTokenUpdate(tokenType, token) {
+            if (this.channel) {
+                this.channel.postMessage({ type: 'TOKEN_UPDATE', tokenType, token });
+            }
+        },
+        
+        // Get available models based on current authentication
+        async getAvailableModels() {
+            const models = [];
+            
+            // Always include Azure models if we have a GitHub token
+            if (this.tokens.github) {
+                models.push(...this.ALL_MODELS.azure);
+            }
+            
+            // Include Copilot models if we have a Copilot token
+            if (this.tokens.copilot) {
+                models.push(...this.ALL_MODELS.copilot);
+            }
+            
+            return models;
+        },
+        
+        // Make a chat completion request
+        async chatCompletion(model, messages, options = {}) {
+            const modelConfig = this.findModel(model);
+            
+            if (!modelConfig) {
+                throw new Error(`Unknown model: ${model}`);
+            }
+            
+            // Route to appropriate endpoint
+            if (modelConfig.endpoint === 'copilot' && this.tokens.copilot) {
+                return this.copilotCompletion(model, messages, options);
+            } else if (modelConfig.endpoint === 'azure' || this.tokens.github) {
+                return this.azureCompletion(model, messages, options);
+            } else {
+                throw new Error('No valid authentication token available');
+            }
+        },
+        
+        // Find model configuration
+        findModel(modelName) {
+            for (const category of Object.values(this.ALL_MODELS)) {
+                const found = category.find(m => m.name === modelName);
+                if (found) return found;
+            }
+            return null;
+        },
+        
+        // Azure Inference API completion
+        async azureCompletion(model, messages, options = {}) {
+            const response = await fetch(`${this.ENDPOINTS.AZURE_INFERENCE}/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${this.tokens.github}`
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    messages: [{ role: 'user', content: 'Hi' }],
-                    max_tokens: 1
+                    model: model,
+                    messages: messages,
+                    max_tokens: options.max_tokens || 4096,
+                    temperature: options.temperature || 0.7,
+                    ...options
                 })
             });
             
-            if (testResponse.ok || testResponse.status === 200) {
-                // Token is valid, use verified models
-                console.log('Token validated, loading verified models');
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`Azure API Error: ${response.status} - ${error}`);
+            }
+            
+            return response.json();
+        },
+        
+        // GitHub Copilot API completion (requires OAuth token)
+        async copilotCompletion(model, messages, options = {}) {
+            if (!this.tokens.copilot) {
+                throw new Error('Copilot authentication required. Please authenticate with GitHub Copilot.');
+            }
+            
+            const response = await fetch(this.ENDPOINTS.COPILOT_CHAT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.tokens.copilot}`,
+                    'Editor-Version': 'SFTi-PREP/1.0',
+                    'Editor-Plugin-Version': '1.0.0',
+                    'Openai-Organization': 'github-copilot',
+                    'X-GitHub-Api-Version': '2024-12-01'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages,
+                    max_tokens: options.max_tokens || 4096,
+                    temperature: options.temperature || 0.7,
+                    ...options
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`Copilot API Error: ${response.status} - ${error}`);
+            }
+            
+            return response.json();
+        },
+        
+        // Set GitHub PAT token
+        setGitHubToken(token) {
+            this.tokens.github = token;
+            localStorage.setItem('githubToken', token);
+            this.broadcastTokenUpdate('github', token);
+        },
+        
+        // Validate GitHub token
+        async validateGitHubToken(token) {
+            try {
+                const response = await fetch('https://api.github.com/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github+json'
+                    }
+                });
                 
-                showToast('Models: GPT-4o, GPT-4o mini, Mistral Nemo', 'success', '3 Models Loaded', 5000);
-                updateModelStatus('ready', '3 models ready', '#00bfa5');
+                if (response.ok) {
+                    const user = await response.json();
+                    return { valid: true, user };
+                }
+                return { valid: false, error: 'Invalid token' };
+            } catch (error) {
+                return { valid: false, error: error.message };
+            }
+        },
+        
+        // GitHub OAuth Device Flow for Copilot
+        // This allows authentication without a backend server!
+        async initiateCopilotAuth() {
+            // Note: This requires a registered GitHub OAuth App with device flow enabled
+            // The client_id should be for an app that has Copilot API access
+            const CLIENT_ID = 'Iv1.XXXXXXXXXXXXXXXX'; // Placeholder - needs real app
+            
+            try {
+                // Step 1: Request device code
+                const codeResponse = await fetch('https://github.com/login/device/code', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_id: CLIENT_ID,
+                        scope: 'copilot'
+                    })
+                });
                 
-                localStorage.setItem('availableModels', JSON.stringify(VERIFIED_MODELS));
-                populateModelPicker(VERIFIED_MODELS);
-            } else if (testResponse.status === 401) {
-                console.error('Authentication failed:', testResponse.status);
-                showToast('Invalid GitHub token. Please check your token has GitHub Models access.', 'error', 'Auth Error');
+                if (!codeResponse.ok) {
+                    throw new Error('Failed to initiate device flow');
+                }
+                
+                const codeData = await codeResponse.json();
+                
+                // Return device code info for user to complete auth
+                return {
+                    device_code: codeData.device_code,
+                    user_code: codeData.user_code,
+                    verification_uri: codeData.verification_uri,
+                    expires_in: codeData.expires_in,
+                    interval: codeData.interval
+                };
+            } catch (error) {
+                console.error('[StaticBackend] OAuth initiation failed:', error);
+                throw error;
+            }
+        },
+        
+        // Poll for OAuth completion
+        async pollCopilotAuth(deviceCode, interval = 5) {
+            const CLIENT_ID = 'Iv1.XXXXXXXXXXXXXXXX'; // Placeholder
+            
+            const poll = async () => {
+                const response = await fetch('https://github.com/login/oauth/access_token', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_id: CLIENT_ID,
+                        device_code: deviceCode,
+                        grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.access_token) {
+                    // Success! Store the token
+                    this.tokens.copilot = data.access_token;
+                    localStorage.setItem('copilotToken', data.access_token);
+                    
+                    if (data.expires_in) {
+                        const expiry = Date.now() + (data.expires_in * 1000);
+                        this.tokens.copilotExpiry = expiry;
+                        localStorage.setItem('copilotTokenExpiry', expiry.toString());
+                    }
+                    
+                    this.broadcastTokenUpdate('copilot', data.access_token);
+                    return { success: true, token: data.access_token };
+                }
+                
+                if (data.error === 'authorization_pending') {
+                    // User hasn't completed auth yet, keep polling
+                    return { success: false, pending: true };
+                }
+                
+                if (data.error === 'slow_down') {
+                    // Need to slow down polling
+                    return { success: false, pending: true, slowDown: true };
+                }
+                
+                // Other errors
+                return { success: false, error: data.error_description || data.error };
+            };
+            
+            return poll();
+        }
+    };
+    
+    // Initialize Static Backend on page load
+    StaticBackend.init();
+    
+    // =============================================
+    // Model Fetching with Static Backend Integration
+    // =============================================
+
+    async function fetchAvailableModels(token) {
+        updateModelStatus('loading', 'Loading models...', '#ff9800');
+        
+        // Update Static Backend with the token
+        StaticBackend.setGitHubToken(token);
+        
+        try {
+            // Validate the token first
+            const validation = await StaticBackend.validateGitHubToken(token);
+            
+            if (!validation.valid) {
+                console.error('Token validation failed:', validation.error);
+                showToast('Invalid GitHub token. Please check your token.', 'error', 'Auth Error');
                 updateModelStatus('error', 'Invalid token', '#ff4444');
                 clearModelPicker();
-            } else {
-                // Token might still work, load models anyway
-                console.log('Test request returned:', testResponse.status, '- loading models anyway');
-                
-                showToast('Models: GPT-4o, GPT-4o mini, Mistral Nemo', 'success', '3 Models Loaded', 5000);
-                updateModelStatus('ready', '3 models ready', '#00bfa5');
-                
-                localStorage.setItem('availableModels', JSON.stringify(VERIFIED_MODELS));
-                populateModelPicker(VERIFIED_MODELS);
+                return;
             }
+            
+            console.log('[Models] Token validated for user:', validation.user.login);
+            
+            // Get available models from Static Backend
+            const models = await StaticBackend.getAvailableModels();
+            
+            if (models.length === 0) {
+                showToast('No models available. Please configure your token.', 'warning', 'No Models');
+                updateModelStatus('error', 'No models', '#ff4444');
+                clearModelPicker();
+                return;
+            }
+            
+            // Show success message with model count
+            const azureCount = models.filter(m => m.endpoint === 'azure').length;
+            const copilotCount = models.filter(m => m.endpoint === 'copilot').length;
+            
+            let toastMsg = `${azureCount} Azure model${azureCount !== 1 ? 's' : ''}`;
+            if (copilotCount > 0) {
+                toastMsg += ` + ${copilotCount} Copilot model${copilotCount !== 1 ? 's' : ''}`;
+            }
+            
+            showToast(toastMsg, 'success', `${models.length} Models Loaded`, 5000);
+            updateModelStatus('ready', `${models.length} models ready`, '#00bfa5');
+            
+            localStorage.setItem('availableModels', JSON.stringify(models));
+            populateModelPicker(models);
+            
         } catch (error) {
-            console.error('Error validating token:', error);
-            // Network error but still load models - user can try them
-            showToast('Models loaded. Network connectivity may be limited.', 'warning', '3 Models Loaded', 5000);
+            console.error('Error fetching models:', error);
+            
+            // Fallback to just Azure models
+            const fallbackModels = StaticBackend.ALL_MODELS.azure;
+            showToast('Loaded basic models. Some features may be limited.', 'warning', '3 Models Loaded', 5000);
             updateModelStatus('ready', '3 models ready', '#00bfa5');
             
-            localStorage.setItem('availableModels', JSON.stringify(VERIFIED_MODELS));
-            populateModelPicker(VERIFIED_MODELS);
+            localStorage.setItem('availableModels', JSON.stringify(fallbackModels));
+            populateModelPicker(fallbackModels);
         }
     }
 
@@ -5174,22 +5533,37 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
                     requestBody.tool_choice = 'auto';
                 }
                 
-                // Make API call
-                const response = await fetch(CONFIG.API_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(requestBody)
-                });
+                // Make API call through StaticBackend
+                // Automatically routes to correct endpoint based on model
+                let data;
+                try {
+                    // Use StaticBackend for intelligent routing
+                    data = await StaticBackend.chatCompletion(selectedModel, messages, {
+                        max_tokens: CONFIG.AI_MAX_TOKENS,
+                        temperature: CONFIG.AI_TEMPERATURE,
+                        tools: webSearchEnabled ? webSearchTools : undefined,
+                        tool_choice: webSearchEnabled ? 'auto' : undefined
+                    });
+                } catch (backendError) {
+                    // Fallback to direct Azure call if StaticBackend fails
+                    console.warn('[StaticBackend] Falling back to direct API:', backendError.message);
+                    const response = await fetch(CONFIG.API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
 
-                if (!response.ok) {
-                    const errorData = await response.text();
-                    throw new Error(`API Error: ${response.status} - ${errorData}`);
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        throw new Error(`API Error: ${response.status} - ${errorData}`);
+                    }
+
+                    data = await response.json();
                 }
-
-                const data = await response.json();
+                
                 const responseMessage = data.choices[0].message;
                 
                 // Add response to messages for context
