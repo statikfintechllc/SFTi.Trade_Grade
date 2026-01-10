@@ -236,10 +236,16 @@
                     headers: {}
                 },
                 {
-                    name: 'cors-anywhere-alt',
+                    name: 'cors.sh',
                     urlBuilder: (url) => `https://proxy.cors.sh/${url}`,
                     supportsPost: true,
                     headers: { 'x-cors-api-key': 'temp_demo' }
+                },
+                {
+                    name: 'crossorigin.me',
+                    urlBuilder: (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                    supportsPost: true,
+                    headers: {}
                 }
             ],
             activeProxyIndex: 0,

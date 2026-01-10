@@ -2715,20 +2715,20 @@
             
             <!-- OAuth Flow Selection -->
             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                <button id="btnWebFlowAuth" onclick="startWebFlowAuth()" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #555 0%, #333 100%); border: 1px solid #444; border-radius: 6px; color: #888; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; opacity: 0.6;" disabled title="Web Flow has CORS limitations in static sites">
+                <button id="btnWebFlowAuth" onclick="startWebFlowAuth()" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #444 0%, #333 100%); border: 1px solid #555; border-radius: 6px; color: #ccc; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" disabled title="Opens GitHub auth in a popup window">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                         <polyline points="15 3 21 3 21 9"/>
                         <line x1="10" y1="14" x2="21" y2="3"/>
                     </svg>
-                    Web Flow
+                    Web (Popup)
                 </button>
                 <button id="btnDeviceFlowAuth" onclick="startDeviceFlowAuth()" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #00796b 0%, #004d40 100%); border: none; border-radius: 6px; color: white; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;" disabled>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
                         <line x1="12" y1="18" x2="12.01" y2="18"/>
                     </svg>
-                    Device Flow
+                    Device Code
                 </button>
             </div>
             
@@ -3832,7 +3832,7 @@
         saveOAuthCredentials();
     }
     
-    // Start Web Flow OAuth
+    // Start Web Flow OAuth (using popup mode)
     async function startWebFlowAuth() {
         try {
             const clientId = localStorage.getItem('oauth_client_id');
@@ -3841,8 +3841,17 @@
                 return;
             }
             
-            showToast('Redirecting to GitHub...', 'info', 'OAuth');
-            StaticBackend.initiateWebFlowAuth();
+            showToast('Opening GitHub authorization...', 'info', 'OAuth');
+            
+            // Use popup mode instead of redirect
+            const result = await StaticBackend.initiatePopupAuth();
+            
+            if (result.success) {
+                showToast('GitHub Copilot connected!', 'success', 'Connected');
+                updateOAuthUI();
+                updateStaticBackendStatus();
+                fetchModels();
+            }
         } catch (error) {
             console.error('Web Flow auth error:', error);
             showToast(error.message, 'error', 'Auth Error');
@@ -4957,6 +4966,7 @@
         
         CorsWidget: {
             // Available CORS proxy services (tried in order)
+            // These are PUBLIC CORS proxies - for production, consider your own proxy
             PROXIES: [
                 {
                     name: 'corsproxy.io',
@@ -4965,16 +4975,16 @@
                     headers: {}
                 },
                 {
-                    name: 'allorigins',
-                    urlBuilder: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                    supportsPost: false, // GET only, use query params
-                    headers: {}
-                },
-                {
-                    name: 'cors-anywhere-alt',
+                    name: 'cors.sh',
                     urlBuilder: (url) => `https://proxy.cors.sh/${url}`,
                     supportsPost: true,
                     headers: { 'x-cors-api-key': 'temp_demo' }
+                },
+                {
+                    name: 'crossorigin.me',
+                    urlBuilder: (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                    supportsPost: true,
+                    headers: {}
                 }
             ],
             
