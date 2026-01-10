@@ -222,14 +222,65 @@
          * 1. User clicks "Connect with GitHub" in the main app
          * 2. User is redirected to GitHub's OAuth authorization page
          * 3. After authorization, GitHub redirects back here with a code
-         * 4. We exchange the code for an access token (via a CORS proxy or Device Flow)
+         * 4. We exchange the code for an access token using CORS proxy
          * 5. Token is stored and user is redirected back to the app
-         * 
-         * Since GitHub's token endpoint doesn't support CORS, we use one of these strategies:
-         * - Device Flow (preferred): Uses GitHub Device Flow which works client-side
-         * - CORS Proxy: Uses a public CORS proxy (less secure but works)
-         * - PostMessage: Communicates directly with opener window
          */
+
+        // CORS Widget - Same as main app for consistency
+        const CorsWidget = {
+            PROXIES: [
+                {
+                    name: 'corsproxy.io',
+                    urlBuilder: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    supportsPost: true,
+                    headers: {}
+                },
+                {
+                    name: 'cors-anywhere-alt',
+                    urlBuilder: (url) => `https://proxy.cors.sh/${url}`,
+                    supportsPost: true,
+                    headers: { 'x-cors-api-key': 'temp_demo' }
+                }
+            ],
+            activeProxyIndex: 0,
+            
+            async postForm(url, data) {
+                const formData = new URLSearchParams();
+                for (const [key, value] of Object.entries(data)) {
+                    formData.append(key, value);
+                }
+                
+                let lastError = null;
+                for (let i = 0; i < this.PROXIES.length; i++) {
+                    const proxyIndex = (this.activeProxyIndex + i) % this.PROXIES.length;
+                    const proxy = this.PROXIES[proxyIndex];
+                    
+                    try {
+                        const proxyUrl = proxy.urlBuilder(url);
+                        const response = await fetch(proxyUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Accept': 'application/json',
+                                ...proxy.headers
+                            },
+                            body: formData.toString()
+                        });
+                        
+                        if (response.ok) {
+                            this.activeProxyIndex = proxyIndex;
+                            console.log(`[CorsWidget] Success with ${proxy.name}`);
+                            return response.json();
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        console.log(`[CorsWidget] ${proxy.name} failed:`, error.message);
+                    }
+                }
+                
+                throw new Error(`All CORS proxies failed. Last error: ${lastError?.message}`);
+            }
+        };
 
         const OAuthCallbackHandler = {
             // Configuration
@@ -243,6 +294,9 @@
                     OAUTH_STATE: 'oauth_state',
                     DEVICE_CODE: 'device_code_data'
                 },
+                
+                // GitHub OAuth endpoints
+                TOKEN_URL: 'https://github.com/login/oauth/access_token',
                 
                 // Redirect delay after success
                 REDIRECT_DELAY: 5000,
@@ -378,7 +432,7 @@
                 return receivedState === storedState;
             },
 
-            // Exchange authorization code for token using CORS proxy
+            // Exchange authorization code for token using CORS Widget
             async exchangeCodeForToken(code) {
                 // Get stored OAuth app credentials
                 const clientId = localStorage.getItem('oauth_client_id');
@@ -392,20 +446,23 @@
                     throw new Error('OAuth Client Secret not configured. GitHub OAuth Web Flow requires both Client ID and Client Secret.');
                 }
                 
-                // IMPORTANT: GitHub's token exchange endpoint does NOT support CORS
-                // This means we CANNOT exchange the code for a token directly from the browser
-                // 
-                // Options:
-                // 1. Use Device Flow instead (recommended - works entirely client-side)
-                // 2. Use a backend server proxy
-                // 3. Use a CORS proxy service (security risk)
+                console.log('[Callback] Exchanging code for token via CORS proxy...');
                 
-                // For now, we'll show an informative error guiding users to Device Flow
-                throw new Error(
-                    'GitHub OAuth Web Flow cannot complete in a static site because GitHub\'s token endpoint doesn\'t support CORS. ' +
-                    'Please use Device Flow instead - it works entirely client-side! ' +
-                    'Authorization code received: ' + code.substring(0, 10) + '...'
-                );
+                try {
+                    // Use CORS Widget to exchange code for token
+                    const tokenData = await CorsWidget.postForm(this.config.TOKEN_URL, {
+                        client_id: clientId,
+                        client_secret: clientSecret,
+                        code: code,
+                        redirect_uri: window.location.origin + window.location.pathname
+                    });
+                    
+                    console.log('[Callback] Token exchange response:', tokenData);
+                    return tokenData;
+                } catch (error) {
+                    console.error('[Callback] Token exchange failed:', error);
+                    throw new Error(`Token exchange failed: ${error.message}. Try using Device Flow instead.`);
+                }
             },
 
             // Handle implicit grant flow (token in URL hash)
@@ -432,64 +489,22 @@
                     
                     if (tokenData.access_token) {
                         this.showSuccess(tokenData.access_token, 'copilot');
+                    } else if (tokenData.error) {
+                        this.showError(
+                            tokenData.error_description || tokenData.error,
+                            tokenData
+                        );
                     } else {
                         this.showError(
-                            tokenData.error_description || 'Failed to obtain access token',
+                            'Failed to obtain access token',
                             tokenData
                         );
                     }
                 } catch (error) {
                     this.showError(error.message, { 
-                        code: code,
+                        code: code.substring(0, 10) + '...',
                         error: error.toString()
                     });
-                }
-            },
-
-            // Handle Device Flow completion
-            async checkDeviceFlowCompletion() {
-                const deviceCodeData = localStorage.getItem(this.config.STORAGE_KEYS.DEVICE_CODE);
-                
-                if (!deviceCodeData) {
-                    return false;
-                }
-                
-                try {
-                    const data = JSON.parse(deviceCodeData);
-                    const clientId = localStorage.getItem('oauth_client_id');
-                    
-                    // Check if device flow completed
-                    const response = await fetch('https://github.com/login/oauth/access_token', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            client_id: clientId,
-                            device_code: data.device_code,
-                            grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.access_token) {
-                        this.showSuccess(result.access_token, 'copilot');
-                        return true;
-                    }
-                    
-                    if (result.error === 'authorization_pending') {
-                        // Still waiting
-                        return false;
-                    }
-                    
-                    // Error occurred
-                    this.showError(result.error_description || result.error, result);
-                    return true;
-                } catch (error) {
-                    console.error('Device flow check failed:', error);
-                    return false;
                 }
             },
 
@@ -517,12 +532,6 @@
                 // Handle authorization code flow
                 if (params.code) {
                     await this.handleCodeFlow(params.code, params.state);
-                    return;
-                }
-                
-                // Check for device flow completion
-                const deviceFlowCompleted = await this.checkDeviceFlowCompletion();
-                if (deviceFlowCompleted) {
                     return;
                 }
                 

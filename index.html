@@ -4949,36 +4949,178 @@
         },
         
         // =============================================
+        // CORS BYPASS WIDGET - Unlocked GitHub Pages
+        // =============================================
+        // This widget enables CORS-bypassed POST requests from static sites
+        // Uses multiple proxy strategies with automatic fallback
+        // =============================================
+        
+        CorsWidget: {
+            // Available CORS proxy services (tried in order)
+            PROXIES: [
+                {
+                    name: 'corsproxy.io',
+                    urlBuilder: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    supportsPost: true,
+                    headers: {}
+                },
+                {
+                    name: 'allorigins',
+                    urlBuilder: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                    supportsPost: false, // GET only, use query params
+                    headers: {}
+                },
+                {
+                    name: 'cors-anywhere-alt',
+                    urlBuilder: (url) => `https://proxy.cors.sh/${url}`,
+                    supportsPost: true,
+                    headers: { 'x-cors-api-key': 'temp_demo' }
+                }
+            ],
+            
+            // Current active proxy index
+            activeProxyIndex: 0,
+            
+            // Make a CORS-bypassed request
+            async fetch(url, options = {}) {
+                const method = options.method || 'GET';
+                const headers = options.headers || {};
+                const body = options.body;
+                
+                // For GET requests, try direct first
+                if (method === 'GET') {
+                    try {
+                        const directResponse = await fetch(url, { ...options, mode: 'cors' });
+                        if (directResponse.ok) return directResponse;
+                    } catch (e) {
+                        console.log('[CorsWidget] Direct GET failed, using proxy');
+                    }
+                }
+                
+                // Try proxies in order until one works
+                let lastError = null;
+                for (let i = 0; i < this.PROXIES.length; i++) {
+                    const proxyIndex = (this.activeProxyIndex + i) % this.PROXIES.length;
+                    const proxy = this.PROXIES[proxyIndex];
+                    
+                    try {
+                        const proxyUrl = proxy.urlBuilder(url);
+                        const proxyHeaders = { ...headers, ...proxy.headers };
+                        
+                        let response;
+                        if (method === 'POST' && proxy.supportsPost) {
+                            response = await fetch(proxyUrl, {
+                                method: 'POST',
+                                headers: proxyHeaders,
+                                body: body
+                            });
+                        } else if (method === 'POST' && !proxy.supportsPost) {
+                            // For proxies that don't support POST, we need to encode data in URL
+                            // This is a limitation - use a POST-supporting proxy first
+                            continue;
+                        } else {
+                            response = await fetch(proxyUrl, {
+                                method: 'GET',
+                                headers: proxyHeaders
+                            });
+                        }
+                        
+                        if (response.ok) {
+                            // Remember this working proxy for next time
+                            this.activeProxyIndex = proxyIndex;
+                            console.log(`[CorsWidget] Success with ${proxy.name}`);
+                            return response;
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        console.log(`[CorsWidget] ${proxy.name} failed:`, error.message);
+                    }
+                }
+                
+                throw new Error(`All CORS proxies failed. Last error: ${lastError?.message}`);
+            },
+            
+            // POST with JSON body
+            async postJson(url, data) {
+                const response = await this.fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                return response.json();
+            },
+            
+            // POST with form-urlencoded body (for OAuth)
+            async postForm(url, data) {
+                const formData = new URLSearchParams();
+                for (const [key, value] of Object.entries(data)) {
+                    formData.append(key, value);
+                }
+                
+                const response = await this.fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: formData.toString()
+                });
+                return response.json();
+            }
+        },
+        
+        // =============================================
         // GitHub OAuth Device Flow for Copilot
         // This allows authentication without a backend server!
+        // Uses CorsWidget for CORS-bypassed requests
         // =============================================
+        
+        // Helper: Make CORS-proxied POST request to GitHub OAuth
+        async corsProxiedOAuthRequest(endpoint, data) {
+            console.log('[StaticBackend] OAuth request to:', endpoint);
+            
+            try {
+                // Use CorsWidget for CORS-bypassed POST
+                const result = await this.CorsWidget.postForm(endpoint, data);
+                console.log('[StaticBackend] OAuth response:', result);
+                return result;
+            } catch (error) {
+                console.error('[StaticBackend] OAuth request failed:', error);
+                throw new Error(`OAuth request failed: ${error.message}`);
+            }
+        },
+        
         async initiateCopilotAuth() {
             const clientId = this.getOAuthClientId();
             
             if (!clientId) {
-                throw new Error('OAuth Client ID not configured. Please enter your GitHub OAuth App Client ID in the Market API settings.');
+                throw new Error('OAuth Client ID not configured. Please enter your GitHub OAuth App Client ID in the settings.');
             }
             
             try {
-                // Step 1: Request device code
-                const codeResponse = await fetch(this.OAUTH_CONFIG.DEVICE_CODE_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
+                console.log('[StaticBackend] Initiating Device Flow with Client ID:', clientId);
+                
+                // Step 1: Request device code from GitHub
+                const codeData = await this.corsProxiedOAuthRequest(
+                    this.OAUTH_CONFIG.DEVICE_CODE_URL,
+                    {
                         client_id: clientId,
                         scope: this.OAUTH_CONFIG.SCOPES.join(' ')
-                    })
-                });
+                    }
+                );
                 
-                if (!codeResponse.ok) {
-                    const errorText = await codeResponse.text();
-                    throw new Error(`Failed to initiate device flow: ${errorText}`);
+                console.log('[StaticBackend] Device code response:', codeData);
+                
+                if (codeData.error) {
+                    throw new Error(codeData.error_description || codeData.error);
                 }
                 
-                const codeData = await codeResponse.json();
+                if (!codeData.device_code || !codeData.user_code) {
+                    throw new Error('Invalid response from GitHub: missing device_code or user_code');
+                }
                 
                 // Store device code data for callback handler
                 localStorage.setItem('device_code_data', JSON.stringify({
@@ -4991,14 +5133,14 @@
                 return {
                     device_code: codeData.device_code,
                     user_code: codeData.user_code,
-                    verification_uri: codeData.verification_uri,
+                    verification_uri: codeData.verification_uri || 'https://github.com/login/device',
                     verification_uri_complete: codeData.verification_uri_complete,
                     expires_in: codeData.expires_in,
                     interval: codeData.interval || 5
                 };
             } catch (error) {
                 console.error('[StaticBackend] OAuth Device Flow initiation failed:', error);
-                throw error;
+                throw new Error(`Device Flow failed: ${error.message}. Make sure your OAuth App has Device Flow enabled in GitHub Developer Settings.`);
             }
         },
         
@@ -5012,20 +5154,17 @@
             
             const poll = async () => {
                 try {
-                    const response = await fetch(this.OAUTH_CONFIG.TOKEN_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
+                    // Use CORS-proxied request for token endpoint
+                    const data = await this.corsProxiedOAuthRequest(
+                        this.OAUTH_CONFIG.TOKEN_URL,
+                        {
                             client_id: clientId,
                             device_code: deviceCode,
                             grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
-                        })
-                    });
+                        }
+                    );
                     
-                    const data = await response.json();
+                    console.log('[StaticBackend] Poll response:', data);
                     
                     if (data.access_token) {
                         // Success! Store the token
@@ -5068,6 +5207,7 @@
                     // Other errors
                     return { success: false, error: data.error_description || data.error };
                 } catch (error) {
+                    console.error('[StaticBackend] Poll error:', error);
                     return { success: false, error: error.message };
                 }
             };
