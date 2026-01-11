@@ -2,15 +2,17 @@
 
 ## Architecture Overview
 
-SFTi P.R.E.P is a single-page Progressive Web App (PWA) built with vanilla HTML, CSS, and JavaScript. No frameworks, build tools, or external dependencies required.
+SFTi P.R.E.P is a single-page Progressive Web App (PWA) built with vanilla HTML, CSS, and JavaScript. Features include a "Static Backend Server" architecture for OAuth authentication and CORS bypassing.
 
 ### Technology Stack
 
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+)
 - **Storage:** Browser LocalStorage API
 - **Offline:** Service Workers for PWA functionality
-- **AI Integration:** GitHub Models API (REST)
-- **Architecture:** Client-side only, no backend server
+- **AI Integration:** GitHub Models API (REST), Azure Inference API
+- **OAuth:** GitHub OAuth with Device Flow and Web Flow
+- **Architecture:** Client-side only with Static Backend Server pattern
+- **CORS Handling:** Custom CORS Widget with proxy fallbacks
 
 ---
 
@@ -18,7 +20,10 @@ SFTi P.R.E.P is a single-page Progressive Web App (PWA) built with vanilla HTML,
 
 ```
 SFTi.Trade_Grade/
-├── index.html              # Main application file (3700+ lines)
+├── index.html              # Main application file (5000+ lines)
+├── auth/
+│   └── callback/
+│       └── index.html      # OAuth callback handler
 ├── system/
 │   ├── img/
 │   │   ├── icon-192.png   # PWA icon (192x192)
@@ -43,35 +48,54 @@ SFTi.Trade_Grade/
 
 ### Single-File Application
 
-The entire application lives in `index.html`:
+The main application lives in `index.html`:
 
-1. **Lines 1-1400:** CSS Styles
+1. **Lines 1-1800:** CSS Styles
    - Base styles
    - Component styles
    - Chat window styles (model selector bar, messages, input)
-   - Modal styles (token access cards)
+   - Modal styles (GitHub, Market API)
+   - Syntax highlighting styles
    - Responsive design
    - Animations
 
-2. **Lines 1400-1900:** HTML Structure
+2. **Lines 1800-2500:** HTML Structure
    - Header and navigation
    - View containers (Grade, Tracker, Finalize, History, AI)
-   - Token access cards (GitHub and API modals)
-   - Modals (ticker, trade details, finalize, image viewer, GitHub token, API token)
-   - Chat window (model selector bar, messages, input)
+   - Token access cards (GitHub and Market API)
+   - Modals (ticker, trade details, finalize, image viewer, GitHub, Market API)
+   - Chat window (model selector bar, chat history, new chat, messages, input)
+   - Web Search toggle and More Actions menu
 
-3. **Lines 1900-3900:** JavaScript
+3. **Lines 2500-5000:** JavaScript
    - Configuration
    - State management
    - View switching
    - Trade grading logic
    - Trade plan calculations
    - History management
-   - AI assistant
-   - Chat interface
-   - Modal management (token access)
+   - **StaticBackend** - OAuth, token management, API routing
+   - **CorsWidget** - CORS proxy management
+   - **WebTools** - Web search and crawling
+   - AI assistant with tool calling
+   - Chat interface with history
+   - Modal management
    - Model selector dynamic resizing
+   - Syntax highlighting for code blocks
    - Utility functions
+
+### OAuth Callback Handler
+
+The `/auth/callback/index.html` file handles OAuth redirects:
+
+1. **CSS:** Themed loading/success/error states
+2. **HTML:** Status display with animations
+3. **JavaScript:**
+   - CorsWidget (copy of main app)
+   - Token exchange via CORS proxy
+   - postMessage to parent window
+   - localStorage sync
+   - Auto-close on success
 
 ### Component Breakdown
 
@@ -80,14 +104,21 @@ The entire application lives in `index.html`:
 - Trade Plan (entry/stop/target)
 - Finalize Trades (outcome tracking)
 - History (search/filter)
-- AI Assistant (chat interface with floating model selector)
+- AI Assistant (chat interface with web search)
+
+**New Components:**
+- StaticBackend (OAuth, routing)
+- CorsWidget (proxy management)
+- WebTools (search/crawl)
+- Chat History (persistent)
+- Code Block Renderer (syntax highlighting)
 
 **Shared Components:**
 - Header/Navigation
 - Side Menu
 - Toast Notifications
-- Modals (ticker, trade details, finalize, image viewer, GitHub token, API token)
-- Token Access Cards (GitHub and API)
+- Glass Modals (GitHub, Market API)
+- Token Access Cards
 
 ---
 
@@ -156,7 +187,22 @@ let chatHistory = [];
     }
   ],
   "githubToken": "ghp_...",
-  "availableModels": [...]
+  "oauthClientId": "Iv1.xxxxx",
+  "oauthClientSecret": "xxxxx...",
+  "copilotToken": "ghu_...",
+  "availableModels": [...],
+  "chatHistory": [
+    {
+      "id": "timestamp",
+      "title": "First message preview",
+      "messages": [...]
+    }
+  ],
+  "usageStats": {
+    "messages": 0,
+    "webSearches": 0,
+    "tokensUsed": 0
+  }
 }
 ```
 
@@ -164,16 +210,87 @@ let chatHistory = [];
 
 ## Key Functions
 
-### View Management
+### StaticBackend
 
 ```javascript
-// Switch between views
-function switchView(view)
-// Shows specified view, hides others
-// Activates menu button
-// Loads view-specific data
+const StaticBackend = {
+    APP_ID: '2631011',
+    ENDPOINTS: {
+        AZURE_INFERENCE: 'https://models.inference.ai.azure.com',
+        COPILOT_CHAT: 'https://api.githubcopilot.com/chat/completions',
+        GITHUB_DEVICE_CODE: 'https://github.com/login/device/code',
+        GITHUB_OAUTH_TOKEN: 'https://github.com/login/oauth/access_token'
+    },
+    MODELS: {
+        AZURE: ['gpt-4o', 'gpt-4o-mini', 'Mistral-Nemo-2407'],
+        COPILOT: ['claude-3.5-sonnet', 'gemini-2.5-pro', 'gpt-5', ...]
+    },
+    
+    // Initialize backend, setup BroadcastChannel
+    init(),
+    
+    // Validate GitHub token
+    validateToken(token),
+    
+    // Route request to correct endpoint
+    routeRequest(model, messages),
+    
+    // Initiate Device Flow OAuth
+    initiateDeviceFlow(clientId),
+    
+    // Poll for Device Flow completion
+    pollDeviceFlow(clientId, deviceCode),
+    
+    // Initiate Web Flow OAuth (popup)
+    initiateWebFlow(clientId)
+}
+```
 
-// Views: 'grade', 'tracker', 'finalize', 'history', 'ai'
+### CorsWidget
+
+```javascript
+const CorsWidget = {
+    PROXIES: [
+        { name: 'corsproxy.io', url: 'https://corsproxy.io/?', supportsPost: true },
+        { name: 'cors.sh', url: 'https://cors.sh/', supportsPost: true },
+        { name: 'crossorigin.me', url: 'https://crossorigin.me/', supportsPost: true }
+    ],
+    workingProxy: null,
+    
+    // GET request via CORS proxy
+    async fetch(url, options),
+    
+    // POST form data via CORS proxy
+    async postForm(url, data),
+    
+    // POST JSON via CORS proxy
+    async postJson(url, data),
+    
+    // Find a working proxy
+    async findWorkingProxy()
+}
+```
+
+### WebTools
+
+```javascript
+const WebTools = {
+    // Execute web search via DuckDuckGo
+    async search(query),
+    
+    // Crawl URL and extract content
+    async crawl(url),
+    
+    // Parse HTML and extract text
+    parseHtml(html),
+    
+    // Validate URL format
+    isValidUrl(url),
+    
+    // Rate limiting
+    lastSearch: 0,
+    MIN_INTERVAL: 2000
+}
 ```
 
 ### Trade Grading
@@ -431,22 +548,39 @@ self.addEventListener('fetch', event => {
 
 ## AI Integration
 
-### GitHub Models API
+### Supported Endpoints
 
-**Endpoint:**
+**Azure Inference API:**
 ```
 https://models.inference.ai.azure.com/chat/completions
 ```
 
-**Authentication:**
+**GitHub Copilot API (after OAuth):**
+```
+https://api.githubcopilot.com/chat/completions
+```
+
+### Authentication
+
+**Azure Inference (GitHub Token):**
 ```javascript
 headers: {
-  'Authorization': `Bearer ${token}`,
+  'Authorization': `Bearer ${githubToken}`,
   'Content-Type': 'application/json'
 }
 ```
 
-**Request Format:**
+**Copilot API (OAuth Token):**
+```javascript
+headers: {
+  'Authorization': `Bearer ${copilotToken}`,
+  'Content-Type': 'application/json',
+  'Copilot-Integration-Id': 'vscode-chat'
+}
+```
+
+### Request Format
+
 ```javascript
 {
   model: "gpt-4o-mini",
@@ -461,31 +595,85 @@ headers: {
     }
   ],
   max_tokens: 1500,
-  temperature: 0.7
+  temperature: 0.7,
+  tools: webSearchEnabled ? [{
+    type: "function",
+    function: {
+      name: "web_search",
+      description: "Search the web for information",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Search query" }
+        },
+        required: ["query"]
+      }
+    }
+  }] : undefined
 }
 ```
 
-**Response Format:**
+### Response Format
+
 ```javascript
 {
   choices: [
     {
       message: {
         role: "assistant",
-        content: "AI response..."
+        content: "AI response...",
+        tool_calls: [{  // If tools were invoked
+          id: "call_xxx",
+          type: "function",
+          function: {
+            name: "web_search",
+            arguments: '{"query": "AAPL stock price"}'
+          }
+        }]
       }
     }
   ]
 }
 ```
 
+### Tool Calling Flow
+
+```javascript
+// 1. User sends message with tools enabled
+const response = await sendMessage(userMessage, { tools: webTools });
+
+// 2. Check if AI wants to use tools
+if (response.tool_calls) {
+  for (const toolCall of response.tool_calls) {
+    // 3. Execute tool
+    const result = await executeWebTool(toolCall);
+    
+    // 4. Send result back to AI
+    messages.push({
+      role: "tool",
+      tool_call_id: toolCall.id,
+      content: result
+    });
+  }
+  
+  // 5. Get final response
+  const finalResponse = await sendMessage(messages);
+}
+```
+
 ### Model Selection
 
-Supported models in dropdown:
-- `gpt-4o-mini` (default, fastest)
+**Azure Models (Working with GitHub Token):**
 - `gpt-4o` (balanced)
-- `gpt-4` (most capable)
-- `gpt-3.5-turbo` (basic)
+- `gpt-4o-mini` (default, fastest)
+- `Mistral-Nemo-2407` (efficient)
+
+**Copilot Models (Require OAuth):**
+- `claude-3.5-sonnet`
+- `claude-opus-4.5`
+- `gemini-2.5-pro`
+- `gpt-5` series
+- `grok-code-fast-1`
 
 ---
 
@@ -779,4 +967,4 @@ git push origin feature/my-feature
 ---
 
 **Last Updated:** January 2026  
-**Version:** 1.0.0
+**Version:** 2.0.0
