@@ -1677,17 +1677,17 @@
         cursor: not-allowed;
     }
 
-    /* File Attach Button Styles - Match web toggle behavior */
+    /* File Attach Button Styles - Match more-menu-btn (div-based, no focus) */
     .file-attach-btn {
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 6px;
         border-radius: 6px;
-        background: transparent;
+        background: none;
         border: none;
         cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
+        transition: all 0.2s ease;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
     }
@@ -1696,33 +1696,14 @@
         background: transparent;
     }
 
-    .file-attach-btn:focus {
-        outline: none;
-        background: transparent;
-    }
-
-    .file-attach-btn:focus-visible {
-        outline: none;
-        background: transparent;
-    }
-
-    .file-attach-icon {
+    .file-attach-btn svg {
         width: 18px;
         height: 18px;
         color: #888;
-        transition: color 0.15s ease;
+        transition: color 0.2s ease;
     }
 
-    .file-attach-btn:hover .file-attach-icon {
-        color: #cc0000;
-    }
-
-    .file-attach-btn:focus .file-attach-icon,
-    .file-attach-btn:focus-visible .file-attach-icon {
-        color: #888;
-    }
-
-    .file-attach-btn:active .file-attach-icon {
+    .file-attach-btn:hover svg {
         color: #cc0000;
     }
 
@@ -3051,11 +3032,11 @@
                         oninput="autoResizeTextarea(this)"></textarea>
                     <div class="chat-controls">
                         <input type="file" id="chatFileInput" class="chat-file-input" accept="image/*,.pdf,.json,.txt,.csv,.md,.doc,.docx,.xls,.xlsx" onchange="handleChatFileUpload(this)">
-                        <button id="fileAttachBtn" class="chat-icon-btn file-attach-btn" onclick="triggerFileUpload(event)" title="Attach file" aria-label="Attach file">
+                        <div id="fileAttachBtn" class="file-attach-btn" onclick="triggerFileUpload(event)" title="Attach file" aria-label="Attach file">
                             <svg class="file-attach-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                             </svg>
-                        </button>
+                        </div>
                         <!-- Web Search Toggle - SVG only -->
                         <button id="webSearchToggle" class="web-search-toggle chat-icon-btn" type="button" onclick="toggleWebSearch(event)" title="Toggle web search" aria-label="Toggle web search">
                             <svg class="web-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -6184,12 +6165,6 @@
 
     // Handle file upload for chat - full implementation
     function handleChatFileUpload(input) {
-        // Blur the file button after file dialog interaction - same pattern as toggleWebSearch
-        const fileBtn = document.getElementById('fileAttachBtn');
-        if (fileBtn) {
-            fileBtn.blur();
-        }
-        
         const file = input.files[0];
         if (!file) return;
         
@@ -6675,19 +6650,12 @@
 
     // Trigger file upload with proper focus handling
     function triggerFileUpload(event) {
-        // Prevent default behavior and stop propagation to avoid keyboard/focus glitches
+        // Stop propagation - same pattern as toggleQuickActionsPopup (More button)
         if (event) {
-            event.preventDefault();
             event.stopPropagation();
         }
         
-        const fileBtn = document.getElementById('fileAttachBtn');
         const fileInput = document.getElementById('chatFileInput');
-        
-        // Immediately blur to remove focus state - same pattern as toggleWebSearch
-        if (fileBtn) {
-            fileBtn.blur();
-        }
         
         // Trigger the file input click
         fileInput.click();
