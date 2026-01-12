@@ -522,6 +522,39 @@ let chatHistory = [
 
 ### Core Functions
 
+#### Image Processor
+
+##### analyzeImage(input, options)
+
+Analyze an image (File, Blob, or data/URL) in the browser using the custom image processor.
+
+- `input` (File|Blob|string): Image source. Can be a File object, Blob, or a data URL / absolute URL (note: remote URLs may require CORS proxy configured via `CONFIG.CORS_PROXY`).
+- `options` (object, optional): Analysis options. Supported keys:
+  - `maxThumbnailWidth` (number): max width in px for generated thumbnail
+  - `numericOCR` (boolean): attempt a naive numeric OCR for chart labels
+  - `detectCharts` (boolean): run chart detection heuristics
+  - `detectText` (boolean): run text region detection
+
+**Returns:** Promise resolving to an analysis object with at least:
+- `thumbnail` (dataURL): low-res thumbnail of the image
+- `metadata` (object): `{width, height, size}`
+- `dominantColors` (array): hex color strings (top k)
+- `chartDetected` (boolean): whether chart-like features were detected
+- `textRegions` (array): bounding box objects `{x,y,w,h,area}` for likely text areas
+- `numericOCR` (array): naive numeric text candidates (best-effort)
+- `analysisSummary` (string): short human-readable summary
+
+**Example:**
+```javascript
+import('/system/js.on/image-processor.js').then(mod => {
+  const analysis = await mod.analyzeImage(file, { numericOCR: true, detectCharts: true });
+  console.log(analysis);
+});
+```
+
+
+### View Management
+
 #### View Management
 
 ##### switchView(view)

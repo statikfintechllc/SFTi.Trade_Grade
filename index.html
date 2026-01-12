@@ -1263,6 +1263,32 @@
         transform: translateY(0);
     }
 
+    /* Attachment preview & analysis styles */
+    .file-attachment-preview {
+        display: block;
+        padding: 10px;
+        margin-bottom: 8px;
+        background: rgba(255,255,255,0.02);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.04);
+        color: #eee;
+    }
+    .file-attachment-preview .file-preview-content { display:flex; align-items:center; gap:12px; }
+    .file-attachment-preview .file-preview-image { width: 96px; height: auto; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.03); }
+    .file-attachment-preview .file-analysis { margin-top: 8px; font-size: 12px; color: #d9d9d9; }
+    .color-swatch { width: 14px; height: 14px; display:inline-block; border-radius: 3px; margin-right:6px; border: 1px solid rgba(0,0,0,0.15); }
+    .analysis-actions { margin-top: 8px; display:flex; gap:8px; align-items:center; }
+    .analysis-actions .small-btn { font-size: 12px; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: transparent; color: #fff; }
+
+    .message-attachments { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+    .attachment-card { display:flex; gap: 10px; align-items:center; background: rgba(255,255,255,0.02); padding: 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); min-width: 160px; max-width: 420px; }
+    .attachment-thumbnail { width: 120px; height: auto; border-radius:6px; object-fit: cover; }
+    .attachment-info { font-size: 12px; color: #e8e8e8; display:flex; flex-direction:column; }
+    .attachment-analysis { font-size: 12px; color: #d0d0d0; margin-top: 6px; }
+    .attachment-actions { display:flex; gap:6px; margin-left:auto; }
+    .attachment-actions .small-btn { font-size: 12px; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: transparent; color: #fff; }
+
+
     /* Chat History Dropdown */
     .chat-history-dropdown {
         position: absolute;
@@ -6226,26 +6252,50 @@
     }
 
     // Process image files for vision-enabled models
-    function processImageFile(file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const base64Data = e.target.result;
+    async function processImageFile(file) {
+        try {
+            // Lazy-load the custom image processor module
+            const mod = await import('/system/js.on/image-processor.js');
+            showToast('Analyzing image... this may take a moment', 'info', 'Analyzing');
+
+            // Run analysis (thumbnail, colors, edges, text regions, numeric OCR)
+            const analysis = await mod.analyzeImage(file, { numericOCR: true, detectCharts: true });
+
             pendingFileAttachment = {
                 type: 'image',
                 name: file.name,
                 mimeType: file.type,
-                data: base64Data,
-                size: file.size
+                size: file.size,
+                thumbnail: analysis.thumbnail,
+                analysis: analysis,
+                // store only thumbnail by default to keep memory small; full data can be included on demand
+                data: analysis.thumbnail
             };
-            
-            // Show preview in textarea area
+
+            // Show enhanced preview with analysis
             showFilePreview(pendingFileAttachment);
-            showToast(`Image ready: ${file.name}. Type your message or click send.`, 'success', 'File Attached');
-        };
-        reader.onerror = function() {
-            showToast('Failed to read image file', 'error', 'File Error');
-        };
-        reader.readAsDataURL(file);
+            showToast(`Image analyzed and attached: ${file.name}`, 'success', 'File Attached');
+        } catch (error) {
+            console.warn('Image analysis failed, falling back to basic preview:', error);
+            // Fallback to basic data URL preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                pendingFileAttachment = {
+                    type: 'image',
+                    name: file.name,
+                    mimeType: file.type,
+                    data: base64Data,
+                    size: file.size
+                };
+                showFilePreview(pendingFileAttachment);
+                showToast(`Image ready: ${file.name}. Type your message or click send.`, 'success', 'File Attached');
+            };
+            reader.onerror = function() {
+                showToast('Failed to read image file', 'error', 'File Error');
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
     // Process text-based files
@@ -6316,24 +6366,27 @@
         reader.readAsDataURL(file);
     }
 
-    // Show file preview in the chat area
+    // Show file preview in the chat area (supports fullscreen input area too)
     function showFilePreview(attachment) {
         // Remove any existing preview
         clearFilePreview();
-        
+
         const previewDiv = document.createElement('div');
         previewDiv.id = 'fileAttachmentPreview';
         previewDiv.className = 'file-attachment-preview';
-        previewDiv.innerHTML = `
+
+        // Build basic preview HTML
+        let previewInner = `
             <div class="file-preview-content">
                 ${attachment.type === 'image' 
-                    ? `<img src="${attachment.data}" alt="${attachment.name}" class="file-preview-image">`
+                    ? `<img src="${attachment.thumbnail || attachment.data}" alt="${attachment.name}" class="file-preview-image">`
                     : `<div class="file-preview-icon">${getFileIcon(attachment.type)}</div>`
                 }
                 <div class="file-preview-info">
                     <span class="file-preview-name">${attachment.name}</span>
                     <span class="file-preview-size">${formatFileSize(attachment.size)}</span>
                 </div>
+                <div style="flex:1 1 auto"></div>
                 <button class="file-preview-remove" onclick="clearFilePreview()" title="Remove attachment">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -6342,12 +6395,77 @@
                 </button>
             </div>
         `;
-        
-        // Insert preview above the chat input
-        const chatInputArea = document.querySelector('.chat-input-container');
-        if (chatInputArea) {
-            chatInputArea.insertBefore(previewDiv, chatInputArea.firstChild);
+
+        // Add analysis section if available
+        if (attachment.analysis) {
+            const a = attachment.analysis;
+            const colorsHtml = (a.dominantColors || []).map(c => `<span class="color-swatch" style="background:${c}" title="${c}"></span>`).join('');
+            previewInner += `
+                <div class="file-analysis">
+                    <div class="analysis-summary">${escapeHtml(a.analysisSummary || '')}</div>
+                    <div class="analysis-meta">
+                        <div class="analysis-colors">${colorsHtml}</div>
+                        <div class="analysis-details">
+                            <span>${a.chartDetected ? 'Chart-like features detected' : 'No chart-like features'}</span>
+                            <span> · </span>
+                            <span>${(a.textRegions || []).length} text regions</span>
+                            ${a.numericOCR && a.numericOCR.length ? `<span> · Numeric samples: ${a.numericOCR.slice(0,3).join(', ')}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="analysis-actions">
+                        ${a.numericOCR && a.numericOCR.length ? `<button class="small-btn" onclick="insertOcrText()">Insert OCR text</button>` : ''}
+                        <button class="small-btn" onclick="reAnalyzeImage()">Re-run analysis</button>
+                        <button class="small-btn" onclick="viewFullAttachment()">View</button>
+                    </div>
+                </div>
+            `;
         }
+
+        previewDiv.innerHTML = previewInner;
+
+        // Choose insertion point: fullscreen input area preferred if active
+        const fullscreenModal = document.getElementById('fullscreenChatModal');
+        let target = null;
+        if (fullscreenModal && fullscreenModal.classList.contains('active')) {
+            target = document.getElementById('fullscreenChatInputArea');
+        }
+        if (!target) target = document.querySelector('.chat-input-bar') || document.querySelector('.chat-input-wrapper') || document.body;
+
+        if (target) {
+            // insert at top
+            target.insertBefore(previewDiv, target.firstChild);
+        }
+
+        // Small helper functions bound to global so buttons can call them
+        window.insertOcrText = function() {
+            const aiPrompt = document.getElementById('aiPrompt');
+            if (!aiPrompt || !attachment.analysis || !attachment.analysis.numericOCR) return;
+            const text = (attachment.analysis.numericOCR || []).slice(0,3).join(' ');
+            aiPrompt.value = (aiPrompt.value ? aiPrompt.value + '\n' : '') + text;
+            aiPrompt.focus();
+            autoResizeTextarea(aiPrompt);
+        };
+
+        window.reAnalyzeImage = async function() {
+            if (!attachment || !attachment.name) return;
+            showToast('Re-analyzing image...', 'info', 'Analyzing');
+            try {
+                const mod = await import('/system/js.on/image-processor.js');
+                const res = await mod.analyzeImage(attachment.data || attachment.thumbnail, { numericOCR: true, detectCharts: true });
+                attachment.analysis = res;
+                // Update preview
+                showFilePreview(attachment);
+                showToast('Re-analysis complete', 'success', 'Analyzed');
+            } catch (e) {
+                showToast('Re-analysis failed', 'error', 'Error');
+            }
+        };
+
+        window.viewFullAttachment = function() {
+            // open full size data in new tab if available
+            const url = attachment.data || attachment.thumbnail;
+            if (url) window.open(url, '_blank');
+        };
     }
 
     // Clear file preview and pending attachment
@@ -6393,16 +6511,21 @@
             const supportsVision = CONFIG.VISION_MODELS.some(v => currentModel.toLowerCase().includes(v));
             
             if (supportsVision) {
-                // Build multimodal message
+                // Build multimodal message including structured analysis when available
+                const imageUrl = attachment.data || attachment.thumbnail || '';
                 return {
                     multimodal: true,
                     content: [
                         {
                             type: 'image_url',
                             image_url: {
-                                url: attachment.data,
+                                url: imageUrl,
                                 detail: 'auto'
                             }
+                        },
+                        {
+                            type: 'attachment_analysis',
+                            analysis: attachment.analysis || {}
                         },
                         {
                             type: 'text',
@@ -6411,8 +6534,9 @@
                     ]
                 };
             } else {
-                // For non-vision models, describe the attachment
-                return `[Image attached: ${attachment.name} (${formatFileSize(attachment.size)})] - Note: Current model may not support image analysis.\n\n${userMessage}`;
+                // For non-vision models, describe the attachment with analysis summary if present
+                const analysisSummary = attachment.analysis ? `\nAnalysis: ${attachment.analysis.analysisSummary || ''}` : '';
+                return `[Image attached: ${attachment.name} (${formatFileSize(attachment.size)})]${analysisSummary} - Note: Current model may not support image analysis.\n\n${userMessage}`;
             }
         }
         
@@ -6623,6 +6747,70 @@
 
             messageDiv.appendChild(avatarDiv);
             messageDiv.appendChild(bubbleDiv);
+
+            // Render attachments if present
+            if (msg.attachments && Array.isArray(msg.attachments) && msg.attachments.length > 0) {
+                const attachmentsContainer = document.createElement('div');
+                attachmentsContainer.className = 'message-attachments';
+
+                msg.attachments.forEach(att => {
+                    const card = document.createElement('div');
+                    card.className = 'attachment-card';
+
+                    if (att.type === 'image') {
+                        const img = document.createElement('img');
+                        img.className = 'attachment-thumbnail';
+                        img.src = att.thumbnail || att.data || '';
+                        img.alt = att.name;
+                        card.appendChild(img);
+                    } else {
+                        const icon = document.createElement('div');
+                        icon.className = 'attachment-icon';
+                        icon.textContent = getFileIcon(att.type);
+                        card.appendChild(icon);
+                    }
+
+                    const info = document.createElement('div');
+                    info.className = 'attachment-info';
+                    info.innerHTML = `<div class="attachment-name">${escapeHtml(att.name)}</div><div class="attachment-size">${formatFileSize(att.size)}</div>`;
+                    card.appendChild(info);
+
+                    if (att.analysis) {
+                        const summary = document.createElement('div');
+                        summary.className = 'attachment-analysis';
+                        summary.textContent = att.analysis.analysisSummary || '';
+                        card.appendChild(summary);
+                    }
+
+                    const actions = document.createElement('div');
+                    actions.className = 'attachment-actions';
+
+                    const viewBtn = document.createElement('button');
+                    viewBtn.className = 'small-btn';
+                    viewBtn.textContent = 'View';
+                    viewBtn.onclick = () => { window.open(att.data || att.thumbnail || att.url, '_blank'); };
+                    actions.appendChild(viewBtn);
+
+                    const insertOCRBtn = document.createElement('button');
+                    insertOCRBtn.className = 'small-btn';
+                    insertOCRBtn.textContent = 'Insert OCR';
+                    insertOCRBtn.onclick = () => {
+                        if (att.analysis && att.analysis.numericOCR && att.analysis.numericOCR.length) {
+                            const aiPrompt = document.getElementById('aiPrompt');
+                            aiPrompt.value = (aiPrompt.value ? aiPrompt.value + '\n' : '') + att.analysis.numericOCR.join('\n');
+                            aiPrompt.focus();
+                            autoResizeTextarea(aiPrompt);
+                        }
+                    };
+                    actions.appendChild(insertOCRBtn);
+
+                    card.appendChild(actions);
+                    attachmentsContainer.appendChild(card);
+                });
+
+                messageDiv.appendChild(attachmentsContainer);
+            }
+
             container.appendChild(messageDiv);
         });
 
@@ -6635,6 +6823,7 @@
         const message = { role, content };
         if (options.citations) message.citations = options.citations;
         if (options.html) message.html = true;
+        if (options.attachments) message.attachments = options.attachments;
 
         // Add to chat history and render
         chatHistory.push(message);
@@ -6837,6 +7026,103 @@
             }
         }
     }
+
+    // ===================== Attachment Test Harness =====================
+    // Floating widget to run scraper-based image analysis tests
+    function _createAttachmentTestWidget() {
+        if (document.getElementById('attachmentTestWidget')) return;
+        const widget = document.createElement('div');
+        widget.id = 'attachmentTestWidget';
+        widget.className = 'attachment-test-widget';
+        widget.title = 'Run Attachment Scraper Tests';
+        widget.innerHTML = `<button id="runAttachmentTestsBtn" class="small-btn">Run Attachment Tests</button>
+            <div id="attachmentTestOutput" class="attachment-test-output" style="display:none;"></div>`;
+        document.body.appendChild(widget);
+
+        document.getElementById('runAttachmentTestsBtn').addEventListener('click', async () => {
+            const out = document.getElementById('attachmentTestOutput');
+            out.style.display = 'block';
+            out.textContent = '';
+            await runAttachmentScraperTests(out);
+        });
+        // Auto-run tests once (user asked to run tests immediately)
+        setTimeout(() => {
+            try { document.getElementById('runAttachmentTestsBtn').click(); } catch(e) { /* ignore */ }
+        }, 800);
+    }
+
+    async function runAttachmentScraperTests(outputEl) {
+        outputEl = outputEl || document.getElementById('attachmentTestOutput') || { textContent: '' };
+        function log(msg) { console.log('[AttachmentTest]', msg); outputEl.textContent += msg + '\n'; outputEl.scrollTop = outputEl.scrollHeight; }
+
+        const samplePages = [
+            'https://en.wikipedia.org/wiki/Apple_Inc.',
+            'https://en.wikipedia.org/wiki/Stock_market'
+        ];
+
+        let total = 0, analyzed = 0, charts = 0;
+
+        for (const page of samplePages) {
+            log(`Fetching page: ${page}`);
+            try {
+                const prox = CONFIG.CORS_PROXY + encodeURIComponent(page);
+                const res = await fetch(prox);
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const imgs = Array.from(doc.querySelectorAll('img'))
+                    .map(img => img.getAttribute('src') || img.getAttribute('data-src'))
+                    .filter(Boolean)
+                    .map(src => {
+                        try { return new URL(src, page).toString(); } catch(e) { return null; }
+                    })
+                    .filter(Boolean);
+
+                log(`Found ${imgs.length} images on page.`);
+
+                for (let i=0;i<Math.min(4, imgs.length); i++) {
+                    const imgUrl = imgs[i];
+                    total++;
+                    log(`Fetching image ${i+1}: ${imgUrl}`);
+                    try {
+                        const proxImg = CONFIG.CORS_PROXY + encodeURIComponent(imgUrl);
+                        const imRes = await fetch(proxImg);
+                        const blob = await imRes.blob();
+                        // analyze using our module
+                        const mod = await import('/system/js.on/image-processor.js');
+                        const analysis = await mod.analyzeImage(blob, { numericOCR: true, detectCharts: true });
+                        analyzed++;
+                        if (analysis.chartDetected) charts++;
+                        log(`Analyzed: chartDetected=${analysis.chartDetected}, textRegions=${(analysis.textRegions||[]).length}, colors=${(analysis.dominantColors||[]).join(', ')}`);
+
+                        // Add result to chat as an assistant message (non-API) for quick inspection
+                        const contentHtml = `<div style="font-size:13px;">Analyzed <a href='${escapeHtml(imgUrl)}' target='_blank' rel='noopener noreferrer'>image</a>: <br/>Chart: ${analysis.chartDetected} · Text regions: ${(analysis.textRegions||[]).length} · Colors: ${(analysis.dominantColors||[]).slice(0,3).join(', ')}</div>`;
+                        addChatMessage('assistant', contentHtml, { html: true });
+
+                    } catch (e) {
+                        log(`Image fetch/analysis failed: ${e.message}`);
+                    }
+                }
+
+            } catch (e) {
+                log(`Page fetch failed: ${e.message}`);
+            }
+        }
+
+        log(`Tests complete. Pages: ${samplePages.length}, Images: ${total}, Analyzed: ${analyzed}, Charts found: ${charts}`);
+    }
+
+    // Create widget on load
+    window.addEventListener('load', () => setTimeout(_createAttachmentTestWidget, 500));
+
+    // Test widget styles
+    const testWidgetStyle = document.createElement('style');
+    testWidgetStyle.innerHTML = `
+        .attachment-test-widget { position: fixed; right: 12px; bottom: 84px; z-index: 99999; display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+        .attachment-test-widget .attachment-test-output { width: 420px; height: 300px; background: rgba(0,0,0,0.7); color: #fff; border: 1px solid rgba(255,255,255,0.06); padding: 8px; overflow:auto; border-radius: 8px; font-family: monospace; font-size: 12px; }
+        #runAttachmentTestsBtn { padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); color: #fff; }
+    `;
+    document.head.appendChild(testWidgetStyle);
+
 
     function showChatStatus(statusType, message) {
         const statusIndicator = document.getElementById('chatStatusIndicator');
@@ -7394,12 +7680,16 @@
                 hasAttachment = true;
                 attachmentPreview = `📎 ${pendingFileAttachment.name}\n\n${prompt}`;
             }
-            // Clear the attachment after use
+            // Capture and clear the attachment after use
+            const attachedFile = pendingFileAttachment;
             clearFilePreview();
+
+            // Add user message to chat with attachment card visible
+            addChatMessage('user', hasAttachment ? attachmentPreview : prompt, { attachments: hasAttachment ? [attachedFile] : undefined });
+        } else {
+            // No attachment - just add the message
+            addChatMessage('user', prompt);
         }
-        
-        // Add user message to chat (show simplified version with attachment indicator)
-        addChatMessage('user', hasAttachment ? attachmentPreview : prompt);
         
         // Clear input and reset height
         const textarea = document.getElementById('aiPrompt');

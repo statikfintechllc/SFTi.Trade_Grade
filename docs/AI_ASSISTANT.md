@@ -177,6 +177,19 @@ The AI Assistant includes a web search tool for real-time information retrieval.
 
 ---
 
+## Attachment & Image Processor Tests
+
+A test harness is built into the app to fetch pages using the scraper, extract images, and run the local image analysis pipeline (thumbnail, color extraction, simple chart detection, and numeric OCR heuristics). Use the floating "Run Attachment Tests" widget (bottom-right) to run these tests; results will be displayed in the test panel and appended to the chat for inspection.
+
+Notes:
+- Tests use a CORS proxy (configured via `CONFIG.CORS_PROXY`) to fetch remote pages; ensure your environment has internet access and the proxy is reachable.
+- Analysis is performed locally in the browser with custom-coded algorithms; results are best-effort and intended for iterative refinement.
+- For full OCR or advanced chart extraction, adaptive WASM or server-side processing can be added later.
+
+For developers: see `system/js.on/image-processor.js` (analysis) and `index.html` (test harness `runAttachmentScraperTests`).
+
+---
+
 ## Quick Actions
 
 Pre-configured prompts for common trading tasks. Each button automatically populates and sends a message.
