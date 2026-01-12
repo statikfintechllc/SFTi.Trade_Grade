@@ -1238,8 +1238,29 @@
 
     .fullscreen-chat-input-area {
         padding: 12px 16px;
-        background: rgba(0, 0, 0, 0.3);
+        background: rgba(0, 0, 0, 0.35);
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+        position: sticky;
+        bottom: 0;
+        z-index: 15;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+        box-shadow: 0 -6px 24px rgba(0,0,0,0.15);
+    }
+
+    /* When the input is 'pulled up' (focused) make it float under the top bar */
+    .fullscreen-chat-modal.input-pulled-up .fullscreen-chat-input-area {
+        position: fixed;
+        top: calc(var(--fullscreen-header-height, 64px) + 8px);
+        left: 16px;
+        right: 16px;
+        margin: 0 auto;
+        width: calc(100% - 32px);
+        border-radius: 12px;
+        z-index: 9998;
+        box-shadow: 0 8px 36px rgba(0,0,0,0.35);
+        transform: translateY(0);
     }
 
     /* Chat History Dropdown */
@@ -3357,7 +3378,7 @@
 </div>
 
 <!-- Fullscreen Chat Modal -->
-<div class="fullscreen-chat-modal" id="fullscreenChatModal">
+<div class="fullscreen-chat-modal" id="fullscreenChatModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="fullscreen-chat-header">
         <span class="fullscreen-chat-title">AI Trading Assistant</span>
         <button class="fullscreen-close-btn" onclick="toggleFullscreenChat()" title="Exit Fullscreen" aria-label="Exit Fullscreen">
@@ -6544,59 +6565,81 @@
         }
     }
 
-    // Add a message to the chat
-    function addChatMessage(role, content) {
-        const container = document.getElementById('chatMessagesContainer');
-        
-        // Remove empty state if it exists
-        const emptyState = container.querySelector('.chat-empty-state');
-        if (emptyState) {
-            emptyState.remove();
+    // Render messages into a given container from chatHistory
+    function renderChatMessages(container, messages) {
+        if (!container) return;
+        container.innerHTML = '';
+        if (!messages || messages.length === 0) {
+            container.innerHTML = `
+                <div class="chat-empty-state">
+                    <div class="chat-empty-icon">💬</div>
+                    <div class="chat-empty-text">Start a conversation</div>
+                    <div class="chat-empty-subtext">Ask about trades, patterns, or market sentiment</div>
+                </div>
+            `;
+            return;
         }
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${role}`;
-        
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'chat-avatar';
-        
-        if (role === 'user') {
-            // User avatar - use GitHub avatar if available
-            const avatarUrl = getUserAvatarUrl();
-            if (avatarUrl) {
-                const img = document.createElement('img');
-                img.src = avatarUrl;
-                img.alt = 'User';
-                img.onerror = function() { this.parentElement.textContent = 'U'; };
-                avatarDiv.appendChild(img);
+
+        messages.forEach(msg => {
+            if (!msg || !msg.role) return;
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${msg.role}`;
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'chat-avatar';
+
+            if (msg.role === 'user') {
+                const avatarUrl = getUserAvatarUrl();
+                if (avatarUrl) {
+                    const img = document.createElement('img');
+                    img.src = avatarUrl;
+                    img.alt = 'User';
+                    img.onerror = function() { this.parentElement.textContent = 'U'; };
+                    avatarDiv.appendChild(img);
+                } else {
+                    avatarDiv.textContent = 'U';
+                }
             } else {
-                avatarDiv.textContent = 'U';
+                avatarDiv.innerHTML = getCopilotSvg();
             }
-        } else {
-            // AI avatar - use Copilot SVG
-            avatarDiv.innerHTML = getCopilotSvg();
-        }
-        
-        const bubbleDiv = document.createElement('div');
-        bubbleDiv.className = 'chat-bubble';
-        
-        if (role === 'user') {
-            // User messages - plain text
-            bubbleDiv.textContent = content;
-        } else {
-            // AI messages - formatted with markdown-like features
-            bubbleDiv.innerHTML = formatMessageText(content);
-        }
-        
-        messageDiv.appendChild(avatarDiv);
-        messageDiv.appendChild(bubbleDiv);
-        container.appendChild(messageDiv);
-        
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'chat-bubble';
+
+            if (msg.role === 'user') {
+                bubbleDiv.textContent = msg.content;
+            } else {
+                // Preserve citations HTML if present, otherwise format message text
+                if (msg.citations && Array.isArray(msg.citations) && msg.citations.length > 0) {
+                    const formatted = formatMessageText(msg.content || '');
+                    bubbleDiv.innerHTML = addCitationsToMessage(formatted, msg.citations);
+                } else if (msg.html === true) {
+                    bubbleDiv.innerHTML = msg.content || '';
+                } else {
+                    bubbleDiv.innerHTML = formatMessageText(msg.content || '');
+                }
+            }
+
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(bubbleDiv);
+            container.appendChild(messageDiv);
+        });
+
         // Scroll to bottom
         container.scrollTop = container.scrollHeight;
-        
-        // Add to chat history
-        chatHistory.push({ role, content });
+    }
+
+    // Add a message to the chat (stores to chatHistory and re-renders)
+    function addChatMessage(role, content, options = {}) {
+        const message = { role, content };
+        if (options.citations) message.citations = options.citations;
+        if (options.html) message.html = true;
+
+        // Add to chat history and render
+        chatHistory.push(message);
+        const container = document.getElementById('chatMessagesContainer');
+        renderChatMessages(container, chatHistory);
     }
 
     // Helper function to restore send button to normal state
@@ -6663,6 +6706,23 @@
 
     // Fullscreen chat state
     let isFullscreenChat = false;
+    let originalChatInputParent = null;
+    let originalChatInputNextSibling = null;
+
+    function handleFullscreenKeydown(e) {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            if (isFullscreenChat) toggleFullscreenChat();
+        }
+    }
+
+    function pullUpInputHandler() {
+        const modal = document.getElementById('fullscreenChatModal');
+        if (modal) modal.classList.add('input-pulled-up');
+    }
+    function pullDownInputHandler() {
+        const modal = document.getElementById('fullscreenChatModal');
+        if (modal) modal.classList.remove('input-pulled-up');
+    }
 
     // Toggle fullscreen chat modal
     function toggleFullscreenChat() {
@@ -6670,40 +6730,97 @@
         const fullscreenBtn = document.getElementById('fullscreenChatBtn');
         const messagesContainer = document.getElementById('chatMessagesContainer');
         const fullscreenBody = document.getElementById('fullscreenChatBody');
-        
+        const fullscreenInputArea = document.getElementById('fullscreenChatInputArea');
+        const chatInputBar = document.querySelector('.chat-input-bar');
+
         if (!modal) return;
-        
+
         isFullscreenChat = !isFullscreenChat;
-        
+
         if (isFullscreenChat) {
             // Enter fullscreen
             modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
-            
-            // Clone messages to fullscreen modal using cloneNode for better event handling
-            if (messagesContainer && fullscreenBody) {
-                // Clear and clone all children
-                fullscreenBody.innerHTML = '';
-                Array.from(messagesContainer.children).forEach(child => {
-                    fullscreenBody.appendChild(child.cloneNode(true));
-                });
-                // Scroll to bottom in fullscreen
-                fullscreenBody.scrollTop = fullscreenBody.scrollHeight;
+
+            // Render messages into fullscreen modal using renderer
+            if (fullscreenBody) {
+                renderChatMessages(fullscreenBody, chatHistory);
+            }
+
+            // Move input controls into fullscreen input area (preserve event listeners)
+            if (chatInputBar && fullscreenInputArea) {
+                if (!originalChatInputParent) {
+                    originalChatInputParent = chatInputBar.parentNode;
+                    originalChatInputNextSibling = chatInputBar.nextSibling;
+                }
+                fullscreenInputArea.appendChild(chatInputBar);
+            }
+
+            // Focus the prompt
+            const aiPrompt = document.getElementById('aiPrompt');
+            setTimeout(() => { if (aiPrompt) aiPrompt.focus(); }, 50);
+
+            // Adjust for virtual keyboard on mobile (visualViewport)
+            if (window.visualViewport) {
+                const onViewportChange = () => {
+                    const kbHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
+                    const fullscreenBodyEl = document.getElementById('fullscreenChatBody');
+                    const inputAreaEl = document.getElementById('fullscreenChatInputArea');
+                    if (fullscreenBodyEl && inputAreaEl) {
+                        fullscreenBodyEl.style.paddingBottom = (kbHeight + inputAreaEl.offsetHeight + 16) + 'px';
+                    }
+                };
+                // store handler so we can remove it later
+                window.visualViewport._fullscreenChatHandler = onViewportChange;
+                window.visualViewport.addEventListener('resize', onViewportChange);
+                window.visualViewport.addEventListener('scroll', onViewportChange);
+                onViewportChange();
+            }
+
+            // Keyboard handler and focus behavior
+            document.addEventListener('keydown', handleFullscreenKeydown);
+            if (aiPrompt) {
+                aiPrompt.addEventListener('focus', pullUpInputHandler);
+                aiPrompt.addEventListener('blur', pullDownInputHandler);
             }
         } else {
             // Exit fullscreen
             modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = '';
-            
-            // Sync messages back to main chat using cloneNode
-            if (messagesContainer && fullscreenBody) {
-                // Clear and clone all children back
-                messagesContainer.innerHTML = '';
-                Array.from(fullscreenBody.children).forEach(child => {
-                    messagesContainer.appendChild(child.cloneNode(true));
-                });
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Re-render messages in main chat container
+            if (messagesContainer) {
+                renderChatMessages(messagesContainer, chatHistory);
             }
+
+            // Move input back to its original location
+            const currentInputBar = document.querySelector('.chat-input-bar');
+            if (currentInputBar && originalChatInputParent) {
+                originalChatInputParent.insertBefore(currentInputBar, originalChatInputNextSibling);
+            }
+            originalChatInputParent = null;
+            originalChatInputNextSibling = null;
+
+            // Remove handlers and any pulled-up state
+            document.removeEventListener('keydown', handleFullscreenKeydown);
+            const aiPrompt = document.getElementById('aiPrompt');
+            if (aiPrompt) {
+                aiPrompt.removeEventListener('focus', pullUpInputHandler);
+                aiPrompt.removeEventListener('blur', pullDownInputHandler);
+            }
+
+            // Remove visualViewport handlers if present
+            if (window.visualViewport && window.visualViewport._fullscreenChatHandler) {
+                window.visualViewport.removeEventListener('resize', window.visualViewport._fullscreenChatHandler);
+                window.visualViewport.removeEventListener('scroll', window.visualViewport._fullscreenChatHandler);
+                delete window.visualViewport._fullscreenChatHandler;
+                const fullscreenBodyEl = document.getElementById('fullscreenChatBody');
+                if (fullscreenBodyEl) fullscreenBodyEl.style.paddingBottom = '';
+            }
+
+            modal.classList.remove('input-pulled-up');
         }
     }
 
@@ -6782,6 +6899,24 @@
                             type: 'string',
                             description: 'The full URL to fetch content from (must start with http:// or https://)'
                         }
+                    },
+                    required: ['url']
+                }
+            }
+        },
+        {
+            type: 'function',
+            function: {
+                name: 'scrape_url',
+                description: 'Crawl and extract content from a URL (or a set of URLs). Parameters: url (string), depth (integer, default 0), maxPages (integer, default 3), selectors (array of css selectors to narrow extraction), followLinks (boolean, default false).',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        url: { type: 'string', description: 'The full URL to scrape (must start with http:// or https://)' },
+                        depth: { type: 'integer', description: 'How deep to follow links (0 = just the URL)', default: 0 },
+                        maxPages: { type: 'integer', description: 'Maximum number of pages to fetch when following links', default: 3 },
+                        selectors: { type: 'array', description: 'A list of CSS selectors to extract specific parts of the page' },
+                        followLinks: { type: 'boolean', description: 'Whether to follow links from the starting page' }
                     },
                     required: ['url']
                 }
@@ -6961,33 +7096,150 @@
         const elementsToRemove = doc.querySelectorAll('script, style, nav, footer, header, aside, iframe, noscript, .ads, .advertisement, .sidebar, .menu, .navigation');
         elementsToRemove.forEach(el => el.remove());
         
-        // Try to find main content areas
-        let mainContent = doc.querySelector('main, article, .content, .post, .article-content, #content, #main');
-        
+        // Try to find main content areas with heuristics
+        let mainContent = doc.querySelector('main, article, [role="main"], .content, .post, .article-content, #content, #main');
+
         if (!mainContent) {
-            mainContent = doc.body;
+            // Fallback: choose the node with the highest text density (text length weighted by inverse link density)
+            const candidates = Array.from(doc.querySelectorAll('article, main, section, div'));
+            let bestNode = null;
+            let bestScore = 0;
+
+            for (const node of candidates) {
+                const t = (node.textContent || '').trim();
+                const textLen = t.length;
+                if (textLen < 200) continue; // skip very small nodes
+
+                const linkTextLen = Array.from(node.querySelectorAll('a')).reduce((acc, a) => acc + ((a.textContent || '').length), 0);
+                const linkDensity = linkTextLen / Math.max(1, textLen);
+                const score = textLen * (1 - linkDensity);
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestNode = node;
+                }
+            }
+
+            mainContent = bestNode || doc.body;
         }
-        
+
         // Extract text content
         let text = mainContent?.textContent || '';
-        
+
+        // Try to extract a short readable snippet from first paragraphs
+        let snippet = '';
+        try {
+            const paragraphs = Array.from(mainContent.querySelectorAll('p')).map(p => (p.textContent || '').trim()).filter(Boolean);
+            if (paragraphs.length > 0) {
+                snippet = paragraphs.slice(0, 3).join('\n\n');
+            } else {
+                snippet = text.substr(0, 500);
+            }
+        } catch (e) {
+            snippet = text.substr(0, 500);
+        }
+
         // Clean up the text
         text = text
             .replace(/\s+/g, ' ')           // Normalize whitespace
             .replace(/\n\s*\n/g, '\n\n')    // Normalize line breaks
             .trim();
-        
+
         // Truncate if too long (keep first 4000 chars to stay within token limits)
         const maxLength = 4000;
         if (text.length > maxLength) {
             text = text.substring(0, maxLength) + '...[content truncated]';
         }
-        
+
+        // Meta description and JSON-LD
+        const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+        const jsonLd = Array.from(doc.querySelectorAll('script[type="application/ld+json"]')).map(s => s.textContent).join('\n').trim();
+
         return {
             title: title.trim(),
             text: text,
+            snippet: snippet.trim(),
+            metaDescription,
+            jsonLd,
             wordCount: text.split(/\s+/).length
         };
+    }
+
+    /**
+     * Advanced scraping utility - fetches a URL, extracts main content, and optionally follows links up to a limited depth/maxPages.
+     * options: { depth: 0, maxPages: 3, selectors: [], followLinks: false }
+     */
+    async function scrapeUrl(startUrl, options = {}) {
+        const opts = Object.assign({ depth: 0, maxPages: 3, selectors: [], followLinks: false }, options || {});
+        if (!isValidUrl(startUrl)) {
+            return { success: false, url: startUrl, error: 'Invalid URL format' };
+        }
+
+        showChatStatus('crawling', `Scraping: ${new URL(startUrl).hostname}`);
+
+        const visited = new Set();
+        const pages = [];
+        const queue = [{ url: startUrl, depth: 0 }];
+
+        while (queue.length > 0 && pages.length < opts.maxPages) {
+            const item = queue.shift();
+            const url = item.url;
+            if (!isValidUrl(url) || visited.has(url)) continue;
+            visited.add(url);
+
+            try {
+                const proxyUrl = CONFIG.CORS_PROXY + encodeURIComponent(url);
+                const response = await fetch(proxyUrl, { method: 'GET', headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' } });
+                if (!response.ok) {
+                    pages.push({ success: false, url, error: `HTTP ${response.status}` });
+                    continue;
+                }
+
+                const html = await response.text();
+                const content = extractMainContent(html, url);
+
+                // Collect selector-specific extracts
+                const selectorsExtract = [];
+                if (opts.selectors && opts.selectors.length > 0) {
+                    try {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        for (const sel of opts.selectors) {
+                            const el = doc.querySelector(sel);
+                            if (el) selectorsExtract.push({ selector: sel, html: el.innerHTML, text: (el.textContent || '').trim() });
+                        }
+                    } catch (e) {
+                        // ignore selector failures
+                    }
+                }
+
+                pages.push({ success: true, url, title: content.title, content: content.text, wordCount: content.wordCount, selectors: selectorsExtract });
+
+                // Optionally follow links for further scraping
+                if (opts.followLinks && item.depth < opts.depth) {
+                    try {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const anchors = Array.from(doc.querySelectorAll('a[href]'))
+                            .map(a => a.href)
+                            .filter(h => h && isValidUrl(h) && !visited.has(h));
+
+                        // Enqueue up to remaining slots
+                        for (const href of anchors) {
+                            if (queue.length + pages.length >= opts.maxPages) break;
+                            queue.push({ url: href, depth: item.depth + 1 });
+                        }
+                    } catch (e) {
+                        // ignore link parsing errors
+                    }
+                }
+
+            } catch (error) {
+                pages.push({ success: false, url, error: error.message || 'Fetch error' });
+            }
+        }
+
+        return { success: true, url: startUrl, pages, resultCount: pages.length };
     }
 
     /**
@@ -7016,6 +7268,9 @@
                 break;
             case 'fetch_url':
                 result = await fetchUrlContent(args.url);
+                break;
+            case 'scrape_url':
+                result = await scrapeUrl(args.url, args);
                 break;
             default:
                 result = { error: `Unknown function: ${functionName}` };
@@ -7054,6 +7309,15 @@
                             title: data.title || new URL(data.url).hostname,
                             url: data.url
                         });
+                    }
+                } else if (result.name === 'scrape_url') {
+                    // scrape_url returns pages[] - include each page as a citation
+                    if (data.pages && Array.isArray(data.pages)) {
+                        for (const p of data.pages) {
+                            if (p && p.url && !citations.some(c => c.url === p.url)) {
+                                citations.push({ title: p.title || new URL(p.url).hostname, url: p.url });
+                            }
+                        }
                     }
                 }
             } catch (e) {
@@ -7213,7 +7477,7 @@ IMPORTANT: You have web search capabilities enabled. When the user asks about:
 - Live market conditions
 - Any time-sensitive information
 
-Use the web_search tool to find current information. Use fetch_url if you need to read a specific webpage in detail.
+Use the web_search tool to find current information. Use fetch_url if you need to read a specific webpage in detail. When you need structured extraction or to fetch multiple related pages, use the new scrape_url tool and pass options (depth, maxPages, selectors, followLinks) so you can control how the scrape behaves and extract only the parts you need.
 
 When analyzing trades:
 1. Be specific and actionable - provide exact levels, percentages, and concrete steps
@@ -7391,31 +7655,14 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
             
             // Add AI response to chat (with citations if available)
             if (citations.length > 0) {
-                // Use special formatting for messages with citations
-                const formattedContent = formatMessageText(finalResponse);
-                const contentWithCitations = addCitationsToMessage(formattedContent, citations);
-                
-                // Add directly as HTML since we need the citation formatting
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'chat-message assistant';
-                messageDiv.innerHTML = `
-                    <div class="chat-avatar">${getCopilotSvg()}</div>
-                    <div class="chat-bubble">${contentWithCitations}</div>
-                `;
-                container.appendChild(messageDiv);
-                container.scrollTop = container.scrollHeight;
-                chatHistory.push({ role: 'assistant', content: finalResponse });
-                
-                // Auto-save chat after response
-                if (!currentChatId) currentChatId = generateChatId();
-                saveCurrentChat();
+                addChatMessage('assistant', finalResponse, { citations });
             } else {
                 addChatMessage('assistant', finalResponse);
-                
-                // Auto-save chat after response
-                if (!currentChatId) currentChatId = generateChatId();
-                saveCurrentChat();
             }
+            
+            // Auto-save chat after response
+            if (!currentChatId) currentChatId = generateChatId();
+            saveCurrentChat();
             
         } catch (error) {
             console.error('AI request failed:', error);
@@ -7537,58 +7784,7 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
         
         // Render the chat
         const container = document.getElementById('chatMessagesContainer');
-        container.innerHTML = '';
-        
-        if (chatHistory.length === 0) {
-            // Show empty state if no messages
-            container.innerHTML = `
-                <div class="chat-empty-state">
-                    <div class="chat-empty-icon">💬</div>
-                    <div class="chat-empty-text">Empty chat loaded</div>
-                    <div class="chat-empty-subtext">Continue the conversation</div>
-                </div>
-            `;
-        } else {
-            chatHistory.forEach(msg => {
-                if (msg.role === 'user' || msg.role === 'assistant') {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = `chat-message ${msg.role}`;
-                    
-                    const avatarDiv = document.createElement('div');
-                    avatarDiv.className = 'chat-avatar';
-                    
-                    if (msg.role === 'user') {
-                        const avatarUrl = getUserAvatarUrl();
-                        if (avatarUrl) {
-                            const img = document.createElement('img');
-                            img.src = avatarUrl;
-                            img.alt = 'User';
-                            img.onerror = function() { this.parentElement.textContent = 'U'; };
-                            avatarDiv.appendChild(img);
-                        } else {
-                            avatarDiv.textContent = 'U';
-                        }
-                    } else {
-                        avatarDiv.innerHTML = getCopilotSvg();
-                    }
-                    
-                    const bubbleDiv = document.createElement('div');
-                    bubbleDiv.className = 'chat-bubble';
-                    
-                    if (msg.role === 'user') {
-                        bubbleDiv.textContent = msg.content;
-                    } else {
-                        bubbleDiv.innerHTML = formatMessageText(msg.content);
-                    }
-                    
-                    messageDiv.appendChild(avatarDiv);
-                    messageDiv.appendChild(bubbleDiv);
-                    container.appendChild(messageDiv);
-                }
-            });
-        }
-        
-        container.scrollTop = container.scrollHeight;
+        renderChatMessages(container, chatHistory);
         hideChatHistoryDropdown();
     }
 
