@@ -1000,8 +1000,8 @@ async function runAttachmentScraperTests(outputEl) {
     log(`Tests complete. Pages: ${samplePages.length}, Images: ${total}, Analyzed: ${analyzed}, Charts found: ${charts}`);
 }
 
-// Create widget on load
-window.addEventListener('load', () => setTimeout(_createAttachmentTestWidget, 500));
+// Create widget on load - DISABLED for production (developer feature only)
+// window.addEventListener('load', () => setTimeout(_createAttachmentTestWidget, 500));
 
 // Test widget styles
 const testWidgetStyle = document.createElement('style');

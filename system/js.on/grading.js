@@ -5,7 +5,6 @@
 // History Filter Variables (Lines 50-55)
 // ============================================================================
 
-let chatHistory = [];
 let historyFilterTicker = '';
 let historyFilterGrade = '';
 let historyFilterStatus = '';
@@ -366,4 +365,4 @@ window.deleteGrade = deleteGrade;
 
 // Export helper functions
 window.getGradeLetter = getGradeLetter;
-window.escapeHtml = escapeHtml;
+// Note: escapeHtml is provided by utils.js
