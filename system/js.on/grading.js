@@ -276,39 +276,6 @@ function loadHistory() {
         </div>
     `;
     }).join('');
-    
-    // Add event delegation for history buttons (Analyze and Delete)
-    // This is done after innerHTML to attach listeners to dynamically created buttons
-    const historyContainer = document.getElementById('historyContainer');
-    if (historyContainer) {
-        // Remove old listener if it exists to prevent duplicates
-        historyContainer.removeEventListener('click', handleHistoryButtonClick);
-        historyContainer.addEventListener('click', handleHistoryButtonClick);
-    }
-}
-
-/**
- * Handle clicks on history buttons (Analyze and Delete) using event delegation
- * @param {Event} event - Click event
- */
-function handleHistoryButtonClick(event) {
-    const analyzeButton = event.target.closest('button.history-analyze-btn');
-    const deleteButton = event.target.closest('button.history-delete-btn');
-    const historyContainer = document.getElementById('historyContainer');
-
-    if (analyzeButton && historyContainer.contains(analyzeButton)) {
-        event.stopPropagation();
-        const index = parseInt(analyzeButton.getAttribute('data-index'), 10);
-        if (!Number.isNaN(index)) {
-            analyzeGradeWithAI(index);
-        }
-    } else if (deleteButton && historyContainer.contains(deleteButton)) {
-        event.stopPropagation();
-        const index = parseInt(deleteButton.getAttribute('data-index'), 10);
-        if (!Number.isNaN(index)) {
-            deleteGrade(index);
-        }
-    }
 }
 
 /**
@@ -316,6 +283,34 @@ function handleHistoryButtonClick(event) {
  */
 function renderHistory() {
     loadHistory();
+}
+
+// ============================================================================
+// Event Listeners - Set up once at module load
+// ============================================================================
+
+// Add event delegation for history buttons (Analyze and Delete)
+// This is set up once when the module loads, not on every loadHistory() call
+const historyContainer = document.getElementById('historyContainer');
+if (historyContainer) {
+    historyContainer.addEventListener('click', function (event) {
+        const analyzeButton = event.target.closest('button.history-analyze-btn');
+        const deleteButton = event.target.closest('button.history-delete-btn');
+
+        if (analyzeButton && historyContainer.contains(analyzeButton)) {
+            event.stopPropagation();
+            const index = parseInt(analyzeButton.getAttribute('data-index'), 10);
+            if (!Number.isNaN(index)) {
+                analyzeGradeWithAI(index);
+            }
+        } else if (deleteButton && historyContainer.contains(deleteButton)) {
+            event.stopPropagation();
+            const index = parseInt(deleteButton.getAttribute('data-index'), 10);
+            if (!Number.isNaN(index)) {
+                deleteGrade(index);
+            }
+        }
+    });
 }
 
 // ============================================================================
