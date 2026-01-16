@@ -290,27 +290,36 @@ function renderHistory() {
 // ============================================================================
 
 // Add event delegation for history buttons (Analyze and Delete)
-// This is set up once when the module loads, not on every loadHistory() call
-const historyContainer = document.getElementById('historyContainer');
-if (historyContainer) {
-    historyContainer.addEventListener('click', function (event) {
-        const analyzeButton = event.target.closest('button.history-analyze-btn');
-        const deleteButton = event.target.closest('button.history-delete-btn');
+// Wait for DOM to be ready before setting up event listeners
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupHistoryEventListeners);
+} else {
+    // DOM is already ready
+    setupHistoryEventListeners();
+}
 
-        if (analyzeButton && historyContainer.contains(analyzeButton)) {
-            event.stopPropagation();
-            const index = parseInt(analyzeButton.getAttribute('data-index'), 10);
-            if (!Number.isNaN(index)) {
-                analyzeGradeWithAI(index);
+function setupHistoryEventListeners() {
+    const historyContainer = document.getElementById('historyContainer');
+    if (historyContainer) {
+        historyContainer.addEventListener('click', function (event) {
+            const analyzeButton = event.target.closest('button.history-analyze-btn');
+            const deleteButton = event.target.closest('button.history-delete-btn');
+
+            if (analyzeButton && historyContainer.contains(analyzeButton)) {
+                event.stopPropagation();
+                const index = parseInt(analyzeButton.getAttribute('data-index'), 10);
+                if (!Number.isNaN(index)) {
+                    analyzeGradeWithAI(index);
+                }
+            } else if (deleteButton && historyContainer.contains(deleteButton)) {
+                event.stopPropagation();
+                const index = parseInt(deleteButton.getAttribute('data-index'), 10);
+                if (!Number.isNaN(index)) {
+                    deleteGrade(index);
+                }
             }
-        } else if (deleteButton && historyContainer.contains(deleteButton)) {
-            event.stopPropagation();
-            const index = parseInt(deleteButton.getAttribute('data-index'), 10);
-            if (!Number.isNaN(index)) {
-                deleteGrade(index);
-            }
-        }
-    });
+        });
+    }
 }
 
 // ============================================================================
