@@ -2,6 +2,22 @@
 // Handles GitHub OAuth, token storage, StaticBackend server for API routing
 
 /**
+ * Reload models after authentication
+ * Handles both GitHub PAT and OAuth Copilot authentication
+ */
+async function reloadModelsAfterAuth() {
+    const token = localStorage.getItem('githubToken');
+    if (token) {
+        await fetchAvailableModels(token);
+    } else {
+        // If no GitHub token, just refresh the model picker with Copilot models
+        const models = await StaticBackend.getAvailableModels();
+        populateModelPicker(models);
+        updateModelStatus('ready', `${models.length} models ready`, '#00bfa5');
+    }
+}
+
+/**
  * GitHub Token Modal Management
  */
 function showGithubTokenModal() {
@@ -280,16 +296,7 @@ async function startWebFlowAuth() {
             showToast('GitHub Copilot connected!', 'success', 'Connected');
             updateOAuthUI();
             updateStaticBackendStatus();
-            // Reload models to include Copilot models
-            const token = localStorage.getItem('githubToken');
-            if (token) {
-                await fetchAvailableModels(token);
-            } else {
-                // If no GitHub token, just refresh the model picker with Copilot models
-                const models = await StaticBackend.getAvailableModels();
-                populateModelPicker(models);
-                updateModelStatus('ready', `${models.length} models ready`, '#00bfa5');
-            }
+            await reloadModelsAfterAuth();
         }
     } catch (error) {
         console.error('Web Flow auth error:', error);
@@ -350,17 +357,7 @@ async function startDeviceFlowAuth() {
             deviceSection.style.display = 'none';
             updateOAuthUI();
             updateStaticBackendStatus();
-            
-            // Reload models to include Copilot models
-            const token = localStorage.getItem('githubToken');
-            if (token) {
-                await fetchAvailableModels(token);
-            } else {
-                // If no GitHub token, just refresh the model picker with Copilot models
-                const models = await StaticBackend.getAvailableModels();
-                populateModelPicker(models);
-                updateModelStatus('ready', `${models.length} models ready`, '#00bfa5');
-            }
+            await reloadModelsAfterAuth();
         } else {
             showToast(result.error || 'Authentication failed', 'error', 'Auth Failed');
             statusEl.textContent = result.error || 'Authentication failed. Please try again.';
