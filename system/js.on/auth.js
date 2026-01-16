@@ -521,14 +521,14 @@ const StaticBackend = {
     ALL_MODELS: {
         // Azure Inference Models (work with GitHub PAT)
         azure: [
-            { name: 'gpt-4o', friendly_name: 'OpenAI GPT-4o', provider: 'OpenAI', endpoint: 'azure' },
-            { name: 'gpt-4o-mini', friendly_name: 'OpenAI GPT-4o mini', provider: 'OpenAI', endpoint: 'azure' },
+            { name: 'gpt-4o', friendly_name: 'GPT-4o (Azure)', provider: 'OpenAI', endpoint: 'azure' },
+            { name: 'gpt-4o-mini', friendly_name: 'GPT-4o mini (Azure)', provider: 'OpenAI', endpoint: 'azure' },
             { name: 'Mistral-Nemo', friendly_name: 'Mistral Nemo', provider: 'Mistral AI', endpoint: 'azure' }
         ],
         // GitHub Copilot Models (require Copilot subscription + OAuth)
         copilot: [
-            { name: 'gpt-4', friendly_name: 'OpenAI GPT-4 (Copilot)', provider: 'OpenAI', endpoint: 'copilot' },
-            { name: 'gpt-4o', friendly_name: 'OpenAI GPT-4o (Copilot)', provider: 'OpenAI', endpoint: 'copilot' },
+            { name: 'gpt-4', friendly_name: 'GPT-4', provider: 'OpenAI', endpoint: 'copilot' },
+            { name: 'gpt-4o', friendly_name: 'GPT-4o', provider: 'OpenAI', endpoint: 'copilot' },
             { name: 'claude-3.5-sonnet', friendly_name: 'Claude 3.5 Sonnet', provider: 'Anthropic', endpoint: 'copilot' },
             { name: 'gemini-1.5-pro', friendly_name: 'Gemini 1.5 Pro', provider: 'Google', endpoint: 'copilot' }
         ]

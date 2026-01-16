@@ -783,6 +783,8 @@ function triggerFileUpload(event) {
 let isFullscreenChat = false;
 let originalChatInputParent = null;
 let originalChatInputNextSibling = null;
+let originalChatModelBarParent = null;
+let originalChatModelBarNextSibling = null;
 
 function handleFullscreenKeydown(e) {
     if (e.key === 'Escape' || e.key === 'Esc') {

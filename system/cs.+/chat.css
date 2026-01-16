@@ -116,9 +116,23 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 12px 16px;
+        padding: 8px 16px;
         background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
         border-bottom: 1px solid #cc0000;
+        min-height: 56px;
+    }
+
+    .fullscreen-chat-controls {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .fullscreen-chat-controls .chat-model-bar {
+        padding: 0;
+        flex: 1;
+        position: static;
     }
 
     .fullscreen-chat-title {
