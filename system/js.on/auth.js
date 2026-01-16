@@ -6,14 +6,51 @@
  * Handles both GitHub PAT and OAuth Copilot authentication
  */
 async function reloadModelsAfterAuth() {
-    const token = localStorage.getItem('githubToken');
-    if (token) {
-        await fetchAvailableModels(token);
-    } else {
-        // If no GitHub token, just refresh the model picker with Copilot models
+    try {
+        const token = localStorage.getItem('githubToken');
+        
+        // If we have a GitHub token, validate it first
+        if (token) {
+            updateModelStatus('loading', 'Loading models...', '#ff9800');
+            StaticBackend.setGitHubToken(token);
+            const validation = await StaticBackend.validateGitHubToken(token);
+            if (!validation.valid) {
+                console.error('Token validation failed:', validation.error);
+            }
+        }
+        
+        // Always get available models (includes both Azure and Copilot based on what tokens exist)
         const models = await StaticBackend.getAvailableModels();
-        populateModelPicker(models);
+        
+        if (models.length === 0) {
+            showToast('No models available. Please configure authentication.', 'warning', 'No Models');
+            updateModelStatus('error', 'No models', '#ff4444');
+            clearModelPicker();
+            return;
+        }
+        
+        // Show success message with model count
+        const azureCount = models.filter(m => m.endpoint === 'azure').length;
+        const copilotCount = models.filter(m => m.endpoint === 'copilot').length;
+        
+        let toastMsg = '';
+        if (azureCount > 0) {
+            toastMsg = `${azureCount} Azure model${azureCount !== 1 ? 's' : ''}`;
+        }
+        if (copilotCount > 0) {
+            toastMsg += (toastMsg ? ' + ' : '') + `${copilotCount} Copilot model${copilotCount !== 1 ? 's' : ''}`;
+        }
+        
+        showToast(toastMsg, 'success', `${models.length} Models Loaded`, 5000);
         updateModelStatus('ready', `${models.length} models ready`, '#00bfa5');
+        
+        localStorage.setItem('availableModels', JSON.stringify(models));
+        populateModelPicker(models);
+        
+    } catch (error) {
+        console.error('Error reloading models:', error);
+        showToast('Error loading models: ' + error.message, 'error', 'Load Error');
+        updateModelStatus('error', 'Load failed', '#ff4444');
     }
 }
 
@@ -402,8 +439,8 @@ function disconnectCopilot() {
     updateOAuthUI();
     updateStaticBackendStatus();
     
-    // Refresh models to show only Azure models
-    fetchModels();
+    // Refresh models to show only Azure models (if GitHub token still exists)
+    reloadModelsAfterAuth();
 }
 
 /**
