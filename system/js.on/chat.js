@@ -802,12 +802,10 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Enter fullscreen - expand within aiView container
+        // Enter fullscreen - expand chat and hide header elements
         chatWindow.classList.add('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'true');
-        
-        // Don't hide body overflow - we're not doing true fullscreen
-        // This allows the page to scroll naturally and prevents mobile zoom issues
+        document.body.classList.add('chat-fullscreen-active');
         
         // Update button icon for exit fullscreen
         if (fullscreenBtn) {
@@ -820,17 +818,18 @@ function toggleFullscreenChat() {
             fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
         }
 
-        // Scroll chat into view smoothly
+        // Scroll chat into view smoothly after animation
         setTimeout(() => {
-            chatWindow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
+            chatWindow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
         
         // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);
     } else {
-        // Exit fullscreen - restore normal size
+        // Exit fullscreen - restore normal size and show header elements
         chatWindow.classList.remove('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('chat-fullscreen-active');
         
         // Restore button icon for enter fullscreen
         if (fullscreenBtn) {

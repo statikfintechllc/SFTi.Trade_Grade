@@ -16,7 +16,15 @@
         margin-bottom: 1px;
         position: relative;
         /* Smooth height transition for fullscreen expansion */
-        transition: height 0.35s ease-in-out;
+        transition: height 0.35s ease-in-out, transform 0.35s ease-in-out;
+    }
+    
+    /* Smooth transitions for AI view elements during fullscreen */
+    #aiViewTitle,
+    #aiViewTokenCards,
+    #aiViewStatsCard {
+        transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out, max-height 0.35s ease-in-out, margin 0.35s ease-in-out;
+        overflow: hidden;
     }
 
     .chat-model-bar {
@@ -97,12 +105,23 @@
         pointer-events: none;
     }
 
-    /* Fullscreen chat - expand height to almost full screen within aiView container */
-    /* NO position changes, NO modal behavior - just much taller */
+    /* Fullscreen chat - expand dynamically with smooth animations */
     .chat-window-container.fullscreen {
-        /* Expand height to almost full viewport, leaving minimal space for header */
-        height: calc(100vh - 100px) !important;
-        /* All other styling inherited - no changes to position, background, borders, etc. */
+        /* Expand height to fill almost entire viewport */
+        height: calc(100vh - 80px) !important;
+        /* All other styling inherited */
+    }
+    
+    /* Hide/collapse AI view header elements in fullscreen */
+    body.chat-fullscreen-active #aiViewTitle,
+    body.chat-fullscreen-active #aiViewTokenCards,
+    body.chat-fullscreen-active #aiViewStatsCard {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        pointer-events: none;
     }
     
     /* Messages area expands to fill available space in fullscreen */
