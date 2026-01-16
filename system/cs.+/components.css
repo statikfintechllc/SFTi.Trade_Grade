@@ -1,0 +1,309 @@
+/* components.css - Reusable component styles */
+/* Cards, inputs, buttons, progress bars, and common UI elements */
+
+    .card {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+                    0 2px 8px rgba(204, 0, 0, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 
+                    0 4px 16px rgba(204, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border-color: rgba(204, 0, 0, 0.3);
+    }
+    
+    .card:hover::before {
+        left: 100%;
+    }
+
+    .ticker-input {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(26, 26, 26, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: white;
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .ticker-input:focus {
+        outline: none;
+        border-color: #cc0000;
+        background: rgba(13, 13, 13, 0.9);
+        box-shadow: 0 0 0 4px rgba(204, 0, 0, 0.15),
+                    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                    0 4px 16px rgba(204, 0, 0, 0.3);
+        transform: scale(1.02);
+    }
+    
+    .ticker-input::placeholder {
+        color: #555;
+    }
+
+    .score-display {
+        background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 8px 32px rgba(204, 0, 0, 0.5),
+                    0 0 40px rgba(204, 0, 0, 0.2),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .score-display::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+        animation: scoreGlow 8s ease-in-out infinite;
+    }
+    
+    @keyframes scoreGlow {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(-20%, -20%) scale(1.2); }
+    }
+    
+    .score-display:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 48px rgba(204, 0, 0, 0.7),
+                    0 0 60px rgba(204, 0, 0, 0.3),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .score-label {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-bottom: 4px;
+    }
+
+    .score-value {
+        font-size: 36px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .score-max {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 4px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: white;
+        border-radius: 6px;
+        transition: width 0.3s ease;
+    }
+
+    .card-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid #333;
+    }
+
+    .slider-group {
+        margin-bottom: 14px;
+    }
+
+    .slider-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2px;
+    }
+
+    .slider-label {
+        flex: 1;
+    }
+
+    .slider-title {
+        font-weight: 600;
+        color: #e0e0e0;
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+
+    .slider-subtitle {
+        font-size: 9px;
+        color: #888;
+        display: none;
+    }
+
+    .slider-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: #cc0000;
+        min-width: 32px;
+        text-align: right;
+    }
+
+    .slider {
+        width: 100%;
+        height: 6px;
+        border-radius: 6px;
+        background: #1a1a1a;
+        outline: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #cc0000 0%, #ff3333 100%);
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(204, 0, 0, 0.4);
+    }
+
+    .slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #cc0000 0%, #ff3333 100%);
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 6px rgba(204, 0, 0, 0.4);
+    }
+
+    .slider-range {
+        display: none;
+    }
+
+    .save-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(204, 0, 0, 0.4), 
+                    0 2px 8px rgba(204, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .save-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+    }
+    
+    .save-btn:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 32px rgba(204, 0, 0, 0.6),
+                    0 4px 16px rgba(204, 0, 0, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        filter: brightness(1.1);
+    }
+    
+    .save-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .save-btn:active {
+        transform: scale(0.97);
+        box-shadow: 0 2px 12px rgba(204, 0, 0, 0.4);
+    }
+
+    .label-text {
+        display: block;
+        font-size: 10px;
+        font-weight: 600;
+        color: #b0b0b0;
+        margin-bottom: 4px;
+    }
+
+    .icon-svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Entry price input style */
+    #entryPriceInput {
+        background: rgba(255, 204, 0, 0.1);
+        border-color: rgba(255, 204, 0, 0.3);
+    }
+
+    #entryPriceInput:focus {
+        border-color: #ffcc00;
+        box-shadow: 0 0 10px rgba(255, 204, 0, 0.2);
+    }
+
+    /* History filter select */
+    #historyGradeFilter {
+        background: #1a1a1a;
+        cursor: pointer;
+    }
+
+    #historyGradeFilter option {
+        background: #1a1a1a;
+        color: #e0e0e0;
+    }

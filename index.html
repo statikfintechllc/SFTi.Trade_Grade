@@ -14,7 +14,19 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23cc0000'/%3E%3Cpath d='M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z' fill='%23ff6666'/%3E%3Ccircle cx='22' cy='12' r='4' fill='%2300ff00'/%3E%3Cpath d='M22 10v4m-2-2h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="system/img/icon-192.png">
     <title>PREPARE Trading Journal</title>
-    <link rel="stylesheet" href="system/cs.+/styles.css">
+    
+    <!-- CSS Modules - Loaded in order -->
+    <link rel="stylesheet" href="system/cs.+/base.css">
+    <link rel="stylesheet" href="system/cs.+/menu.css">
+    <link rel="stylesheet" href="system/cs.+/components.css">
+    <link rel="stylesheet" href="system/cs.+/sliders.css">
+    <link rel="stylesheet" href="system/cs.+/grading.css">
+    <link rel="stylesheet" href="system/cs.+/modal.css">
+    <link rel="stylesheet" href="system/cs.+/toast.css">
+    <link rel="stylesheet" href="system/cs.+/chat.css">
+    <link rel="stylesheet" href="system/cs.+/models.css">
+    <link rel="stylesheet" href="system/cs.+/responsive.css">
+
 
 </head>
 <body>
@@ -963,6 +975,34 @@
     </div>
 </div>
 
-<script src="system/js.on/app.js"></script>
+<!-- JavaScript Modules - Loaded in dependency order -->
+<!-- 1. Core utilities and configuration -->
+<script src="system/js.on/config.js"></script>
+<script src="system/js.on/utils.js"></script>
+
+<!-- 2. UI components -->
+<script src="system/js.on/toast.js"></script>
+<script src="system/js.on/menu.js"></script>
+<script src="system/js.on/modal.js"></script>
+
+<!-- 3. Feature modules -->
+<script src="system/js.on/sliders.js"></script>
+<script src="system/js.on/screenshot.js"></script>
+<script src="system/js.on/grading.js"></script>
+
+<!-- 4. Authentication and models -->
+<script src="system/js.on/auth.js"></script>
+<script src="system/js.on/models.js"></script>
+
+<!-- 5. Chat and search functionality -->
+<script src="system/js.on/chat.js"></script>
+<script src="system/js.on/web-search.js"></script>
+
+<!-- 6. AI integration -->
+<script src="system/js.on/ai.js"></script>
+
+<!-- 7. Initialize application -->
+<script src="system/js.on/init.js"></script>
+
 </body>
 </html>

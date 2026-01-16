@@ -1,0 +1,271 @@
+/* models.css - AI model selection styles */
+/* Model dropdown menu, model items, provider icons, and capability badges */
+
+    .chat-model-select {
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid rgba(204, 0, 0, 0.3);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        outline: none;
+        width: auto;
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .chat-model-select:hover:not(:disabled) {
+        border-color: rgba(204, 0, 0, 0.6);
+        background: rgba(13, 13, 13, 0.95);
+        box-shadow: 0 4px 12px rgba(204, 0, 0, 0.2);
+    }
+
+    .chat-model-select:focus {
+        border-color: #cc0000;
+        box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.2);
+    }
+
+    .chat-model-select:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .chat-model-select option {
+        background: #1a1a1a;
+        color: white;
+        padding: 8px;
+    }
+
+    /* Custom Model Dropdown - Matches More Menu Theme */
+    .model-dropdown-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .model-dropdown-trigger {
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white;
+        padding: 6px 28px 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        outline: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 150px;
+        max-width: 280px;
+        position: relative;
+    }
+
+    .model-dropdown-trigger::after {
+        content: '';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 5px solid #888;
+        transition: transform 0.2s ease;
+    }
+
+    .model-dropdown-trigger.active::after {
+        transform: translateY(-50%) rotate(180deg);
+    }
+
+    .model-dropdown-trigger:hover:not(:disabled) {
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(13, 13, 13, 0.95);
+    }
+
+    .model-dropdown-trigger:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .model-dropdown-trigger .model-icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
+    .model-dropdown-trigger .model-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .model-dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-top: 8px;
+        background: linear-gradient(135deg, rgba(30, 30, 30, 0.98) 0%, rgba(20, 20, 20, 0.99) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 8px;
+        min-width: 220px;
+        max-width: 300px;
+        max-height: 350px;
+        overflow-y: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 200;
+        display: none;
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
+
+    .model-dropdown-menu.active {
+        display: block;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .model-dropdown-menu::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .model-dropdown-menu::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+    }
+
+    .model-dropdown-menu::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+
+    .model-section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px 6px;
+        color: #888;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 4px;
+    }
+
+    .model-section-header:not(:first-child) {
+        margin-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding-top: 12px;
+    }
+
+    .model-section-header svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+
+    .model-section-header.azure svg {
+        color: #0078D4;
+    }
+
+    .model-section-header.copilot svg {
+        color: #00bfa5;
+    }
+
+    .model-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: none;
+        border: none;
+        color: #e0e0e0;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        transition: all 0.2s ease;
+    }
+
+    .model-item:hover {
+        background: rgba(204, 0, 0, 0.15);
+        color: white;
+    }
+
+    .model-item.selected {
+        background: rgba(204, 0, 0, 0.25);
+        color: white;
+    }
+
+    .model-item-icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .model-item-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .model-item-icon.openai svg { color: #10a37f; }
+    .model-item-icon.anthropic svg { color: #d4a27f; }
+    .model-item-icon.google svg { color: #4285f4; }
+    .model-item-icon.mistral svg { color: #f7a21e; }
+    .model-item-icon.meta svg { color: #0668E1; }
+    .model-item-icon.xai svg { color: #1d9bf0; }
+
+    .model-item-details {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .model-item-name {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .model-item-caps {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .model-cap-icon {
+        width: 12px;
+        height: 12px;
+        opacity: 0.6;
+    }
+
+    .model-cap-icon svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .model-cap-icon.chat svg { color: #00bfa5; }
+    .model-cap-icon.code svg { color: #ff9800; }
+    .model-cap-icon.vision svg { color: #9c27b0; }
+
+    .model-item:hover .model-cap-icon {
+        opacity: 1;
+    }
