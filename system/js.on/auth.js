@@ -521,8 +521,8 @@ const StaticBackend = {
     ALL_MODELS: {
         // Azure Inference Models (work with GitHub PAT)
         azure: [
-            { name: 'gpt-4o', friendly_name: 'GPT-4o (Azure)', provider: 'OpenAI', endpoint: 'azure' },
-            { name: 'gpt-4o-mini', friendly_name: 'GPT-4o mini (Azure)', provider: 'OpenAI', endpoint: 'azure' },
+            { name: 'gpt-4o', friendly_name: 'GPT-4o', provider: 'OpenAI', endpoint: 'azure' },
+            { name: 'gpt-4o-mini', friendly_name: 'GPT-4o mini', provider: 'OpenAI', endpoint: 'azure' },
             { name: 'Mistral-Nemo', friendly_name: 'Mistral Nemo', provider: 'Mistral AI', endpoint: 'azure' }
         ],
         // GitHub Copilot Models (require Copilot subscription + OAuth)

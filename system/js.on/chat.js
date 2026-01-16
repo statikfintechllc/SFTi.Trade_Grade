@@ -820,7 +820,18 @@ function toggleFullscreenChat() {
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
 
-        // Render messages into fullscreen modal using renderer
+        // Move model selector bar to top of fullscreen body (preserve event listeners)
+        const chatModelBar = document.querySelector('.chat-model-bar');
+        if (chatModelBar && fullscreenBody) {
+            if (!originalChatModelBarParent) {
+                originalChatModelBarParent = chatModelBar.parentNode;
+                originalChatModelBarNextSibling = chatModelBar.nextSibling;
+            }
+            // Insert at the beginning of fullscreen body
+            fullscreenBody.insertBefore(chatModelBar, fullscreenBody.firstChild);
+        }
+
+        // Render messages into fullscreen modal using renderer (after model bar)
         if (fullscreenBody) {
             renderChatMessages(fullscreenBody, chatHistory);
         }
@@ -866,6 +877,14 @@ function toggleFullscreenChat() {
         modal.classList.remove('active');
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
+
+        // Move model bar back to its original location
+        const currentModelBar = document.querySelector('.chat-model-bar');
+        if (currentModelBar && originalChatModelBarParent) {
+            originalChatModelBarParent.insertBefore(currentModelBar, originalChatModelBarNextSibling);
+        }
+        originalChatModelBarParent = null;
+        originalChatModelBarNextSibling = null;
 
         // Re-render messages in main chat container
         if (messagesContainer) {
