@@ -37,34 +37,41 @@ function switchView(view) {
     historyBtn.classList.remove('active');
     aiBtn.classList.remove('active');
 
-    if (view === 'grade') {
-        gradeView.style.display = 'block';
-        gradeBtn.classList.add('active');
-    } else if (view === 'tracker') {
-        trackerView.style.display = 'block';
-        trackerBtn.classList.add('active');
-        initializeTracker();
-    } else if (view === 'finalize') {
-        finalizeView.style.display = 'block';
-        finalizeBtn.classList.add('active');
-        loadFinalizeView();
-    } else if (view === 'history') {
-        historyView.style.display = 'block';
-        historyBtn.classList.add('active');
-        loadHistory();
-    } else if (view === 'ai') {
-        aiView.style.display = 'block';
-        aiBtn.classList.add('active');
-        loadToken();
-        // Show chat window when AI view is active
-        if (chatWindow) {
-            chatWindow.style.display = 'flex';
+    // Store whether menu is open before view-specific code runs
+    const menu = document.getElementById('sideMenu');
+    const shouldCloseMenu = menu && menu.classList.contains('active');
+
+    try {
+        if (view === 'grade') {
+            gradeView.style.display = 'block';
+            gradeBtn.classList.add('active');
+        } else if (view === 'tracker') {
+            trackerView.style.display = 'block';
+            trackerBtn.classList.add('active');
+            initializeTracker();
+        } else if (view === 'finalize') {
+            finalizeView.style.display = 'block';
+            finalizeBtn.classList.add('active');
+            loadFinalizeView();
+        } else if (view === 'history') {
+            historyView.style.display = 'block';
+            historyBtn.classList.add('active');
+            loadHistory();
+        } else if (view === 'ai') {
+            aiView.style.display = 'block';
+            aiBtn.classList.add('active');
+            loadToken();
+            // Show chat window when AI view is active
+            if (chatWindow) {
+                chatWindow.style.display = 'flex';
+            }
         }
+    } catch (error) {
+        console.error('Error in switchView:', error);
     }
     
-    // Only toggle menu if it's open (for menu button clicks)
-    const menu = document.getElementById('sideMenu');
-    if (menu.classList.contains('active')) {
+    // Always close menu if it was open, even if there was an error
+    if (shouldCloseMenu) {
         toggleMenu();
     }
 }
