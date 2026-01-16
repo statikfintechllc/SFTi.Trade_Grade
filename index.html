@@ -14,7 +14,19 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23cc0000'/%3E%3Cpath d='M8 10h6v2H8v-2zm0 4h8v2H8v-2zm0 4h10v2H8v-2z' fill='%23ff6666'/%3E%3Ccircle cx='22' cy='12' r='4' fill='%2300ff00'/%3E%3Cpath d='M22 10v4m-2-2h4' stroke='white' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="apple-touch-icon" href="system/img/icon-192.png">
     <title>PREPARE Trading Journal</title>
-    <link rel="stylesheet" href="system/cs.+/styles.css">
+    
+    <!-- CSS Modules - Loaded in order -->
+    <link rel="stylesheet" href="system/cs.+/base.css">
+    <link rel="stylesheet" href="system/cs.+/menu.css">
+    <link rel="stylesheet" href="system/cs.+/components.css">
+    <link rel="stylesheet" href="system/cs.+/sliders.css">
+    <link rel="stylesheet" href="system/cs.+/grading.css">
+    <link rel="stylesheet" href="system/cs.+/modal.css">
+    <link rel="stylesheet" href="system/cs.+/toast.css">
+    <link rel="stylesheet" href="system/cs.+/chat.css">
+    <link rel="stylesheet" href="system/cs.+/models.css">
+    <link rel="stylesheet" href="system/cs.+/responsive.css">
+
 
 </head>
 <body>
@@ -945,24 +957,34 @@
     </div>
 </div>
 
-<!-- Fullscreen Chat Modal -->
-<div class="fullscreen-chat-modal" id="fullscreenChatModal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="fullscreen-chat-header">
-        <span class="fullscreen-chat-title">AI Trading Assistant</span>
-        <button class="fullscreen-close-btn" onclick="toggleFullscreenChat()" title="Exit Fullscreen" aria-label="Exit Fullscreen">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-            </svg>
-        </button>
-    </div>
-    <div class="fullscreen-chat-body" id="fullscreenChatBody">
-        <!-- Messages will be cloned here when entering fullscreen -->
-    </div>
-    <div class="fullscreen-chat-input-area" id="fullscreenChatInputArea">
-        <!-- Chat input will be cloned here when entering fullscreen -->
-    </div>
-</div>
+<!-- JavaScript Modules - Loaded in dependency order with defer for non-blocking -->
+<!-- 1. Core utilities and configuration -->
+<script src="system/js.on/config.js" defer></script>
+<script src="system/js.on/utils.js" defer></script>
 
-<script src="system/js.on/app.js"></script>
+<!-- 2. UI components -->
+<script src="system/js.on/toast.js" defer></script>
+<script src="system/js.on/menu.js" defer></script>
+<script src="system/js.on/modal.js" defer></script>
+
+<!-- 3. Feature modules -->
+<script src="system/js.on/sliders.js" defer></script>
+<script src="system/js.on/screenshot.js" defer></script>
+<script src="system/js.on/grading.js" defer></script>
+
+<!-- 4. Authentication and models -->
+<script src="system/js.on/auth.js" defer></script>
+<script src="system/js.on/models.js" defer></script>
+
+<!-- 5. Chat and search functionality -->
+<script src="system/js.on/chat.js" defer></script>
+<script src="system/js.on/web-search.js" defer></script>
+
+<!-- 6. AI integration -->
+<script src="system/js.on/ai.js" defer></script>
+
+<!-- 7. Initialize application -->
+<script src="system/js.on/init.js" defer></script>
+
 </body>
 </html>

@@ -1,0 +1,210 @@
+/* grading.css - Trade grading and history styles */
+/* History items, grade display, screenshots, and empty states */
+
+    .history-item {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 12px;
+        align-items: center;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                    0 2px 8px rgba(204, 0, 0, 0.08),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .history-item::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(204, 0, 0, 0.08) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.6s ease, transform 0.6s ease;
+        pointer-events: none;
+    }
+    
+    .history-item:hover {
+        transform: translateY(-6px) scale(1.02);
+        border-color: rgba(204, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+                    0 8px 20px rgba(204, 0, 0, 0.25),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.1),
+                    0 0 40px rgba(204, 0, 0, 0.15);
+    }
+    
+    .history-item:hover::before {
+        opacity: 1;
+        transform: scale(1.1) rotate(45deg);
+    }
+    
+    .history-item:active {
+        transform: translateY(-2px) scale(0.99);
+    }
+
+    .history-left {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .history-ticker {
+        font-size: 18px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .history-grades-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        font-size: 11px;
+    }
+
+    .history-grade-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #b0b0b0;
+    }
+
+    .history-grade-letter {
+        font-weight: 700;
+        color: #cc0000;
+        font-size: 12px;
+    }
+
+    .history-grade-value {
+        color: #e0e0e0;
+        font-weight: 600;
+    }
+
+    .history-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+    }
+
+    .history-score-value {
+        font-size: 48px;
+        font-weight: 700;
+        color: white;
+        line-height: 1;
+    }
+
+    .history-right {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .history-screenshot {
+        width: 100%;
+        max-width: 120px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .history-screenshot::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(204, 0, 0, 0.2), rgba(204, 0, 0, 0.05));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+    
+    .history-screenshot:hover {
+        border-color: rgba(204, 0, 0, 0.5);
+        transform: scale(1.1) rotate(2deg);
+        box-shadow: 0 12px 32px rgba(204, 0, 0, 0.4),
+                    0 0 20px rgba(204, 0, 0, 0.2);
+        filter: brightness(1.1) saturate(1.2);
+    }
+    
+    .history-screenshot:hover::after {
+        opacity: 1;
+    }
+
+    .history-no-screenshot {
+        width: 100%;
+        max-width: 120px;
+        height: 80px;
+        border-radius: 6px;
+        border: 1px dashed #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        font-size: 10px;
+    }
+
+    .history-footer {
+        grid-column: 1 / -1;
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+    }
+
+    .delete-btn {
+        width: 100%;
+        padding: 8px;
+        background: rgba(204, 0, 0, 0.1);
+        color: #cc0000;
+        border: 1px solid rgba(204, 0, 0, 0.3);
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .delete-btn:hover {
+        background: rgba(204, 0, 0, 0.2);
+    }
+
+    .btn-icon {
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+        margin-right: 4px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 16px;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.3;
+    }
+
+    .empty-text {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .empty-subtext {
+        color: #555;
+        font-size: 11px;
+    }

@@ -1,0 +1,55 @@
+/* responsive.css - Responsive design adjustments */
+/* Media queries for mobile devices (max-width: 480px) */
+
+@media (max-width: 480px) {
+    .chat-window-container {
+        height: 450px;
+        margin-top: 0;
+        margin-bottom: 1px;
+    }
+
+    .chat-model-bar {
+        padding: 6px 8px;
+    }
+
+    .chat-model-select {
+        font-size: 11px;
+        padding: 5px 10px;
+        max-width: 95%;
+    }
+
+    .chat-bubble {
+        max-width: 85%;
+        font-size: 12px;
+    }
+
+    .chat-input-bar {
+        padding: 8px 8px 0 8px;
+        gap: 6px;
+    }
+
+    .chat-input-wrapper {
+        flex: 1;
+        min-width: 0;
+        gap: 4px;
+        padding: 6px 10px;
+    }
+
+    .chat-textarea {
+        font-size: 13px;
+    }
+
+    .chat-controls {
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .chat-icon-btn {
+        padding: 4px;
+    }
+
+    .chat-icon-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+}
