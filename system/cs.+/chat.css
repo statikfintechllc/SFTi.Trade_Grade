@@ -105,21 +105,13 @@
         pointer-events: none;
     }
 
-    /* Fullscreen chat - expand dynamically with smooth animations */
+    /* Fullscreen chat - expand height within AIView container, not true fullscreen */
     .chat-window-container.fullscreen {
-        /* Fixed positioning to center in viewport and prevent scroll */
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100% !important;
-        /* Expand height to fill entire viewport */
-        height: 100vh !important;
-        height: 100dvh !important; /* Dynamic for mobile keyboard */
-        margin: 0 !important;
-        z-index: 9999 !important;
-        /* All other styling inherited - gradient, borders, etc. */
+        /* Large height expansion - stays in document flow */
+        /* Leaves space for camera/status bar at top */
+        height: calc(100vh - 60px) !important;
+        height: calc(100dvh - 60px) !important; /* Dynamic for mobile keyboard */
+        /* All other styling inherited - gradient, borders, corners, etc. */
     }
     
     /* Prevent body scroll when fullscreen */
@@ -149,9 +141,9 @@
         -webkit-overflow-scrolling: touch !important;
     }
     
-    /* Hide fullscreen button when in fullscreen mode */
+    /* Fullscreen button stays visible in fullscreen mode */
     .chat-window-container.fullscreen .fullscreen-chat-btn {
-        display: none !important;
+        /* Keep button visible and accessible */
     }
 
     /* Attachment preview & analysis styles */
