@@ -120,6 +120,20 @@ function hideMarketApiModal() {
 }
 
 /**
+ * Update GitHub token status display
+ * @param {boolean} hasToken - Whether a token is configured
+ * @param {string} message - Status message to display
+ */
+function updateGithubTokenStatus(hasToken, message) {
+    const statusText = document.getElementById('githubTokenStatusText');
+    
+    if (statusText) {
+        statusText.textContent = message || (hasToken ? 'Token configured' : 'Click to configure');
+        statusText.style.color = hasToken ? '#00bfa5' : '#666';
+    }
+}
+
+/**
  * OAuth Functions
  */
 function updateStaticBackendStatus() {
@@ -1093,6 +1107,29 @@ const StaticBackend = {
     }
 };
 
+/**
+ * Load token from localStorage and initialize UI
+ * Called when AI view is activated
+ */
+function loadToken() {
+    const token = localStorage.getItem('githubToken');
+    if (token) {
+        // Update token status
+        updateGithubTokenStatus(true, 'Token configured');
+        // Fetch avatar if not already cached
+        if (!localStorage.getItem('githubAvatarUrl')) {
+            fetchAndCacheUserAvatar(token);
+        }
+        // Fetch models on load if token exists
+        fetchAvailableModels(token);
+    } else {
+        // No token available, clear model picker
+        updateGithubTokenStatus(false);
+        updateModelStatus('none', 'Configure token first', '#666');
+        clearModelPicker();
+    }
+}
+
 // Expose all functions and StaticBackend globally
 window.showGithubTokenModal = showGithubTokenModal;
 window.hideGithubTokenModal = hideGithubTokenModal;
@@ -1104,6 +1141,7 @@ window.showApiTokenModal = showApiTokenModal;
 window.hideApiTokenModal = hideApiTokenModal;
 window.showMarketApiModal = showMarketApiModal;
 window.hideMarketApiModal = hideMarketApiModal;
+window.updateGithubTokenStatus = updateGithubTokenStatus;
 window.updateStaticBackendStatus = updateStaticBackendStatus;
 window.updateOAuthUI = updateOAuthUI;
 window.saveOAuthCredentials = saveOAuthCredentials;
@@ -1116,4 +1154,5 @@ window.initiateCopilotAuth = initiateCopilotAuth;
 window.toggleQuickActionsPopup = toggleQuickActionsPopup;
 window.hideQuickActionsPopup = hideQuickActionsPopup;
 window.closeQuickActionsPopupOnOutsideClick = closeQuickActionsPopupOnOutsideClick;
+window.loadToken = loadToken;
 window.StaticBackend = StaticBackend;

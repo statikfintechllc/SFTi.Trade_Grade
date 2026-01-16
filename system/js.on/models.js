@@ -323,6 +323,29 @@ async function fetchAvailableModels(token) {
         // No longer needed - custom dropdown auto-sizes
     }
 
+    /**
+     * Update model status display (for backward compatibility)
+     * @param {string} status - Status: 'loading', 'ready', 'error', 'none'
+     * @param {string} message - Status message
+     * @param {string} iconColor - Color for icon (not used in current UI)
+     */
+    function updateModelStatus(status, message, iconColor) {
+        // The model status is now shown in the stats card
+        // Keep function for backwards compatibility but update the active model display
+        const statModel = document.getElementById('statModel');
+        if (statModel) {
+            if (status === 'ready') {
+                // Will be updated when a model is selected/used
+            } else if (status === 'loading') {
+                statModel.textContent = '...';
+            } else if (status === 'error') {
+                statModel.textContent = '!';
+            } else {
+                statModel.textContent = '--';
+            }
+        }
+    }
+
 // Expose all functions globally
 window.fetchAvailableModels = fetchAvailableModels;
 window.getModelId = getModelId;
@@ -334,3 +357,4 @@ window.selectModel = selectModel;
 window.populateModelPicker = populateModelPicker;
 window.clearModelPicker = clearModelPicker;
 window.resizeModelSelector = resizeModelSelector;
+window.updateModelStatus = updateModelStatus;
