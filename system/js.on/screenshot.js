@@ -39,4 +39,3 @@ window.currentScreenshot = null;
 window.handleScreenshot = handleScreenshot;
 window.clearScreenshot = clearScreenshot;
 
-

@@ -266,10 +266,10 @@ function extractMainContent(html, sourceUrl) {
         if (paragraphs.length > 0) {
             snippet = paragraphs.slice(0, 3).join('\n\n');
         } else {
-            snippet = text.substr(0, 500);
+            snippet = text.substring(0, 500);
         }
     } catch (e) {
-        snippet = text.substr(0, 500);
+        snippet = text.substring(0, 500);
     }
 
     // Clean up the text
