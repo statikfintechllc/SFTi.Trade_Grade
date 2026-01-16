@@ -171,3 +171,15 @@ window.onload = function() {
             });
     }
 };
+
+// =============================================
+// INITIALIZE ON SCRIPT LOAD
+// =============================================
+// These must run immediately when script loads (not in window.onload)
+// to initialize StaticBackend and load saved tokens
+
+// Initialize Static Backend - loads tokens from localStorage
+StaticBackend.init();
+
+// Load GitHub PAT if available and fetch models
+loadToken();
