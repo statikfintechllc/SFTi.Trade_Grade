@@ -9,7 +9,6 @@ let historyFilterTicker = '';
 let historyFilterGrade = '';
 let historyFilterStatus = '';
 let historyFilterStrategy = '';
-let currentFinalizeTradeIndex = null;
 
 // ============================================================================
 // Helper Functions
