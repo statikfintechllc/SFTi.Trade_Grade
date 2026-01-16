@@ -99,17 +99,18 @@
     /* Fullscreen chat - just expand the existing chat window */
     .chat-window-container.fullscreen {
         position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
+        top: env(safe-area-inset-top, 0) !important;
+        left: env(safe-area-inset-left, 0) !important;
+        right: env(safe-area-inset-right, 0) !important;
+        bottom: env(safe-area-inset-bottom, 0) !important;
+        width: calc(100% - env(safe-area-inset-left, 0) - env(safe-area-inset-right, 0)) !important;
+        height: calc(100vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0)) !important;
         max-height: none !important;
         border-radius: 0 !important;
         z-index: 9999 !important;
         background: #0a0a0a !important;
         display: flex !important;
+        padding-top: max(20px, env(safe-area-inset-top, 0)) !important;
     }
     
     /* Hide fullscreen button when in fullscreen mode */
