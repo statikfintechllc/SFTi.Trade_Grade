@@ -98,28 +98,15 @@
         pointer-events: none;
     }
 
-    /* Fullscreen chat - smoothly expand the existing chat window keeping same styling */
-    /* The key is to ONLY change position and size, NOT appearance */
+    /* Fullscreen chat - smoothly expand within aiView container */
+    /* Keep same positioning and styling, just increase height */
     .chat-window-container.fullscreen {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100% !important;
-        /* Use 100svh (small viewport height) to account for mobile browser chrome */
-        height: 100svh !important;
-        height: 100dvh !important; /* Dynamic viewport height - adjusts when keyboard opens */
-        max-height: none !important;
-        z-index: 9999 !important;
-        margin: 0 !important;
-        /* Keep the same styling as normal view - just bigger */
-        /* Background, border-radius, border-top, etc. are inherited from .chat-window-container */
-        /* Add safe area padding for notches/cameras on mobile */
-        padding-top: env(safe-area-inset-top, 0) !important;
-        padding-left: env(safe-area-inset-left, 0) !important;
-        padding-right: env(safe-area-inset-right, 0) !important;
-        padding-bottom: env(safe-area-inset-bottom, 0) !important;
+        /* Expand to fill most of the viewport within aiView */
+        /* Use calc to account for header and cards above */
+        height: calc(100vh - 180px) !important;
+        max-height: calc(100vh - 180px) !important;
+        /* Stay in normal document flow - no position fixed */
+        /* All styling (background, borders, etc.) inherited from base class */
     }
     
     /* Messages area expands to fill available space in fullscreen */
@@ -128,6 +115,8 @@
         overflow-y: auto !important;
         overflow-x: hidden !important;
         min-height: 0 !important;
+        /* Smooth scroll on iOS */
+        -webkit-overflow-scrolling: touch !important;
     }
     
     /* Hide fullscreen button when in fullscreen mode */
