@@ -280,7 +280,16 @@ async function startWebFlowAuth() {
             showToast('GitHub Copilot connected!', 'success', 'Connected');
             updateOAuthUI();
             updateStaticBackendStatus();
-            fetchModels();
+            // Reload models to include Copilot models
+            const token = localStorage.getItem('githubToken');
+            if (token) {
+                await fetchAvailableModels(token);
+            } else {
+                // If no GitHub token, just refresh the model picker with Copilot models
+                const models = await StaticBackend.getAvailableModels();
+                populateModelPicker(models);
+                updateModelStatus('ready', `${models.length} models ready`, '#00bfa5');
+            }
         }
     } catch (error) {
         console.error('Web Flow auth error:', error);
@@ -342,8 +351,16 @@ async function startDeviceFlowAuth() {
             updateOAuthUI();
             updateStaticBackendStatus();
             
-            // Refresh models
-            fetchModels();
+            // Reload models to include Copilot models
+            const token = localStorage.getItem('githubToken');
+            if (token) {
+                await fetchAvailableModels(token);
+            } else {
+                // If no GitHub token, just refresh the model picker with Copilot models
+                const models = await StaticBackend.getAvailableModels();
+                populateModelPicker(models);
+                updateModelStatus('ready', `${models.length} models ready`, '#00bfa5');
+            }
         } else {
             showToast(result.error || 'Authentication failed', 'error', 'Auth Failed');
             statusEl.textContent = result.error || 'Authentication failed. Please try again.';
