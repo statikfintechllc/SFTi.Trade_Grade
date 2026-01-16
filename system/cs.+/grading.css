@@ -180,6 +180,13 @@
         background: rgba(204, 0, 0, 0.2);
     }
 
+    .btn-icon {
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+        margin-right: 4px;
+    }
+
     .empty-state {
         text-align: center;
         padding: 40px 16px;
