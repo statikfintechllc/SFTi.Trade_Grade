@@ -15,9 +15,8 @@
         margin-top: 0;
         margin-bottom: 1px;
         position: relative;
-        /* Add smooth transitions for fullscreen expansion */
-        transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
-        transition-property: top, left, right, bottom, width, height, border-radius, background, box-shadow;
+        /* Smooth height transition for fullscreen expansion */
+        transition: height 0.35s ease-in-out;
     }
 
     .chat-model-bar {
@@ -98,15 +97,12 @@
         pointer-events: none;
     }
 
-    /* Fullscreen chat - smoothly expand within aiView container */
-    /* Keep same positioning and styling, just increase height */
+    /* Fullscreen chat - expand height to almost full screen within aiView container */
+    /* NO position changes, NO modal behavior - just much taller */
     .chat-window-container.fullscreen {
-        /* Expand to fill most of the viewport within aiView */
-        /* Use calc to account for header and cards above */
-        height: calc(100vh - 180px) !important;
-        max-height: calc(100vh - 180px) !important;
-        /* Stay in normal document flow - no position fixed */
-        /* All styling (background, borders, etc.) inherited from base class */
+        /* Expand height to almost full viewport, leaving minimal space for header */
+        height: calc(100vh - 100px) !important;
+        /* All other styling inherited - no changes to position, background, borders, etc. */
     }
     
     /* Messages area expands to fill available space in fullscreen */
