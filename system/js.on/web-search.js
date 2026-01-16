@@ -70,18 +70,7 @@ const webSearchTools = [
 // =============================================
 // Web Search Implementation Functions
 // =============================================
-
-/**
- * Validates if a string is a valid URL
- */
-function isValidUrl(string) {
-    try {
-        const url = new URL(string);
-        return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch (_) {
-        return false;
-    }
-}
+// Note: isValidUrl() is imported from utils.js
 
 /**
  * Performs a web search using DuckDuckGo's HTML interface (CORS-friendly)

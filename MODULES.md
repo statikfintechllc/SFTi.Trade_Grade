@@ -5,9 +5,9 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-## JavaScript Modules (17 files)
+## JavaScript Modules (16 files)
 
-### 1. **config.js** (2.7 KB) - Already Existed
+### 1. **config.js** (689 bytes)
 **Purpose:** Application configuration constants  
 **Contents:**
 - API endpoints and tokens
@@ -15,6 +15,9 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 - AI configuration (max tokens, temperature)
 - Web search settings
 - Vision model definitions
+
+**Exports:** `window.CONFIG`
+**Note:** State variables moved to their respective modules (sliders.js, web-search.js, grading.js, etc.)
 
 ---
 
@@ -74,14 +77,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 6. **tracker.js** (301 bytes)
-**Purpose:** Documentation placeholder  
-**Contents:** Comment noting that tracker functions are in sliders.js  
-**Note:** Exists for module naming consistency
-
----
-
-### 7. **screenshot.js** (1.7 KB)
+### 6. **screenshot.js** (1.7 KB)
 **Purpose:** Screenshot handling  
 **Contents:**
 - `currentScreenshot` variable
@@ -92,7 +88,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 8. **grading.js** (18 KB)
+### 7. **grading.js** (18 KB)
 **Purpose:** Trade grading and history management  
 **Contents:**
 - History filter variables
@@ -109,7 +105,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 9. **modal.js** (29 KB)
+### 8. **modal.js** (29 KB)
 **Purpose:** Modal dialog management  
 **Contents:**
 - `currentFinalizeTradeIndex` variable
@@ -132,7 +128,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 10. **auth.js** (42 KB)
+### 9. **auth.js** (42 KB)
 **Purpose:** Authentication and token management  
 **Contents:**
 - GitHub token modal functions
@@ -159,7 +155,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 11. **models.js** (17 KB)
+### 10. **models.js** (17 KB)
 **Purpose:** AI model selection and management  
 **Contents:**
 - `fetchAvailableModels()` - Fetch and cache models
@@ -177,7 +173,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 12. **chat.js** (51 KB)
+### 11. **chat.js** (51 KB)
 **Purpose:** Chat interface and message handling  
 **Contents:**
 - `chatHistory` variable
@@ -231,7 +227,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 13. **web-search.js** (18 KB)
+### 12. **web-search.js** (18 KB)
 **Purpose:** Web search functionality  
 **Contents:**
 - `webSearchEnabled` variable
@@ -248,10 +244,11 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
   - `addCitationsToMessage()` - Add sources
 
 **Exports:** All functions and variables to `window`
+**Dependencies:** Uses `isValidUrl()` from utils.js
 
 ---
 
-### 14. **ai.js** (17 KB)
+### 13. **ai.js** (17 KB)
 **Purpose:** AI request handling  
 **Contents:**
 - `analyzeGradeWithAI()` - Format grade for AI analysis
@@ -275,7 +272,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 15. **init.js** (5.9 KB)
+### 14. **init.js** (5.9 KB)
 **Purpose:** Application initialization  
 **Contents:**
 - `refreshServiceWorker()` - Update app
@@ -290,13 +287,13 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 16. **image-processor.js** (16 KB) - Already Existed
+### 15. **image-processor.js** (16 KB) - Already Existed
 **Purpose:** Image processing utilities  
 **Note:** Not modified, already modularized
 
 ---
 
-### 17. **sw.js** (3.8 KB) - Already Existed
+### 16. **sw.js** (3.8 KB) - Already Existed
 **Purpose:** Service worker  
 **Note:** Not modified, already separate
 
@@ -483,14 +480,14 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ### Load Order (Critical):
 ```
-1. config.js         ← Configuration constants
+1. config.js         ← Configuration constants only
 2. utils.js          ← Used by all modules
 3. toast.js          ← Used by all modules
 4. menu.js           ← Navigation
 5. modal.js          ← Used by grading, auth
 6. sliders.js        ← State objects
 7. screenshot.js     ← Used by grading
-8. grading.js        ← History management
+8. grading.js        ← History management  
 9. auth.js           ← Token management, StaticBackend
 10. models.js        ← Depends on auth
 11. chat.js          ← Depends on models, auth
@@ -502,10 +499,19 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 ### Cross-Module Dependencies:
 - **All modules** depend on `CONFIG` from config.js
 - **Most modules** use `escapeHtml()` and `showToast()` from utils.js and toast.js
+- **web-search.js** uses `isValidUrl()` from utils.js (no duplication)
+- **grading.js** uses `escapeHtml()` from utils.js (no duplication)
 - **chat.js** depends on `StaticBackend` from auth.js
 - **ai.js** depends on `StaticBackend` from auth.js and tools from web-search.js
 - **models.js** depends on `StaticBackend` from auth.js
 - **grading.js** uses modal functions from modal.js
+
+**Code Quality Improvements:**
+- Removed duplicate `isValidUrl()` function (now only in utils.js)
+- Removed duplicate `escapeHtml()` function (now only in utils.js)
+- Removed duplicate `resetHistoryFilters()` function (now only in grading.js)
+- Removed empty tracker.js placeholder file
+- Added `defer` attributes to all script tags for non-blocking page load
 
 ---
 
@@ -538,10 +544,11 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ### After:
 **JavaScript:**
-- 17 modules (including existing)
+- 16 modules (including existing image-processor.js and sw.js)
 - Largest: chat.js (51 KB)
 - Average: ~12 KB per module
-- **Total**: ~220 KB (spread across 17 files)
+- **Total**: ~220 KB (spread across 16 files)
+- All duplicates removed for cleaner code
 
 **CSS:**
 - 10 modules

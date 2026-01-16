@@ -28,16 +28,7 @@ function getGradeLetter(total) {
     return 'D';
 }
 
-/**
- * Escape HTML special characters to prevent XSS
- * @param {string} text - Text to escape
- * @returns {string} HTML-escaped text
- */
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// Note: escapeHtml() is imported from utils.js
 
 // ============================================================================
 // Filter Management (Lines 61-83)
