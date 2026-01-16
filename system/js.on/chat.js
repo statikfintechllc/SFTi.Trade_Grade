@@ -792,131 +792,57 @@ function handleFullscreenKeydown(e) {
     }
 }
 
-function pullUpInputHandler() {
-    const modal = document.getElementById('fullscreenChatModal');
-    if (modal) modal.classList.add('input-pulled-up');
-}
-function pullDownInputHandler() {
-    const modal = document.getElementById('fullscreenChatModal');
-    if (modal) modal.classList.remove('input-pulled-up');
-}
-
-// Toggle fullscreen chat modal
+// Toggle fullscreen chat - simply makes the chat window fullscreen
 function toggleFullscreenChat() {
-    const modal = document.getElementById('fullscreenChatModal');
+    const chatWindow = document.getElementById('chatWindow');
     const fullscreenBtn = document.getElementById('fullscreenChatBtn');
-    const messagesContainer = document.getElementById('chatMessagesContainer');
-    const fullscreenBody = document.getElementById('fullscreenChatBody');
-    const fullscreenInputArea = document.getElementById('fullscreenChatInputArea');
-    const chatInputBar = document.querySelector('.chat-input-bar');
-
-    if (!modal) return;
+    
+    if (!chatWindow) return;
 
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Enter fullscreen
-        modal.classList.add('active');
-        modal.setAttribute('aria-hidden', 'false');
+        // Enter fullscreen - just add class to existing container
+        chatWindow.classList.add('fullscreen');
+        chatWindow.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
-
-        // Move model selector bar to top of fullscreen body (preserve event listeners)
-        const chatModelBar = document.querySelector('.chat-model-bar');
-        if (chatModelBar && fullscreenBody) {
-            if (!originalChatModelBarParent) {
-                originalChatModelBarParent = chatModelBar.parentNode;
-                originalChatModelBarNextSibling = chatModelBar.nextSibling;
-            }
-            // Insert at the beginning of fullscreen body
-            fullscreenBody.insertBefore(chatModelBar, fullscreenBody.firstChild);
-        }
-
-        // Render messages into fullscreen modal using renderer (after model bar)
-        if (fullscreenBody) {
-            renderChatMessages(fullscreenBody, chatHistory);
-        }
-
-        // Move input controls into fullscreen input area (preserve event listeners)
-        if (chatInputBar && fullscreenInputArea) {
-            if (!originalChatInputParent) {
-                originalChatInputParent = chatInputBar.parentNode;
-                originalChatInputNextSibling = chatInputBar.nextSibling;
-            }
-            fullscreenInputArea.appendChild(chatInputBar);
+        
+        // Update button icon for exit fullscreen
+        if (fullscreenBtn) {
+            fullscreenBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                </svg>
+            `;
+            fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+            fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
         }
 
         // Focus the prompt
         const aiPrompt = document.getElementById('aiPrompt');
         setTimeout(() => { if (aiPrompt) aiPrompt.focus(); }, 50);
-
-        // Adjust for virtual keyboard on mobile (visualViewport)
-        if (window.visualViewport) {
-            const onViewportChange = () => {
-                const kbHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
-                const fullscreenBodyEl = document.getElementById('fullscreenChatBody');
-                const inputAreaEl = document.getElementById('fullscreenChatInputArea');
-                if (fullscreenBodyEl && inputAreaEl) {
-                    fullscreenBodyEl.style.paddingBottom = (kbHeight + inputAreaEl.offsetHeight + 16) + 'px';
-                }
-            };
-            // store handler so we can remove it later
-            window.visualViewport._fullscreenChatHandler = onViewportChange;
-            window.visualViewport.addEventListener('resize', onViewportChange);
-            window.visualViewport.addEventListener('scroll', onViewportChange);
-            onViewportChange();
-        }
-
-        // Keyboard handler and focus behavior
+        
+        // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);
-        if (aiPrompt) {
-            aiPrompt.addEventListener('focus', pullUpInputHandler);
-            aiPrompt.addEventListener('blur', pullDownInputHandler);
-        }
     } else {
-        // Exit fullscreen
-        modal.classList.remove('active');
-        modal.setAttribute('aria-hidden', 'true');
+        // Exit fullscreen - just remove class
+        chatWindow.classList.remove('fullscreen');
+        chatWindow.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
-
-        // Move model bar back to its original location
-        const currentModelBar = document.querySelector('.chat-model-bar');
-        if (currentModelBar && originalChatModelBarParent) {
-            originalChatModelBarParent.insertBefore(currentModelBar, originalChatModelBarNextSibling);
+        
+        // Restore button icon for enter fullscreen
+        if (fullscreenBtn) {
+            fullscreenBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>
+            `;
+            fullscreenBtn.setAttribute('title', 'Toggle Fullscreen');
+            fullscreenBtn.setAttribute('aria-label', 'Toggle Fullscreen Chat');
         }
-        originalChatModelBarParent = null;
-        originalChatModelBarNextSibling = null;
-
-        // Re-render messages in main chat container
-        if (messagesContainer) {
-            renderChatMessages(messagesContainer, chatHistory);
-        }
-
-        // Move input back to its original location
-        const currentInputBar = document.querySelector('.chat-input-bar');
-        if (currentInputBar && originalChatInputParent) {
-            originalChatInputParent.insertBefore(currentInputBar, originalChatInputNextSibling);
-        }
-        originalChatInputParent = null;
-        originalChatInputNextSibling = null;
-
-        // Remove handlers and any pulled-up state
+        
+        // Remove keyboard handler
         document.removeEventListener('keydown', handleFullscreenKeydown);
-        const aiPrompt = document.getElementById('aiPrompt');
-        if (aiPrompt) {
-            aiPrompt.removeEventListener('focus', pullUpInputHandler);
-            aiPrompt.removeEventListener('blur', pullDownInputHandler);
-        }
-
-        // Remove visualViewport handlers if present
-        if (window.visualViewport && window.visualViewport._fullscreenChatHandler) {
-            window.visualViewport.removeEventListener('resize', window.visualViewport._fullscreenChatHandler);
-            window.visualViewport.removeEventListener('scroll', window.visualViewport._fullscreenChatHandler);
-            delete window.visualViewport._fullscreenChatHandler;
-            const fullscreenBodyEl = document.getElementById('fullscreenChatBody');
-            if (fullscreenBodyEl) fullscreenBodyEl.style.paddingBottom = '';
-        }
-
-        modal.classList.remove('input-pulled-up');
     }
 }
 
