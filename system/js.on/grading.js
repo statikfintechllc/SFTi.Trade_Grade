@@ -119,9 +119,6 @@ function saveGrade() {
 function loadHistory() {
     let grades = JSON.parse(localStorage.getItem('prepareGrades') || '[]');
     const container = document.getElementById('historyContainer');
-    
-    console.log('[loadHistory] Total grades:', grades.length);
-    console.log('[loadHistory] Container exists:', !!container);
 
     // Populate strategy filter dropdown with unique strategies
     const strategySet = new Set();
@@ -160,8 +157,6 @@ function loadHistory() {
     if (historyFilterStrategy) {
         grades = grades.filter(g => g.outcome && g.outcome.strategy === historyFilterStrategy);
     }
-    
-    console.log('[loadHistory] After filters:', grades.length);
 
     if (grades.length === 0) {
         const hasFilters = historyFilterTicker || historyFilterGrade || historyFilterStatus || historyFilterStrategy;
@@ -177,11 +172,9 @@ function loadHistory() {
                 <div class="empty-subtext">${hasFilters ? 'Try adjusting your search criteria' : 'Start grading stocks to build your history'}</div>
             </div>
         `;
-        console.log('[loadHistory] Showing empty state');
         return;
     }
 
-    console.log('[loadHistory] Rendering', grades.length, 'trades');
     container.innerHTML = grades.map((grade, index) => {
         // Handle both old format (scores at top level) and new format (grade.scores)
         const scores = grade.scores || (grade.grade ? grade.grade.scores : {});
@@ -283,8 +276,6 @@ function loadHistory() {
         </div>
     `;
     }).join('');
-    
-    console.log('[loadHistory] Rendered HTML length:', container.innerHTML.length);
     
     // Add event delegation for history buttons (Analyze and Delete)
     // This is done after innerHTML to attach listeners to dynamically created buttons
