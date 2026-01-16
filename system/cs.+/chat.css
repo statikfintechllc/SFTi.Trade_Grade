@@ -116,7 +116,7 @@
         /* Keep the same styling as normal view - just bigger */
         /* Background, border-radius, border-top, etc. are inherited from .chat-window-container */
         /* Add safe area padding for notches/cameras on mobile */
-        padding-top: max(env(safe-area-inset-top, 0), 0) !important;
+        padding-top: env(safe-area-inset-top, 0) !important;
         padding-left: env(safe-area-inset-left, 0) !important;
         padding-right: env(safe-area-inset-right, 0) !important;
         padding-bottom: env(safe-area-inset-bottom, 0) !important;
