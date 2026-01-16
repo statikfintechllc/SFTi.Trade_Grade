@@ -1,9 +1,6 @@
 // screenshot.js - Screenshot handling
 // Manages screenshot upload, preview, and clearing functionality for trade grading
 
-// Screenshot state variable
-let currentScreenshot = null;
-
 // Screenshot handling functions with size validation
 function handleScreenshot(input) {
     const file = input.files[0];
@@ -17,8 +14,8 @@ function handleScreenshot(input) {
         
         const reader = new FileReader();
         reader.onload = function(e) {
-            currentScreenshot = e.target.result;
-            document.getElementById('previewImg').src = currentScreenshot;
+            window.currentScreenshot = e.target.result;
+            document.getElementById('previewImg').src = window.currentScreenshot;
             document.getElementById('screenshotPreview').style.display = 'block';
             document.getElementById('screenshotBtnText').textContent = 'Change Screenshot';
         };
@@ -31,13 +28,15 @@ function handleScreenshot(input) {
 }
 
 function clearScreenshot() {
-    currentScreenshot = null;
+    window.currentScreenshot = null;
     document.getElementById('screenshotPreview').style.display = 'none';
     document.getElementById('screenshotInput').value = '';
     document.getElementById('screenshotBtnText').textContent = 'Add Screenshot';
 }
 
-// Expose functions and variable globally
-window.currentScreenshot = currentScreenshot;
+// Initialize and expose globally
+window.currentScreenshot = null;
 window.handleScreenshot = handleScreenshot;
 window.clearScreenshot = clearScreenshot;
+
+

@@ -70,7 +70,8 @@ const webSearchTools = [
 // =============================================
 // Web Search Implementation Functions
 // =============================================
-// Note: isValidUrl() is imported from utils.js
+// Note: isValidUrl() is available globally from utils.js
+//       This module depends on utils.js being loaded first
 
 /**
  * Performs a web search using DuckDuckGo's HTML interface (CORS-friendly)

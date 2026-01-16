@@ -1,7 +1,12 @@
 // models.js - AI model selection and management
 // Fetches available models, populates model picker, handles model selection
 
-    async function fetchAvailableModels(token) {
+/**
+ * Fetch available AI models from StaticBackend
+ * @param {string} token - GitHub personal access token
+ * @returns {Promise<void>}
+ */
+async function fetchAvailableModels(token) {
         updateModelStatus('loading', 'Loading models...', '#ff9800');
         
         // Update Static Backend with the token

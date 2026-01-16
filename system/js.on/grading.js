@@ -28,7 +28,8 @@ function getGradeLetter(total) {
     return 'D';
 }
 
-// Note: escapeHtml() is imported from utils.js
+// Note: escapeHtml() is available globally from utils.js
+//       This module depends on utils.js being loaded first
 
 // ============================================================================
 // Filter Management (Lines 61-83)
