@@ -15,6 +15,9 @@
         margin-top: 0;
         margin-bottom: 1px;
         position: relative;
+        /* Add smooth transitions for fullscreen expansion */
+        transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+        transition-property: top, left, right, bottom, width, height, border-radius, background, box-shadow;
     }
 
     .chat-model-bar {
@@ -95,8 +98,8 @@
         pointer-events: none;
     }
 
-    /* Fullscreen Chat Modal - Clean solid background identical to AI view */
-    /* Fullscreen chat - expand existing chat window with proper keyboard handling */
+    /* Fullscreen chat - smoothly expand the existing chat window keeping same styling */
+    /* The key is to ONLY change position and size, NOT appearance */
     .chat-window-container.fullscreen {
         position: fixed !important;
         top: 0 !important;
@@ -108,50 +111,23 @@
         height: 100svh !important;
         height: 100dvh !important; /* Dynamic viewport height - adjusts when keyboard opens */
         max-height: none !important;
-        border-radius: 0 !important;
         z-index: 9999 !important;
-        background: #0a0a0a !important;
-        display: flex !important;
-        flex-direction: column !important;
-        /* Add safe area padding for notches/cameras */
-        padding-top: env(safe-area-inset-top, 0) !important;
+        margin: 0 !important;
+        /* Keep the same styling as normal view - just bigger */
+        /* Background, border-radius, border-top, etc. are inherited from .chat-window-container */
+        /* Add safe area padding for notches/cameras on mobile */
+        padding-top: max(env(safe-area-inset-top, 0), 0) !important;
         padding-left: env(safe-area-inset-left, 0) !important;
         padding-right: env(safe-area-inset-right, 0) !important;
         padding-bottom: env(safe-area-inset-bottom, 0) !important;
-        /* Ensure keyboard doesn't overlap - iOS viewport behavior */
-        -webkit-overflow-scrolling: touch !important;
     }
     
-    /* Model bar stays at top in fullscreen */
-    .chat-window-container.fullscreen .chat-model-bar {
-        position: sticky !important;
-        top: 0 !important;
-        flex-shrink: 0 !important;
-        background: rgba(26, 26, 26, 0.95) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-        z-index: 20 !important;
-    }
-    
-    /* Messages area should scroll independently */
+    /* Messages area expands to fill available space in fullscreen */
     .chat-window-container.fullscreen .chat-messages {
         flex: 1 !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         min-height: 0 !important;
-    }
-    
-    /* Input stays at bottom in fullscreen */
-    .chat-window-container.fullscreen .chat-input-area {
-        flex-shrink: 0 !important;
-        position: sticky !important;
-        bottom: 0 !important;
-        background: rgba(26, 26, 26, 0.95) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-        z-index: 20 !important;
     }
     
     /* Hide fullscreen button when in fullscreen mode */

@@ -181,5 +181,5 @@ window.onload = function() {
 // Initialize Static Backend - loads tokens from localStorage
 StaticBackend.init();
 
-// Load GitHub PAT if available and fetch models
-loadToken();
+// Note: loadToken() is now called only when switching to AI view (see menu.js)
+// This prevents the "Models Loaded" toast from appearing on every page load
