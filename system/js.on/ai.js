@@ -129,6 +129,9 @@ async function askAI() {
             return;
         }
         
+        // Extract actual model name for API call (remove endpoint prefix)
+        const modelForApi = getModelApiName(selectedModel);
+        
         // Build system prompt
         const systemPrompt = webSearchEnabled 
             ? `You are an expert trading analyst with deep knowledge of technical analysis, fundamental analysis, and market dynamics. You have access to web search tools to find current information.
@@ -217,7 +220,7 @@ Be direct, professional, and avoid generic advice. Treat this as real money at s
             
             // Build request body
             const requestBody = {
-                model: selectedModel,
+                model: modelForApi, // Use API name without endpoint prefix
                 messages: messages,
                 max_tokens: CONFIG.AI_MAX_TOKENS,
                 temperature: CONFIG.AI_TEMPERATURE

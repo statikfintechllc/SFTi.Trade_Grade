@@ -64,9 +64,23 @@ async function fetchAvailableModels(token) {
         }
     }
 
-    // Helper function to get model ID for API calls
+    // Helper function to get model ID for UI selection
+    // Creates unique IDs by combining endpoint + model name to avoid conflicts
     function getModelId(model) {
-        return model.name || model.id;
+        const baseName = model.name || model.id;
+        // Create unique ID by prefixing with endpoint to avoid Azure/Copilot model conflicts
+        return `${model.endpoint}-${baseName}`;
+    }
+    
+    // Helper function to get the actual model name for API calls (without endpoint prefix)
+    function getModelApiName(modelId) {
+        // Strip endpoint prefix if present
+        if (modelId.startsWith('azure-')) {
+            return modelId.substring(6); // Remove 'azure-' prefix
+        } else if (modelId.startsWith('copilot-')) {
+            return modelId.substring(8); // Remove 'copilot-' prefix
+        }
+        return modelId;
     }
 
     // Helper function to get model display name for UI
