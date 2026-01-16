@@ -802,7 +802,7 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Enter fullscreen - fixed positioning, centered, no scroll
+        // Enter fullscreen - expand chat and hide header elements
         chatWindow.classList.add('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'true');
         document.body.classList.add('chat-fullscreen-active');
@@ -817,6 +817,11 @@ function toggleFullscreenChat() {
             fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
             fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
         }
+
+        // Scroll chat into view smoothly after animation
+        setTimeout(() => {
+            chatWindow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
         
         // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);
