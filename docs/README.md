@@ -21,27 +21,62 @@ A Progressive Web App (PWA) for grading trades using the PREPARE methodology, fe
 ## Project Structure
 
 ```
+.github
+└── FUNDING.yml
+
+0 directories, 1 file
+.
 ├── LICENSE
-├── docs/
-│   ├── README.md
-│   ├── AI_ASSISTANT.md
-│   ├── API_REFERENCE.md
-│   ├── INSTALLATION.md
-│   ├── PREPARE_METHODOLOGY.md
-│   ├── TECHNICAL.md
-│   └── USER_GUIDE.md
-│
-├── index.html              # Main application (Static Backend + CORS Widget)
-├── auth/
-│   └── callback/
-│       └── index.html      # OAuth callback handler
-└── system/
-    ├── img/
-    │   ├── icon-192.png
-    │   └── icon-512.png
-    └── js.on/
+├── auth
+│   └── callback
+│       └── index.html
+├── docs
+│   ├── AI_ASSISTANT.md
+│   ├── API_REFERENCE.md
+│   ├── INSTALLATION.md
+│   ├── MODULES.md
+│   ├── PREPARE_METHODOLOGY.md
+│   ├── README.md
+│   ├── TECHNICAL.md
+│   └── USER_GUIDE.md
+├── index.html
+└── system
+    ├── cs.+
+    │   ├── base.css
+    │   ├── chat.css
+    │   ├── components.css
+    │   ├── grading.css
+    │   ├── menu.css
+    │   ├── modal.css
+    │   ├── models.css
+    │   ├── responsive.css
+    │   ├── sliders.css
+    │   ├── styles.css.backup
+    │   └── toast.css
+    ├── img
+    │   ├── icon-192.png
+    │   └── icon-512.png
+    └── js.on
+        ├── ai.js
+        ├── app.js.backup
+        ├── auth.js
+        ├── chat.js
+        ├── config.js
+        ├── grading.js
+        ├── image-processor.js
+        ├── init.js
         ├── manifest.json
-        └── sw.js
+        ├── menu.js
+        ├── modal.js
+        ├── models.js
+        ├── screenshot.js
+        ├── sliders.js
+        ├── sw.js
+        ├── toast.js
+        ├── utils.js
+        └── web-search.js
+
+7 directories, 42 files
 ```
 
 ## Installation
