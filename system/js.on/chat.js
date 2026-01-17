@@ -863,9 +863,36 @@ function toggleFullscreenChat() {
         // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);
         
-        // Update height on keyboard open/close and orientation change
-        // JS handles keyboard resizing fully container-relative, reflecting instantly
-        window.addEventListener('resize', applyFullscreenHeight);
+        // Keyboard handling with visualViewport API to prevent header movement
+        if (window.visualViewport) {
+            const handleViewportChange = () => {
+                // When keyboard opens, visualViewport.height shrinks
+                // We need to keep header fixed and only resize chat messages
+                const viewportHeight = window.visualViewport.height;
+                const windowHeight = window.innerHeight;
+                
+                // If viewport is smaller than window, keyboard is open
+                const keyboardHeight = windowHeight - viewportHeight;
+                
+                if (keyboardHeight > 0) {
+                    // Keyboard is open - recalculate container height
+                    applyFullscreenHeight();
+                } else {
+                    // Keyboard is closed - restore full height
+                    applyFullscreenHeight();
+                }
+            };
+            
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+            window.visualViewport.addEventListener('scroll', handleViewportChange);
+            
+            // Store reference for cleanup
+            chatWindow._visualViewportHandler = handleViewportChange;
+        } else {
+            // Fallback for browsers without visualViewport
+            window.addEventListener('resize', applyFullscreenHeight);
+        }
+        
         window.addEventListener('orientationchange', applyFullscreenHeight);
     } else {
         // Exit fullscreen - restore normal size and show header elements
@@ -889,6 +916,13 @@ function toggleFullscreenChat() {
         
         // Remove keyboard handler
         document.removeEventListener('keydown', handleFullscreenKeydown);
+        
+        // Remove visualViewport handlers if present
+        if (window.visualViewport && chatWindow._visualViewportHandler) {
+            window.visualViewport.removeEventListener('resize', chatWindow._visualViewportHandler);
+            window.visualViewport.removeEventListener('scroll', chatWindow._visualViewportHandler);
+            delete chatWindow._visualViewportHandler;
+        }
         
         // Remove resize handlers
         window.removeEventListener('resize', applyFullscreenHeight);
