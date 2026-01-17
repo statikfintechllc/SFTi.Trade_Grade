@@ -122,11 +122,12 @@
         flex-shrink: 0 !important;
     }
     
-    /* Messages area fills available space */
+    /* Messages area fills available space - NEVER SHRINKS, just scrolls */
     .chat-window-container.fullscreen .chat-messages {
         flex: 1 !important;
         overflow-y: auto !important;
         min-height: 0 !important;
+        /* Messages area height never changes - just scrolls behind chatbar and model bar */
     }
     
     /* Chatbar stays at bottom - no flex grow */

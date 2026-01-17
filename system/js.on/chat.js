@@ -792,34 +792,70 @@ function handleFullscreenKeydown(e) {
     }
 }
 
-// Calculate dynamic fullscreen height based on AIView container
-function calculateFullscreenHeight() {
+// Calculate fullscreen height from actual viewport position
+function calculateFullscreenHeight(keyboardHeight = 0) {
     const aiView = document.getElementById('aiView');
     const chatWindow = document.getElementById('chatWindow');
     
     if (!aiView || !chatWindow) return null;
     
-    // Get AIView container height - entirely container-driven
-    const containerHeight = aiView.clientHeight;
+    // Get the actual position of the container in the viewport
+    const containerRect = chatWindow.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
     
-    // Add some padding for spacing (for the hidden title/cards area above)
-    const paddingOffset = 20;
+    // Available height = from current top position to viewport bottom
+    // Subtract keyboard height if present
+    const availableHeight = viewportHeight - containerRect.top - keyboardHeight - 10;
     
-    // The entire chat window container height
-    // Flexbox will handle internal layout (model bar + messages + chatbar)
-    const availableHeight = containerHeight - paddingOffset;
-    
-    return availableHeight;
+    return Math.max(availableHeight, 200); // Min 200px for safety
 }
 
-// Apply dynamic height to chat window
-function applyFullscreenHeight() {
+// Apply dynamic height to chat window - JS controls everything
+function applyFullscreenHeight(keyboardHeight = 0) {
     const chatWindow = document.getElementById('chatWindow');
     if (!chatWindow || !chatWindow.classList.contains('fullscreen')) return;
     
-    const height = calculateFullscreenHeight();
+    const height = calculateFullscreenHeight(keyboardHeight);
     if (height) {
+        // Set height immediately - CSS only provides smooth transition
         chatWindow.style.height = `${height}px`;
+    }
+}
+
+// Keyboard handler using visualViewport API
+let viewportResizeHandler = null;
+
+function setupKeyboardHandling() {
+    if (!window.visualViewport) return;
+    
+    viewportResizeHandler = () => {
+        const chatWindow = document.getElementById('chatWindow');
+        if (!chatWindow || !chatWindow.classList.contains('fullscreen')) return;
+        
+        // Detect keyboard height
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - viewportHeight;
+        
+        // Shrink container from bottom when keyboard opens
+        if (keyboardHeight > 50) {
+            // Keyboard is open - shrink container
+            applyFullscreenHeight(keyboardHeight);
+        } else {
+            // Keyboard closed - restore full height
+            applyFullscreenHeight(0);
+        }
+    };
+    
+    window.visualViewport.addEventListener('resize', viewportResizeHandler);
+    window.visualViewport.addEventListener('scroll', viewportResizeHandler);
+}
+
+function removeKeyboardHandling() {
+    if (window.visualViewport && viewportResizeHandler) {
+        window.visualViewport.removeEventListener('resize', viewportResizeHandler);
+        window.visualViewport.removeEventListener('scroll', viewportResizeHandler);
+        viewportResizeHandler = null;
     }
 }
 
@@ -839,7 +875,10 @@ function toggleFullscreenChat() {
         document.body.classList.add('chat-fullscreen-active');
         
         // Calculate and apply dynamic height immediately
-        applyFullscreenHeight();
+        applyFullscreenHeight(0);
+        
+        // Setup keyboard handling
+        setupKeyboardHandling();
         
         // Update button icon for exit fullscreen
         if (fullscreenBtn) {
@@ -882,9 +921,12 @@ function toggleFullscreenChat() {
         // Remove keyboard handler
         document.removeEventListener('keydown', handleFullscreenKeydown);
         
+        // Remove keyboard handling
+        removeKeyboardHandling();
+        
         // Remove resize handlers
-        window.removeEventListener('resize', applyFullscreenHeight);
-        window.removeEventListener('orientationchange', applyFullscreenHeight);
+        window.removeEventListener('resize', () => applyFullscreenHeight(0));
+        window.removeEventListener('orientationchange', () => applyFullscreenHeight(0));
     }
 }
 
