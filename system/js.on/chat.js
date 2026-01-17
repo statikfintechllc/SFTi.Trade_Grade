@@ -767,12 +767,27 @@ function triggerFileUpload(event) {
     // Stop propagation - same pattern as toggleQuickActionsPopup (More button)
     if (event) {
         event.stopPropagation();
+        event.preventDefault();
     }
     
     const fileInput = document.getElementById('chatFileInput');
+    const fileAttachBtn = document.getElementById('fileAttachBtn');
+    
+    // Remove hover state by forcing a re-render trick for mobile
+    // This prevents the highlight from sticking on mobile devices
+    if (fileAttachBtn) {
+        // Temporarily remove pointer events to clear any stuck :hover state
+        fileAttachBtn.style.pointerEvents = 'none';
+        // Use setTimeout to restore pointer events on next frame
+        setTimeout(() => {
+            fileAttachBtn.style.pointerEvents = '';
+        }, 10);
+    }
     
     // Trigger the file input click
-    fileInput.click();
+    if (fileInput) {
+        fileInput.click();
+    }
 }
 
 // ============================================================================
@@ -864,12 +879,50 @@ let savedScrollPosition = 0;
 let scrollLockActive = false;
 
 // JS-driven scroll lock - prevents any scroll while active
+// BUT allows scrolling within specific scrollable elements (dropdowns and message box)
 function lockScroll(e) {
-    if (scrollLockActive) {
-        window.scrollTo(0, savedScrollPosition);
-        e.preventDefault();
-        return false;
+    if (!scrollLockActive) return;
+    
+    // Check if the scroll/touch is happening inside an allowed scrollable element
+    const target = e.target;
+    
+    // List of allowed scrollable elements (by class or ID)
+    const allowedScrollables = [
+        'model-dropdown-menu',        // Model selector dropdown
+        'chat-history-list',          // Chat history dropdown
+        'chat-messages',              // Message box container
+        'chat-input-wrapper',         // Chat input area (for textarea)
+        'chat-textarea'               // Textarea itself
+    ];
+    
+    // Check if target or any parent has one of the allowed classes/IDs
+    let element = target;
+    while (element && element !== document.body) {
+        // Check by class
+        if (element.classList) {
+            for (const className of allowedScrollables) {
+                if (element.classList.contains(className)) {
+                    // Allow scroll within this element
+                    return;
+                }
+            }
+        }
+        // Check by ID
+        if (element.id) {
+            for (const id of allowedScrollables) {
+                if (element.id === id) {
+                    // Allow scroll within this element
+                    return;
+                }
+            }
+        }
+        element = element.parentElement;
     }
+    
+    // Not in an allowed scrollable element - prevent the scroll
+    window.scrollTo(0, savedScrollPosition);
+    e.preventDefault();
+    return false;
 }
 
 // Prevent viewport resizing/zoom on textarea focus
