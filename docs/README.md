@@ -21,12 +21,10 @@ A Progressive Web App (PWA) for grading trades using the PREPARE methodology, fe
 ## Project Structure
 
 ```
-.github
-└── FUNDING.yml
-
-0 directories, 1 file
-.
+SFti.Trade_Grade/
 ├── LICENSE
+├── .github
+│   └── FUNDING.yml
 ├── auth
 │   └── callback
 │       └── index.html
@@ -76,7 +74,7 @@ A Progressive Web App (PWA) for grading trades using the PREPARE methodology, fe
         ├── utils.js
         └── web-search.js
 
-7 directories, 42 files
+8 directories, 43 files
 ```
 
 ## Installation
