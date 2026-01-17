@@ -111,7 +111,27 @@
         /* Elevate to higher stacking context without position:fixed */
         position: relative !important;
         z-index: 10000 !important;
+        /* Flexbox layout for proper chatbar positioning */
+        display: flex !important;
+        flex-direction: column !important;
         /* All other styling inherited - gradient, borders, corners, etc. */
+    }
+    
+    /* Model bar stays at top */
+    .chat-window-container.fullscreen .chat-model-bar {
+        flex-shrink: 0 !important;
+    }
+    
+    /* Messages area fills available space */
+    .chat-window-container.fullscreen .chat-messages {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        min-height: 0 !important;
+    }
+    
+    /* Chatbar stays at bottom - no flex grow */
+    .chat-window-container.fullscreen .chat-input-bar {
+        flex-shrink: 0 !important;
     }
     
     /* Modal backdrop overlay behind fullscreen chat */

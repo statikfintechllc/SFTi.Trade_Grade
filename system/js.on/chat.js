@@ -796,26 +796,18 @@ function handleFullscreenKeydown(e) {
 function calculateFullscreenHeight() {
     const aiView = document.getElementById('aiView');
     const chatWindow = document.getElementById('chatWindow');
-    const modelBar = document.querySelector('.chat-model-bar');
     
     if (!aiView || !chatWindow) return null;
     
     // Get AIView container height - entirely container-driven
     const containerHeight = aiView.clientHeight;
     
-    // Calculate fixed header height (model bar + buttons area)
-    // Model bar is visible in fullscreen, title/cards are hidden
-    let headerHeight = 0;
-    if (modelBar) {
-        headerHeight = modelBar.offsetHeight;
-    }
-    
-    // Add some padding for spacing (title area that's now hidden)
+    // Add some padding for spacing (for the hidden title/cards area above)
     const paddingOffset = 20;
     
-    // Subtract header from container to get available chat height
-    // Entirely container-driven - no fallback, no magic numbers
-    const availableHeight = containerHeight - headerHeight - paddingOffset;
+    // The entire chat window container height
+    // Flexbox will handle internal layout (model bar + messages + chatbar)
+    const availableHeight = containerHeight - paddingOffset;
     
     return availableHeight;
 }
