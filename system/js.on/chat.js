@@ -859,6 +859,26 @@ function removeKeyboardHandling() {
     }
 }
 
+// Saved scroll position for body lock
+let savedScrollPosition = 0;
+
+// Prevent textarea focus scroll
+function preventTextareaScroll(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Immediately shrink container before browser can scroll
+    const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const windowHeight = window.innerHeight;
+    const keyboardHeight = windowHeight - viewportHeight;
+    
+    if (keyboardHeight > 50) {
+        applyFullscreenHeight(keyboardHeight);
+    }
+    
+    return false;
+}
+
 // Toggle fullscreen chat - simply makes the chat window fullscreen
 function toggleFullscreenChat() {
     const chatWindow = document.getElementById('chatWindow');
@@ -869,6 +889,12 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
+        // Save scroll position and lock body
+        savedScrollPosition = window.scrollY || window.pageYOffset;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${savedScrollPosition}px`;
+        document.body.style.width = '100%';
+        
         // Enter fullscreen - expand chat and hide header elements
         chatWindow.classList.add('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'true');
@@ -879,6 +905,13 @@ function toggleFullscreenChat() {
         
         // Setup keyboard handling
         setupKeyboardHandling();
+        
+        // Prevent textarea focus scroll
+        const textarea = document.getElementById('aiPrompt');
+        if (textarea) {
+            textarea.addEventListener('focus', preventTextareaScroll, true);
+            textarea.addEventListener('touchstart', preventTextareaScroll, true);
+        }
         
         // Update button icon for exit fullscreen
         if (fullscreenBtn) {
@@ -899,10 +932,23 @@ function toggleFullscreenChat() {
         window.addEventListener('resize', applyFullscreenHeight);
         window.addEventListener('orientationchange', applyFullscreenHeight);
     } else {
+        // Remove textarea scroll prevention
+        const textarea = document.getElementById('aiPrompt');
+        if (textarea) {
+            textarea.removeEventListener('focus', preventTextareaScroll, true);
+            textarea.removeEventListener('touchstart', preventTextareaScroll, true);
+        }
+        
         // Exit fullscreen - restore normal size and show header elements
         chatWindow.classList.remove('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
+        
+        // Restore body position and scroll
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, savedScrollPosition);
         
         // Clear inline height style
         chatWindow.style.height = '';
