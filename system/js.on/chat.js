@@ -818,10 +818,10 @@ function toggleFullscreenChat() {
             fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
         }
 
-        // Scroll chat into view smoothly after animation
+        // Scroll chat into view smoothly after animation completes
         setTimeout(() => {
             chatWindow.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 150);
+        }, 400);
         
         // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);

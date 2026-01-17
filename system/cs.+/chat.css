@@ -23,7 +23,7 @@
     #aiViewTitle,
     #aiViewTokenCards,
     #aiViewStatsCard {
-        transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out, max-height 0.35s ease-in-out, margin 0.35s ease-in-out;
+        transition: opacity 0.35s ease-in-out, transform 0.35s ease-in-out, max-height 0.35s ease-in-out, margin 0.35s ease-in-out;
         overflow: hidden;
     }
 
@@ -105,21 +105,29 @@
         pointer-events: none;
     }
 
-    /* Fullscreen chat - elevate to modal overlay layer */
+    /* Fullscreen chat - elevate using stacking context, no position:fixed */
     .chat-window-container.fullscreen {
-        /* Promote to modal overlay on top of app */
-        position: fixed !important;
-        top: 60px !important; /* Leave space for status bar */
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        z-index: 10000 !important;
-        /* Height calculated by fixed positioning */
+        /* Large height expansion - stays in document flow */
+        /* Leaves space for camera/status bar at top */
         height: calc(100vh - 60px) !important;
         height: calc(100dvh - 60px) !important; /* Dynamic for mobile keyboard */
-        width: 100% !important;
-        margin: 0 !important;
+        /* Elevate to higher stacking context without position:fixed */
+        position: relative !important;
+        z-index: 10000 !important;
         /* All other styling inherited - gradient, borders, corners, etc. */
+    }
+    
+    /* Modal backdrop overlay behind fullscreen chat */
+    body.chat-fullscreen-active::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        pointer-events: none;
     }
     
     /* Prevent body scroll when fullscreen */
@@ -147,11 +155,6 @@
         min-height: 0 !important;
         /* Smooth scroll on iOS */
         -webkit-overflow-scrolling: touch !important;
-    }
-    
-    /* Fullscreen button stays visible in fullscreen mode */
-    .chat-window-container.fullscreen .fullscreen-chat-btn {
-        /* Keep button visible and accessible */
     }
 
     /* Attachment preview & analysis styles */
