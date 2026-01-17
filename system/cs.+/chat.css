@@ -15,6 +15,16 @@
         margin-top: 0;
         margin-bottom: 1px;
         position: relative;
+        /* Instant height transition - as fast as the system can render */
+        transition: height 0s, transform 0s;
+    }
+    
+    /* Smooth transitions for AI view elements during fullscreen */
+    #aiViewTitle,
+    #aiViewTokenCards,
+    #aiViewStatsCard {
+        transition: opacity 0.35s ease-in-out, transform 0.35s ease-in-out, max-height 0.35s ease-in-out, margin 0.35s ease-in-out;
+        overflow: hidden;
     }
 
     .chat-model-bar {
@@ -95,68 +105,74 @@
         pointer-events: none;
     }
 
-    /* Fullscreen Chat Modal - Clean solid background identical to AI view */
-    /* Fullscreen chat - expand existing chat window with proper keyboard handling */
+    /* Fullscreen chat - elevate using stacking context, no position:fixed */
     .chat-window-container.fullscreen {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100% !important;
-        /* Use 100svh (small viewport height) to account for mobile browser chrome */
-        height: 100svh !important;
-        height: 100dvh !important; /* Dynamic viewport height - adjusts when keyboard opens */
-        max-height: none !important;
-        border-radius: 0 !important;
-        z-index: 9999 !important;
-        background: #0a0a0a !important;
+        /* Height set dynamically by JavaScript - no CSS sizing */
+        /* Elevate to higher stacking context without position:fixed */
+        position: relative !important;
+        z-index: 10000 !important;
+        /* Flexbox layout for proper chatbar positioning */
         display: flex !important;
         flex-direction: column !important;
-        /* Add safe area padding for notches/cameras */
-        padding-top: env(safe-area-inset-top, 0) !important;
-        padding-left: env(safe-area-inset-left, 0) !important;
-        padding-right: env(safe-area-inset-right, 0) !important;
-        padding-bottom: env(safe-area-inset-bottom, 0) !important;
-        /* Ensure keyboard doesn't overlap - iOS viewport behavior */
-        -webkit-overflow-scrolling: touch !important;
+        /* All other styling inherited - gradient, borders, corners, etc. */
     }
     
-    /* Model bar stays at top in fullscreen */
+    /* Model bar stays at top */
     .chat-window-container.fullscreen .chat-model-bar {
-        position: sticky !important;
-        top: 0 !important;
         flex-shrink: 0 !important;
-        background: rgba(26, 26, 26, 0.95) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-        z-index: 20 !important;
     }
     
-    /* Messages area should scroll independently */
+    /* Messages area fills available space - NEVER SHRINKS, just scrolls */
+    .chat-window-container.fullscreen .chat-messages {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        min-height: 0 !important;
+        /* Messages area height never changes - just scrolls behind chatbar and model bar */
+    }
+    
+    /* Chatbar stays at bottom - no flex grow */
+    .chat-window-container.fullscreen .chat-input-bar {
+        flex-shrink: 0 !important;
+    }
+    
+    /* Modal backdrop overlay behind fullscreen chat */
+    body.chat-fullscreen-active::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        pointer-events: none;
+    }
+    
+    /* Prevent body scroll when fullscreen */
+    body.chat-fullscreen-active {
+        overflow: hidden !important;
+    }
+    
+    /* Hide/collapse AI view header elements in fullscreen */
+    body.chat-fullscreen-active #aiViewTitle,
+    body.chat-fullscreen-active #aiViewTokenCards,
+    body.chat-fullscreen-active #aiViewStatsCard {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        pointer-events: none;
+    }
+    
+    /* Messages area expands to fill available space in fullscreen */
     .chat-window-container.fullscreen .chat-messages {
         flex: 1 !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         min-height: 0 !important;
-    }
-    
-    /* Input stays at bottom in fullscreen */
-    .chat-window-container.fullscreen .chat-input-area {
-        flex-shrink: 0 !important;
-        position: sticky !important;
-        bottom: 0 !important;
-        background: rgba(26, 26, 26, 0.95) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-        z-index: 20 !important;
-    }
-    
-    /* Hide fullscreen button when in fullscreen mode */
-    .chat-window-container.fullscreen .fullscreen-chat-btn {
-        display: none !important;
+        /* Smooth scroll on iOS */
+        -webkit-overflow-scrolling: touch !important;
     }
 
     /* Attachment preview & analysis styles */

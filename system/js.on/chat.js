@@ -792,6 +792,99 @@ function handleFullscreenKeydown(e) {
     }
 }
 
+// Calculate fullscreen height from actual viewport position
+function calculateFullscreenHeight(keyboardHeight = 0) {
+    const aiView = document.getElementById('aiView');
+    const chatWindow = document.getElementById('chatWindow');
+    
+    if (!aiView || !chatWindow) return null;
+    
+    // Get the actual position of the container in the viewport
+    const containerRect = chatWindow.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // Available height = from current top position to viewport bottom
+    // Subtract keyboard height if present
+    const availableHeight = viewportHeight - containerRect.top - keyboardHeight - 10;
+    
+    return Math.max(availableHeight, 200); // Min 200px for safety
+}
+
+// Apply dynamic height to chat window - JS controls everything
+function applyFullscreenHeight(keyboardHeight = 0) {
+    const chatWindow = document.getElementById('chatWindow');
+    if (!chatWindow || !chatWindow.classList.contains('fullscreen')) return;
+    
+    const height = calculateFullscreenHeight(keyboardHeight);
+    if (height) {
+        // Set height immediately - CSS only provides smooth transition
+        chatWindow.style.height = `${height}px`;
+    }
+}
+
+// Keyboard handler using visualViewport API
+let viewportResizeHandler = null;
+
+function setupKeyboardHandling() {
+    if (!window.visualViewport) return;
+    
+    viewportResizeHandler = () => {
+        const chatWindow = document.getElementById('chatWindow');
+        if (!chatWindow || !chatWindow.classList.contains('fullscreen')) return;
+        
+        // Detect keyboard height
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - viewportHeight;
+        
+        // Shrink container from bottom when keyboard opens
+        if (keyboardHeight > 50) {
+            // Keyboard is open - shrink container
+            applyFullscreenHeight(keyboardHeight);
+        } else {
+            // Keyboard closed - restore full height
+            applyFullscreenHeight(0);
+        }
+    };
+    
+    window.visualViewport.addEventListener('resize', viewportResizeHandler);
+    window.visualViewport.addEventListener('scroll', viewportResizeHandler);
+}
+
+function removeKeyboardHandling() {
+    if (window.visualViewport && viewportResizeHandler) {
+        window.visualViewport.removeEventListener('resize', viewportResizeHandler);
+        window.visualViewport.removeEventListener('scroll', viewportResizeHandler);
+        viewportResizeHandler = null;
+    }
+}
+
+// Saved scroll position for JS-driven body lock
+let savedScrollPosition = 0;
+let scrollLockActive = false;
+
+// JS-driven scroll lock - prevents any scroll while active
+function lockScroll(e) {
+    if (scrollLockActive) {
+        window.scrollTo(0, savedScrollPosition);
+        e.preventDefault();
+        return false;
+    }
+}
+
+// Prevent viewport resizing/zoom on textarea focus
+function preventTextareaZoom(e) {
+    // Don't prevent default - keep textarea functional
+    // Just immediately shrink container before browser tries to scroll/zoom
+    const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const windowHeight = window.innerHeight;
+    const keyboardHeight = windowHeight - viewportHeight;
+    
+    if (keyboardHeight > 50) {
+        applyFullscreenHeight(keyboardHeight);
+    }
+}
+
 // Toggle fullscreen chat - simply makes the chat window fullscreen
 function toggleFullscreenChat() {
     const chatWindow = document.getElementById('chatWindow');
@@ -802,10 +895,34 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Enter fullscreen - just add class to existing container
+        // Save scroll position and activate JS-driven scroll lock
+        savedScrollPosition = window.scrollY || window.pageYOffset;
+        scrollLockActive = true;
+        
+        // Add JS scroll lock listeners (NO CSS position:fixed)
+        window.addEventListener('scroll', lockScroll, { passive: false });
+        document.addEventListener('touchmove', lockScroll, { passive: false });
+        
+        // Immediately set scroll position
+        window.scrollTo(0, savedScrollPosition);
+        
+        // Enter fullscreen - expand chat and hide header elements
         chatWindow.classList.add('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('chat-fullscreen-active');
+        
+        // Calculate and apply dynamic height immediately
+        applyFullscreenHeight(0);
+        
+        // Setup keyboard handling
+        setupKeyboardHandling();
+        
+        // Prevent viewport zoom on textarea focus (keep textarea functional)
+        const textarea = document.getElementById('aiPrompt');
+        if (textarea) {
+            textarea.addEventListener('focus', preventTextareaZoom);
+            textarea.addEventListener('touchstart', preventTextareaZoom);
+        }
         
         // Update button icon for exit fullscreen
         if (fullscreenBtn) {
@@ -817,18 +934,36 @@ function toggleFullscreenChat() {
             fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
             fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
         }
-
-        // Focus the prompt
-        const aiPrompt = document.getElementById('aiPrompt');
-        setTimeout(() => { if (aiPrompt) aiPrompt.focus(); }, 50);
         
         // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);
+        
+        // Update height on keyboard open/close and orientation change
+        // JS handles keyboard resizing fully container-relative, reflecting instantly
+        window.addEventListener('resize', applyFullscreenHeight);
+        window.addEventListener('orientationchange', applyFullscreenHeight);
     } else {
-        // Exit fullscreen - just remove class
+        // Remove textarea zoom prevention
+        const textarea = document.getElementById('aiPrompt');
+        if (textarea) {
+            textarea.removeEventListener('focus', preventTextareaZoom);
+            textarea.removeEventListener('touchstart', preventTextareaZoom);
+        }
+        
+        // Exit fullscreen - restore normal size and show header elements
         chatWindow.classList.remove('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
+        document.body.classList.remove('chat-fullscreen-active');
+        
+        // Deactivate JS scroll lock and restore scroll position
+        scrollLockActive = false;
+        window.removeEventListener('scroll', lockScroll);
+        document.removeEventListener('touchmove', lockScroll);
+        window.scrollTo(0, savedScrollPosition);
+        window.scrollTo(0, savedScrollPosition);
+        
+        // Clear inline height style
+        chatWindow.style.height = '';
         
         // Restore button icon for enter fullscreen
         if (fullscreenBtn) {
@@ -843,6 +978,13 @@ function toggleFullscreenChat() {
         
         // Remove keyboard handler
         document.removeEventListener('keydown', handleFullscreenKeydown);
+        
+        // Remove keyboard handling
+        removeKeyboardHandling();
+        
+        // Remove resize handlers
+        window.removeEventListener('resize', () => applyFullscreenHeight(0));
+        window.removeEventListener('orientationchange', () => applyFullscreenHeight(0));
     }
 }
 
