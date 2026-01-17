@@ -859,15 +859,23 @@ function removeKeyboardHandling() {
     }
 }
 
-// Saved scroll position for body lock
+// Saved scroll position for JS-driven body lock
 let savedScrollPosition = 0;
+let scrollLockActive = false;
 
-// Prevent textarea focus scroll
-function preventTextareaScroll(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Immediately shrink container before browser can scroll
+// JS-driven scroll lock - prevents any scroll while active
+function lockScroll(e) {
+    if (scrollLockActive) {
+        window.scrollTo(0, savedScrollPosition);
+        e.preventDefault();
+        return false;
+    }
+}
+
+// Prevent viewport resizing/zoom on textarea focus
+function preventTextareaZoom(e) {
+    // Don't prevent default - keep textarea functional
+    // Just immediately shrink container before browser tries to scroll/zoom
     const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     const windowHeight = window.innerHeight;
     const keyboardHeight = windowHeight - viewportHeight;
@@ -875,8 +883,6 @@ function preventTextareaScroll(e) {
     if (keyboardHeight > 50) {
         applyFullscreenHeight(keyboardHeight);
     }
-    
-    return false;
 }
 
 // Toggle fullscreen chat - simply makes the chat window fullscreen
@@ -889,11 +895,16 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Save scroll position and lock body
+        // Save scroll position and activate JS-driven scroll lock
         savedScrollPosition = window.scrollY || window.pageYOffset;
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${savedScrollPosition}px`;
-        document.body.style.width = '100%';
+        scrollLockActive = true;
+        
+        // Add JS scroll lock listeners (NO CSS position:fixed)
+        window.addEventListener('scroll', lockScroll, { passive: false });
+        document.addEventListener('touchmove', lockScroll, { passive: false });
+        
+        // Immediately set scroll position
+        window.scrollTo(0, savedScrollPosition);
         
         // Enter fullscreen - expand chat and hide header elements
         chatWindow.classList.add('fullscreen');
@@ -906,11 +917,11 @@ function toggleFullscreenChat() {
         // Setup keyboard handling
         setupKeyboardHandling();
         
-        // Prevent textarea focus scroll
+        // Prevent viewport zoom on textarea focus (keep textarea functional)
         const textarea = document.getElementById('aiPrompt');
         if (textarea) {
-            textarea.addEventListener('focus', preventTextareaScroll, true);
-            textarea.addEventListener('touchstart', preventTextareaScroll, true);
+            textarea.addEventListener('focus', preventTextareaZoom);
+            textarea.addEventListener('touchstart', preventTextareaZoom);
         }
         
         // Update button icon for exit fullscreen
@@ -932,11 +943,11 @@ function toggleFullscreenChat() {
         window.addEventListener('resize', applyFullscreenHeight);
         window.addEventListener('orientationchange', applyFullscreenHeight);
     } else {
-        // Remove textarea scroll prevention
+        // Remove textarea zoom prevention
         const textarea = document.getElementById('aiPrompt');
         if (textarea) {
-            textarea.removeEventListener('focus', preventTextareaScroll, true);
-            textarea.removeEventListener('touchstart', preventTextareaScroll, true);
+            textarea.removeEventListener('focus', preventTextareaZoom);
+            textarea.removeEventListener('touchstart', preventTextareaZoom);
         }
         
         // Exit fullscreen - restore normal size and show header elements
@@ -944,10 +955,11 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
         
-        // Restore body position and scroll
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
+        // Deactivate JS scroll lock and restore scroll position
+        scrollLockActive = false;
+        window.removeEventListener('scroll', lockScroll);
+        document.removeEventListener('touchmove', lockScroll);
+        window.scrollTo(0, savedScrollPosition);
         window.scrollTo(0, savedScrollPosition);
         
         // Clear inline height style
