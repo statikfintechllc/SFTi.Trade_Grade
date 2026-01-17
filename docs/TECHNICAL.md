@@ -7,12 +7,14 @@ SFTi P.R.E.P is a single-page Progressive Web App (PWA) built with vanilla HTML,
 ### Technology Stack
 
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+)
-- **Storage:** Browser LocalStorage API
+- **Storage:** Browser LocalStorage API (no backend, no IndexedDB)
 - **Offline:** Service Workers for PWA functionality
 - **AI Integration:** GitHub Models API (REST), Azure Inference API
 - **OAuth:** GitHub OAuth with Device Flow and Web Flow
-- **Architecture:** Client-side only with Static Backend Server pattern
-- **CORS Handling:** Custom CORS Widget with proxy fallbacks
+- **Architecture:** 100% client-side with Static Backend Server pattern (no real backend server)
+- **CORS Handling:** Public CORS proxies (corsproxy.io, cors.sh, codetabs) with automatic fallback
+- **Web Search:** DuckDuckGo JSON API (no authentication required)
+- **Web Scraping:** Custom DOM parser-based logic via CORS proxy
 
 ---
 
@@ -248,50 +250,83 @@ const StaticBackend = {
 
 ### CorsWidget
 
+**Location:** `system/js.on/auth.js` (lines 860-976)
+
+**Important:** Uses **PUBLIC, HOSTED CORS PROXIES** (not custom). These are 3rd party services:
+
 ```javascript
 const CorsWidget = {
     PROXIES: [
-        { name: 'corsproxy.io', url: 'https://corsproxy.io/?', supportsPost: true },
-        { name: 'cors.sh', url: 'https://cors.sh/', supportsPost: true },
-        { name: 'crossorigin.me', url: 'https://crossorigin.me/', supportsPost: true }
+        { 
+            name: 'corsproxy.io', 
+            urlBuilder: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+            supportsPost: true 
+        },
+        { 
+            name: 'cors.sh', 
+            urlBuilder: (url) => `https://proxy.cors.sh/${url}`,
+            supportsPost: true,
+            headers: { 'x-cors-api-key': 'temp_demo' }
+        },
+        { 
+            name: 'crossorigin.me', 
+            urlBuilder: (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+            supportsPost: true 
+        }
     ],
-    workingProxy: null,
+    activeProxyIndex: 0,
     
-    // GET request via CORS proxy
+    // GET request via CORS proxy with automatic fallback
     async fetch(url, options),
     
     // POST form data via CORS proxy
     async postForm(url, data),
     
     // POST JSON via CORS proxy
-    async postJson(url, data),
-    
-    // Find a working proxy
-    async findWorkingProxy()
+    async postJson(url, data)
 }
 ```
+
+**Note:** These proxies are hardcoded and may have rate limits or availability issues. For production use, consider implementing a custom CORS proxy server.
 
 ### WebTools
 
+**Location:** `system/js.on/web-search.js`
+
+**Important:** Uses **CUSTOM SCRAPING LOGIC** (not a 3rd party scraping API). Search uses DuckDuckGo's public JSON API.
+
 ```javascript
 const WebTools = {
-    // Execute web search via DuckDuckGo
-    async search(query),
+    // Execute web search via DuckDuckGo JSON API
+    // API: https://api.duckduckgo.com (no authentication required)
+    async performWebSearch(query),
     
-    // Crawl URL and extract content
-    async crawl(url),
+    // Fetch URL content via CORS proxy (allorigins.win)
+    async fetchUrlContent(url),
     
-    // Parse HTML and extract text
-    parseHtml(html),
+    // Crawl URLs with depth control and link following
+    // Uses custom DOM parser heuristics
+    async scrapeUrl(url, depth = 0, maxPages = 3, selectors = [], followLinks = false),
     
-    // Validate URL format
-    isValidUrl(url),
+    // Extract main content using DOM parsing
+    // Removes nav, footer, ads; finds <main>, <article>, or highest text density
+    extractMainContent(htmlText),
     
-    // Rate limiting
-    lastSearch: 0,
-    MIN_INTERVAL: 2000
+    // Execute tool calls from AI (web_search, fetch_url, scrape_url)
+    async executeToolCall(toolCall),
+    
+    // Format and add citations to messages
+    formatCitations(citations),
+    addCitationsToMessage(message, citations)
 }
 ```
+
+**Web Search Details:**
+- **Search Engine:** DuckDuckGo's JSON API (free, no auth)
+- **CORS Proxy:** `https://api.allorigins.win/raw?url=` (CONFIG.CORS_PROXY)
+- **Content Extraction:** Custom DOM parser with heuristic-based main content detection
+- **Not Used:** No Yahoo Finance, Alpha Vantage, Polygon.io, or other premium APIs
+- **Rate Limiting:** 2-second minimum interval between searches
 
 ### Trade Grading
 
@@ -546,6 +581,138 @@ self.addEventListener('fetch', event => {
 
 ---
 
+## External Dependencies
+
+### Third-Party APIs
+
+| Service | Type | Purpose | Authentication | Cost |
+|---------|------|---------|----------------|------|
+| **GitHub Models API** | AI/LLM | Chat completions via Azure Inference endpoint | GitHub Personal Access Token (PAT) | Free tier available |
+| **GitHub Copilot API** | AI/LLM | Premium models (Claude, Gemini, GPT-4) | OAuth 2.0 (Device Flow) | Requires Copilot subscription |
+| **DuckDuckGo Search** | Search | Web search for market data/news | None (public API) | Free |
+| **GitHub REST API** | Identity | User validation, avatar fetching | GitHub PAT (Bearer token) | Free |
+
+### Third-Party CORS Proxies (Public)
+
+**Important:** These are **PUBLIC, HOSTED services** (not custom infrastructure)
+
+| Service | URL | Reliability | Notes |
+|---------|-----|-------------|-------|
+| **corsproxy.io** | `https://corsproxy.io/?{url}` | Primary | No auth, rate limits unknown |
+| **cors.sh** | `https://proxy.cors.sh/{url}` | Fallback #1 | Requires `x-cors-api-key: temp_demo` |
+| **codetabs** | `https://api.codetabs.com/v1/proxy?quest={url}` | Fallback #2 | Free tier |
+| **allorigins.win** | `https://api.allorigins.win/raw?url={url}` | Web scraping | Used for content fetching |
+
+**Risks:**
+- Public proxies may rate-limit or block requests
+- No SLA or uptime guarantee
+- Privacy concerns (proxies can log requests)
+- **Recommendation:** Implement custom CORS proxy for production use
+
+### Internal Components (No External Services)
+
+| Component | Implementation | Location |
+|-----------|----------------|----------|
+| **StaticBackend** | Client-side OAuth handler | `system/js.on/auth.js:485-1159` |
+| **CorsWidget** | CORS proxy router with fallback | `system/js.on/auth.js:860-976` |
+| **WebTools** | Custom DOM parser for scraping | `system/js.on/web-search.js` |
+
+---
+
+## Storage Architecture
+
+### Storage Type: **localStorage Only**
+
+**No Backend Storage:** This application uses **NO server-side database**. All data persists exclusively in the browser's localStorage.
+
+### What's Stored
+
+```javascript
+// LocalStorage Schema
+{
+  // Trade Data
+  "prepareGrades": [...]         // All trade evaluations and plans
+  
+  // Authentication
+  "githubToken": "ghp_...",      // GitHub Personal Access Token
+  "copilotToken": "gho_...",     // OAuth token for Copilot
+  "copilotTokenExpiry": 1699999999999,
+  "oauth_client_id": "Ov23li...",
+  "oauth_client_secret": "...",
+  
+  // User Data
+  "githubAvatarUrl": "https://...",
+  "githubUsername": "user123",
+  
+  // AI Configuration
+  "availableModels": [...],      // Cached model list
+  "selectedModel": "gpt-4o-mini",
+  
+  // Chat History
+  "chatHistory": [...]           // All AI conversations
+  
+  // Usage Stats
+  "usageStats": {
+    "messages": 42,
+    "webSearches": 15,
+    "tokensUsed": 12500
+  }
+}
+```
+
+### Storage Limits
+
+- **Browser Limit:** ~5-10MB per domain (varies by browser)
+- **Current Usage:** Typical user data < 2MB
+- **Image Storage:** Screenshots stored as base64 (increases size significantly)
+- **Quota Management:** No automatic cleanup; user must manually delete old trades
+
+### Cross-Tab Synchronization
+
+- **BroadcastChannel API:** Used for token updates across tabs
+- **No real-time sync:** localStorage changes don't automatically sync between tabs
+- **Refresh required:** Users must refresh other tabs to see new data
+
+### Data Persistence
+
+✅ **Persists:**
+- Until user clears browser data
+- Until user deletes localStorage manually
+- Survives browser restart
+
+❌ **Does NOT Persist:**
+- Across different browsers
+- Across different devices
+- After localStorage is cleared
+- In private/incognito mode (cleared on session end)
+
+### Backup & Recovery
+
+**No Automatic Backup:**
+- No cloud sync
+- No export/import feature (could be added)
+- No database backups
+- **Risk:** All data can be permanently lost
+
+**Manual Backup (Developer):**
+```javascript
+// Export all data
+const backup = {
+  grades: localStorage.getItem('prepareGrades'),
+  chatHistory: localStorage.getItem('chatHistory'),
+  settings: {
+    selectedModel: localStorage.getItem('selectedModel'),
+    // ... other settings
+  }
+};
+console.log(JSON.stringify(backup));
+
+// Import data
+localStorage.setItem('prepareGrades', backup.grades);
+```
+
+---
+
 ## AI Integration
 
 ### Supported Endpoints
@@ -749,10 +916,19 @@ None required for modern browsers. Graceful degradation:
 ### Data Security
 
 **Storage:**
-- All data in browser LocalStorage
-- No server-side storage
-- No cookies
-- Token encrypted by browser
+- **100% client-side:** All data stored in browser LocalStorage only
+- **No backend database:** No server-side storage or persistence
+- **No IndexedDB:** Not used in this application
+- **No cookies:** Authentication tokens stored in localStorage
+- **Token security:** Tokens stored in plain text in localStorage (browser-level encryption only)
+- **Data portability:** All data can be exported/imported via JSON
+- **Data loss risk:** If localStorage is cleared, all data is permanently lost
+
+**Security Considerations:**
+- GitHub tokens in localStorage are accessible via JavaScript (XSS vulnerability)
+- No server-side token refresh mechanism
+- OAuth tokens expire and must be re-authenticated
+- Public CORS proxies may log requests (privacy concern)
 
 **API Calls:**
 - HTTPS only

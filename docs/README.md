@@ -6,16 +6,18 @@
 
 A Progressive Web App (PWA) for grading trades using the PREPARE methodology, featuring AI-powered analysis with web search capabilities.
 
+**Architecture:** 100% client-side static web application. No backend server, uses localStorage for data persistence and public CORS proxies for API access.
+
 ## Features
 
 - **Grade Tab**: Pre-trade psychology check, pattern recognition, and risk assessment
 - **Trade Tracker**: Plan builder with entry price, stop loss (5-10%), and profit target (15-30%) sliders
 - **Trade History**: Search and filter saved trades with detailed trade plan display
 - **AI Assistant**: Integration with GitHub Models API for trade analysis
-  - **Web Search Tool**: AI-powered web search and URL crawling with citations
-  - **Static Backend Server**: Client-side OAuth authentication for GitHub Copilot models
-  - **CORS Widget**: Bypass CORS restrictions for static site API calls
-  - **Chat History**: Persistent conversation history with chat management
+  - **Web Search Tool**: AI-powered web search via DuckDuckGo (free public API) with custom DOM-based scraping
+  - **Static Backend Server**: Client-side OAuth authentication handler for GitHub Copilot models
+  - **CORS Widget**: Public CORS proxy fallback system (corsproxy.io, cors.sh, codetabs)
+  - **Chat History**: Persistent conversation history in localStorage
   - **Syntax Highlighting**: Code blocks with language detection and copy buttons
 
 ## Project Structure

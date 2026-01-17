@@ -3,6 +3,8 @@
 ## Overview
 The application has been refactored from 2 large monolithic files (app.js: 4941 lines, styles.css: 2457 lines) into 27 smaller, logical modules for better maintainability and organization.
 
+**Important:** This application uses a **functional/procedural programming** approach with **NO ES6 classes**. All components are implemented as object literals, functions, or closures.
+
 ---
 
 ## JavaScript Modules (16 files)
@@ -128,7 +130,7 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 9. **auth.js** (42 KB)
+### 9. **auth.js** (42 KB → 1,209 lines)
 **Purpose:** Authentication and token management  
 **Contents:**
 - GitHub token modal functions
@@ -143,15 +145,26 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 - `cancelDeviceFlow()` - Cancel device flow
 - `disconnectCopilot()` - Disconnect Copilot
 - Quick actions popup functions
-- **StaticBackend server class:**
+- **StaticBackend object** (NOT a class - object literal):
   - OAuth configuration
-  - Token management
-  - API routing (Azure, Copilot)
-  - CORS proxy widget
+  - Token management (GitHub PAT, Copilot OAuth)
+  - API routing (Azure Inference, Copilot)
   - Device flow polling
-  - Cross-tab communication
+  - Cross-tab communication via BroadcastChannel
+  - Model catalog management
+- **CorsWidget object** (NOT a class - nested object in StaticBackend):
+  - Public CORS proxy management (corsproxy.io, cors.sh, codetabs)
+  - Automatic fallback between proxies
+  - GET/POST request routing via CORS proxies
 
 **Exports:** All functions and StaticBackend to `window`
+
+**Key Implementation Details:**
+- StaticBackend is an **object literal**, not a class
+- CorsWidget is a **nested object** within StaticBackend
+- Uses **public, hosted CORS proxies** (not custom infrastructure)
+- Implements full OAuth 2.0 Device Flow on client-side
+- BroadcastChannel API for cross-tab token sync
 
 ---
 
@@ -227,24 +240,31 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
 
 ---
 
-### 12. **web-search.js** (18 KB)
+### 12. **web-search.js** (18 KB → 490 lines)
 **Purpose:** Web search functionality  
 **Contents:**
 - `webSearchEnabled` variable
 - `currentSearchAbortController` variable
-- `webSearchTools` array - Tool definitions
+- `webSearchTools` array - Tool definitions for AI function calling
 - Search functions:
-  - `performWebSearch()` - DuckDuckGo search
-  - `fetchUrlContent()` - CORS-proxied fetching
-  - `extractMainContent()` - HTML parsing
-  - `scrapeUrl()` - Multi-page scraping
+  - `performWebSearch()` - **DuckDuckGo JSON API** search (no auth required)
+  - `fetchUrlContent()` - CORS-proxied URL fetching via **allorigins.win**
+  - `extractMainContent()` - **Custom DOM parsing** with heuristics
+  - `scrapeUrl()` - **Custom recursive crawler** with depth control
 - Tool execution:
-  - `executeToolCall()` - Route tool calls
-  - `formatCitations()` - Extract citations
-  - `addCitationsToMessage()` - Add sources
+  - `executeToolCall()` - Route tool calls from AI
+  - `formatCitations()` - Extract and format source citations
+  - `addCitationsToMessage()` - Add sources to chat messages
 
-**Exports:** All functions and variables to `window`
+**Exports:** All functions and variables to `window`  
 **Dependencies:** Uses `isValidUrl()` from utils.js
+
+**Important Notes:**
+- **NOT using a 3rd party scraping API** - implements custom scraping logic
+- **Search engine:** DuckDuckGo (free, no authentication)
+- **CORS proxy:** Uses public `allorigins.win` service
+- **Content extraction:** Custom DOM parser with heuristics (not a paid service)
+- **No premium APIs:** Does not use Yahoo Finance, Alpha Vantage, etc.
 
 ---
 

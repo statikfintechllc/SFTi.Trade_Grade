@@ -4,6 +4,13 @@
 
 This document covers the external APIs used by SFTi P.R.E.P and internal JavaScript APIs available for customization. The application uses a "Static Backend Server" pattern to handle OAuth and CORS-restricted API calls.
 
+**Key Architecture Points:**
+- **No Custom Backend Server:** 100% client-side application hosted on GitHub Pages
+- **Public CORS Proxies:** Uses hosted services (corsproxy.io, cors.sh, codetabs) - NOT custom infrastructure
+- **Custom Web Scraping:** Uses custom DOM parsing logic - NOT a 3rd party scraping API
+- **localStorage Only:** No database, no cloud storage, no IndexedDB
+- **DuckDuckGo Search:** Free public API - no authentication required
+
 ---
 
 ## External APIs
@@ -976,6 +983,159 @@ function escapeHtml(text) {
   return text.replace(/[&<>"']/g, m => map[m]);
 }
 ```
+
+---
+
+## Web Scraping & Search
+
+### DuckDuckGo Search
+
+**API:** Free public JSON API (no authentication)
+
+**Endpoint:** `https://api.duckduckgo.com/`
+
+**Implementation:** `performWebSearch()` in `system/js.on/web-search.js`
+
+**Important:** This application uses **DuckDuckGo's free API** - NOT a paid scraping service.
+
+### Custom Web Scraping
+
+**Method:** Custom DOM parsing logic (NOT a 3rd party API)
+
+**Implementation:** `extractMainContent()`, `scrapeUrl()` in `system/js.on/web-search.js`
+
+**CORS Proxy:** Uses public `allorigins.win` service
+
+**Process:**
+1. Fetch URL via CORS proxy
+2. Parse HTML with DOMParser
+3. Remove scripts, styles, nav, footer, ads
+4. Find main content using heuristics:
+   - Look for `<main>` or `<article>` tags
+   - Find highest text-density element
+   - Extract metadata (title, description, JSON-LD)
+5. Truncate to 4000 characters
+
+**NOT Used:**
+- ❌ ScraperAPI
+- ❌ Bright Data
+- ❌ Apify
+- ❌ ParseHub
+- ❌ Any paid scraping service
+
+---
+
+## Storage & Data Persistence
+
+### Storage Type
+
+**localStorage ONLY** - No backend database, no IndexedDB, no cloud sync
+
+### What's Stored
+
+| Key | Data | Size |
+|-----|------|------|
+| `prepareGrades` | All trade evaluations | ~500-2000 KB |
+| `chatHistory` | AI conversation history | ~100-500 KB |
+| `githubToken` | GitHub PAT | ~100 bytes |
+| `copilotToken` | OAuth token | ~100 bytes |
+| `availableModels` | Model catalog cache | ~10 KB |
+| `usageStats` | Usage statistics | ~1 KB |
+
+### Storage Limits
+
+- **Browser Limit:** 5-10 MB per domain
+- **Typical Usage:** 1-3 MB
+- **Max Screenshots:** ~20-30 (at 2MB each)
+
+### Data Persistence
+
+✅ **Persists:**
+- Until browser data is cleared
+- Across browser restarts
+- In same browser on same device
+
+❌ **Does NOT Persist:**
+- Across different browsers
+- Across different devices
+- In private/incognito mode (after session)
+- After user clears site data
+
+### Backup & Export
+
+**No Built-In Export:** Application does not provide export/import features
+
+**Manual Backup (Developer Console):**
+```javascript
+// Export all data
+const backup = {
+  grades: localStorage.getItem('prepareGrades'),
+  chatHistory: localStorage.getItem('chatHistory'),
+  tokens: {
+    github: localStorage.getItem('githubToken'),
+    copilot: localStorage.getItem('copilotToken')
+  }
+};
+console.log(JSON.stringify(backup));
+// Copy output and save to file
+
+// Import data
+const backup = JSON.parse('...'); // paste backup JSON
+localStorage.setItem('prepareGrades', backup.grades);
+localStorage.setItem('chatHistory', backup.chatHistory);
+// Refresh page
+```
+
+### Cross-Tab Sync
+
+- **BroadcastChannel:** Used for token updates only
+- **No automatic sync:** localStorage changes don't sync between tabs
+- **Manual refresh required:** Users must refresh other tabs
+
+---
+
+## Summary of External Dependencies
+
+### APIs Used
+
+| Service | Custom or 3rd Party? | Authentication | Cost |
+|---------|---------------------|----------------|------|
+| GitHub Models API | 3rd Party (Microsoft Azure) | GitHub PAT | Free tier |
+| GitHub Copilot API | 3rd Party (GitHub) | OAuth 2.0 | ~$10/month |
+| DuckDuckGo Search | 3rd Party (DuckDuckGo) | None | Free |
+| GitHub REST API | 3rd Party (GitHub) | GitHub PAT | Free |
+
+### CORS Proxies
+
+| Service | Custom or Hosted? | Notes |
+|---------|------------------|-------|
+| corsproxy.io | **Hosted** (Public) | Primary proxy |
+| cors.sh | **Hosted** (Public) | Fallback #1 |
+| codetabs | **Hosted** (Public) | Fallback #2 |
+| allorigins.win | **Hosted** (Public) | Web scraping |
+
+**Important:** All CORS proxies are **public, hosted services** - NOT custom infrastructure.
+
+### Web Scraping
+
+| Component | Custom or 3rd Party? | Notes |
+|-----------|---------------------|-------|
+| DuckDuckGo Search | 3rd Party API | Free, no auth |
+| Content Extraction | **Custom Logic** | DOM parser heuristics |
+| URL Fetching | via Public Proxies | allorigins.win |
+
+**Important:** Uses **custom scraping logic** - NOT a 3rd party scraping API.
+
+### Storage
+
+| Type | Used? | Notes |
+|------|-------|-------|
+| localStorage | ✅ Yes | Only storage mechanism |
+| IndexedDB | ❌ No | Not used |
+| Backend Database | ❌ No | 100% client-side |
+| Cloud Storage | ❌ No | No cloud sync |
+
+**Important:** Uses **real browser storage (localStorage)** - NOT simulated or in-memory storage.
 
 ---
 
