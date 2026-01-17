@@ -105,12 +105,20 @@
         pointer-events: none;
     }
 
-    /* Fullscreen chat - expand height within AIView container, not true fullscreen */
+    /* Fullscreen chat - elevate to modal overlay layer */
     .chat-window-container.fullscreen {
-        /* Large height expansion - stays in document flow */
-        /* Leaves space for camera/status bar at top */
+        /* Promote to modal overlay on top of app */
+        position: fixed !important;
+        top: 60px !important; /* Leave space for status bar */
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 10000 !important;
+        /* Height calculated by fixed positioning */
         height: calc(100vh - 60px) !important;
         height: calc(100dvh - 60px) !important; /* Dynamic for mobile keyboard */
+        width: 100% !important;
+        margin: 0 !important;
         /* All other styling inherited - gradient, borders, corners, etc. */
     }
     
