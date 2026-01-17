@@ -845,11 +845,8 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'true');
         document.body.classList.add('chat-fullscreen-active');
         
-        // Calculate and apply dynamic height after a brief delay
-        // to allow header elements to start fading
-        setTimeout(() => {
-            applyFullscreenHeight();
-        }, 50);
+        // Calculate and apply dynamic height immediately
+        applyFullscreenHeight();
         
         // Update button icon for exit fullscreen
         if (fullscreenBtn) {
