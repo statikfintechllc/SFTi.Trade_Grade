@@ -792,6 +792,44 @@ function handleFullscreenKeydown(e) {
     }
 }
 
+// Calculate dynamic fullscreen height based on AIView container
+function calculateFullscreenHeight() {
+    const aiView = document.getElementById('aiView');
+    const chatWindow = document.getElementById('chatWindow');
+    const modelBar = document.querySelector('.chat-model-bar');
+    
+    if (!aiView || !chatWindow) return null;
+    
+    // Get AIView container height
+    const containerHeight = aiView.clientHeight;
+    
+    // Calculate fixed header height (model bar + buttons area)
+    // Model bar is visible in fullscreen, title/cards are hidden
+    let headerHeight = 0;
+    if (modelBar) {
+        headerHeight = modelBar.offsetHeight;
+    }
+    
+    // Add some padding for spacing (title area that's now hidden)
+    const paddingOffset = 20;
+    
+    // Subtract header from container to get available chat height
+    const availableHeight = containerHeight - headerHeight - paddingOffset;
+    
+    return Math.max(availableHeight, 400); // Never smaller than default
+}
+
+// Apply dynamic height to chat window
+function applyFullscreenHeight() {
+    const chatWindow = document.getElementById('chatWindow');
+    if (!chatWindow || !chatWindow.classList.contains('fullscreen')) return;
+    
+    const height = calculateFullscreenHeight();
+    if (height) {
+        chatWindow.style.height = `${height}px`;
+    }
+}
+
 // Toggle fullscreen chat - simply makes the chat window fullscreen
 function toggleFullscreenChat() {
     const chatWindow = document.getElementById('chatWindow');
@@ -806,6 +844,12 @@ function toggleFullscreenChat() {
         chatWindow.classList.add('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'true');
         document.body.classList.add('chat-fullscreen-active');
+        
+        // Calculate and apply dynamic height after a brief delay
+        // to allow header elements to start fading
+        setTimeout(() => {
+            applyFullscreenHeight();
+        }, 50);
         
         // Update button icon for exit fullscreen
         if (fullscreenBtn) {
@@ -825,11 +869,18 @@ function toggleFullscreenChat() {
         
         // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);
+        
+        // Update height on keyboard open/close and orientation change
+        window.addEventListener('resize', applyFullscreenHeight);
+        window.addEventListener('orientationchange', applyFullscreenHeight);
     } else {
         // Exit fullscreen - restore normal size and show header elements
         chatWindow.classList.remove('fullscreen');
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
+        
+        // Clear inline height style
+        chatWindow.style.height = '';
         
         // Restore button icon for enter fullscreen
         if (fullscreenBtn) {
@@ -844,6 +895,10 @@ function toggleFullscreenChat() {
         
         // Remove keyboard handler
         document.removeEventListener('keydown', handleFullscreenKeydown);
+        
+        // Remove resize handlers
+        window.removeEventListener('resize', applyFullscreenHeight);
+        window.removeEventListener('orientationchange', applyFullscreenHeight);
     }
 }
 

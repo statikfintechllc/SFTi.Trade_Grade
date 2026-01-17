@@ -107,10 +107,7 @@
 
     /* Fullscreen chat - elevate using stacking context, no position:fixed */
     .chat-window-container.fullscreen {
-        /* Large height expansion - stays in document flow */
-        /* No vh/dvh - container-relative sizing only */
-        height: 800px !important;
-        max-height: 90% !important; /* Container-relative maximum */
+        /* Height set dynamically by JavaScript - no CSS sizing */
         /* Elevate to higher stacking context without position:fixed */
         position: relative !important;
         z-index: 10000 !important;
