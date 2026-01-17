@@ -800,7 +800,7 @@ function calculateFullscreenHeight() {
     
     if (!aiView || !chatWindow) return null;
     
-    // Get AIView container height
+    // Get AIView container height - entirely container-driven
     const containerHeight = aiView.clientHeight;
     
     // Calculate fixed header height (model bar + buttons area)
@@ -814,9 +814,10 @@ function calculateFullscreenHeight() {
     const paddingOffset = 20;
     
     // Subtract header from container to get available chat height
+    // Entirely container-driven - no fallback, no magic numbers
     const availableHeight = containerHeight - headerHeight - paddingOffset;
     
-    return Math.max(availableHeight, 400); // Never smaller than default
+    return availableHeight;
 }
 
 // Apply dynamic height to chat window
@@ -858,16 +859,12 @@ function toggleFullscreenChat() {
             fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
             fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
         }
-
-        // Scroll chat into view smoothly after animation completes
-        setTimeout(() => {
-            chatWindow.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 400);
         
         // Keyboard handler
         document.addEventListener('keydown', handleFullscreenKeydown);
         
         // Update height on keyboard open/close and orientation change
+        // JS handles keyboard resizing fully container-relative, reflecting instantly
         window.addEventListener('resize', applyFullscreenHeight);
         window.addEventListener('orientationchange', applyFullscreenHeight);
     } else {
