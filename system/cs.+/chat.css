@@ -108,9 +108,9 @@
     /* Fullscreen chat - elevate using stacking context, no position:fixed */
     .chat-window-container.fullscreen {
         /* Large height expansion - stays in document flow */
-        /* Leaves space for camera/status bar at top */
-        height: calc(100vh - 60px) !important;
-        height: calc(100dvh - 60px) !important; /* Dynamic for mobile keyboard */
+        /* No vh/dvh - container-relative sizing only */
+        height: 800px !important;
+        max-height: 90% !important; /* Container-relative maximum */
         /* Elevate to higher stacking context without position:fixed */
         position: relative !important;
         z-index: 10000 !important;
