@@ -111,9 +111,6 @@
         /* Elevate to higher stacking context without position:fixed */
         position: relative !important;
         z-index: 10000 !important;
-        /* Ensure flex layout works properly */
-        display: flex !important;
-        flex-direction: column !important;
         /* All other styling inherited - gradient, borders, corners, etc. */
     }
     
@@ -130,14 +127,9 @@
         pointer-events: none;
     }
     
-    /* Prevent body scroll when fullscreen - lock position completely */
+    /* Prevent body scroll when fullscreen */
     body.chat-fullscreen-active {
         overflow: hidden !important;
-        position: fixed !important;
-        width: 100% !important;
-        height: 100% !important;
-        top: 0 !important;
-        left: 0 !important;
     }
     
     /* Hide/collapse AI view header elements in fullscreen */
@@ -160,22 +152,6 @@
         min-height: 0 !important;
         /* Smooth scroll on iOS */
         -webkit-overflow-scrolling: touch !important;
-    }
-    
-    /* Chatbar stays at bottom of flex container - no flex property */
-    .chat-window-container.fullscreen .chat-input-bar {
-        /* Don't use position sticky in flex container - just let flexbox handle it */
-        flex-shrink: 0 !important;
-        position: relative !important;
-        z-index: 5 !important;
-    }
-    
-    /* Model bar must stay at top and never move */
-    .chat-window-container.fullscreen .chat-model-bar {
-        flex-shrink: 0 !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 10 !important;
     }
 
     /* Attachment preview & analysis styles */
