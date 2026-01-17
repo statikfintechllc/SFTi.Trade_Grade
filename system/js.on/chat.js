@@ -2,6 +2,22 @@
 // Manages chat UI, message rendering, file attachments, code highlighting, chat history persistence
 
 // ============================================================================
+// CONSTANTS AND CONFIGURATION
+// ============================================================================
+
+// List of allowed scrollable elements during fullscreen scroll lock
+const ALLOWED_SCROLLABLE_ELEMENTS = [
+    'model-dropdown-menu',        // Model selector dropdown
+    'chat-history-list',          // Chat history dropdown
+    'chat-messages',              // Message box container
+    'chat-input-wrapper',         // Chat input area (for textarea)
+    'chat-textarea'               // Textarea itself
+];
+
+// Timeout duration (in milliseconds) for clearing stuck hover states on mobile
+const HOVER_CLEAR_TIMEOUT_MS = 10;
+
+// ============================================================================
 // CHAT HISTORY AND USAGE STATS
 // ============================================================================
 
@@ -781,7 +797,7 @@ function triggerFileUpload(event) {
         // Use setTimeout to restore pointer events on next frame
         setTimeout(() => {
             fileAttachBtn.style.pointerEvents = '';
-        }, 10);
+        }, HOVER_CLEAR_TIMEOUT_MS);
     }
     
     // Trigger the file input click
@@ -886,21 +902,12 @@ function lockScroll(e) {
     // Check if the scroll/touch is happening inside an allowed scrollable element
     const target = e.target;
     
-    // List of allowed scrollable elements (by class or ID)
-    const allowedScrollables = [
-        'model-dropdown-menu',        // Model selector dropdown
-        'chat-history-list',          // Chat history dropdown
-        'chat-messages',              // Message box container
-        'chat-input-wrapper',         // Chat input area (for textarea)
-        'chat-textarea'               // Textarea itself
-    ];
-    
     // Check if target or any parent has one of the allowed classes/IDs
     let element = target;
     while (element && element !== document.body) {
         // Check by class
         if (element.classList) {
-            for (const className of allowedScrollables) {
+            for (const className of ALLOWED_SCROLLABLE_ELEMENTS) {
                 if (element.classList.contains(className)) {
                     // Allow scroll within this element
                     return;
@@ -909,7 +916,7 @@ function lockScroll(e) {
         }
         // Check by ID
         if (element.id) {
-            for (const id of allowedScrollables) {
+            for (const id of ALLOWED_SCROLLABLE_ELEMENTS) {
                 if (element.id === id) {
                     // Allow scroll within this element
                     return;
