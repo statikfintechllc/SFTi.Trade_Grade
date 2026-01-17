@@ -27,9 +27,6 @@ SFti.Trade_Grade/
 ├── LICENSE
 ├── .github
 │   └── FUNDING.yml
-├── auth
-│   └── callback
-│       └── index.html
 ├── docs
 │   ├── AI_ASSISTANT.md
 │   ├── API_REFERENCE.md
@@ -41,6 +38,9 @@ SFti.Trade_Grade/
 │   └── USER_GUIDE.md
 ├── index.html
 └── system
+    ├── auth
+    │   └── callback
+    │       └── index.html
     ├── cs.+
     │   ├── base.css
     │   ├── chat.css
