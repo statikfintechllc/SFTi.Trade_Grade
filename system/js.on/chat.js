@@ -826,8 +826,48 @@ function applyFullscreenHeight() {
     if (!chatWindow || !chatWindow.classList.contains('fullscreen')) return;
     
     const height = calculateFullscreenHeight();
-    if (height) {
+    if (height && height > 0) {
         chatWindow.style.height = `${height}px`;
+    }
+}
+
+// Calculate available height for messages area accounting for keyboard
+function calculateMessagesHeight() {
+    const chatWindow = document.getElementById('chatWindow');
+    const modelBar = document.querySelector('.chat-model-bar');
+    const chatInputBar = document.querySelector('.chat-input-bar');
+    
+    if (!chatWindow) return null;
+    
+    // Get current chat window height (set by applyFullscreenHeight)
+    const containerHeight = chatWindow.clientHeight;
+    
+    // Subtract fixed elements from container
+    let usedHeight = 0;
+    
+    if (modelBar) {
+        usedHeight += modelBar.offsetHeight;
+    }
+    
+    if (chatInputBar) {
+        usedHeight += chatInputBar.offsetHeight;
+    }
+    
+    // Available height for messages
+    const messagesHeight = containerHeight - usedHeight;
+    
+    return messagesHeight > 0 ? messagesHeight : 100; // Minimum 100px
+}
+
+// Apply dynamic height to messages area only (for keyboard resize)
+function applyMessagesHeight() {
+    const chatMessages = document.querySelector('.chat-messages');
+    if (!chatMessages) return;
+    
+    const height = calculateMessagesHeight();
+    if (height) {
+        chatMessages.style.height = `${height}px`;
+        chatMessages.style.flex = 'none'; // Override flex when explicitly sized
     }
 }
 
@@ -867,19 +907,24 @@ function toggleFullscreenChat() {
         if (window.visualViewport) {
             const handleViewportChange = () => {
                 // When keyboard opens, visualViewport.height shrinks
-                // We need to keep header fixed and only resize chat messages
+                // We keep the chat window at the same size, but resize messages area only
                 const viewportHeight = window.visualViewport.height;
                 const windowHeight = window.innerHeight;
                 
                 // If viewport is smaller than window, keyboard is open
                 const keyboardHeight = windowHeight - viewportHeight;
                 
-                if (keyboardHeight > 0) {
-                    // Keyboard is open - recalculate container height
-                    applyFullscreenHeight();
+                if (keyboardHeight > 50) {
+                    // Keyboard is open - only resize messages area, not entire container
+                    // This keeps header (model bar) in same position
+                    applyMessagesHeight();
                 } else {
-                    // Keyboard is closed - restore full height
-                    applyFullscreenHeight();
+                    // Keyboard is closed - restore flex layout
+                    const chatMessages = document.querySelector('.chat-messages');
+                    if (chatMessages) {
+                        chatMessages.style.height = '';
+                        chatMessages.style.flex = '1';
+                    }
                 }
             };
             
@@ -900,8 +945,15 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
         
-        // Clear inline height style
+        // Clear inline height styles
         chatWindow.style.height = '';
+        
+        // Restore messages area to flex layout
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+            chatMessages.style.height = '';
+            chatMessages.style.flex = '';
+        }
         
         // Restore button icon for enter fullscreen
         if (fullscreenBtn) {

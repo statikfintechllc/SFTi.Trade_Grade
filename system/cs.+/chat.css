@@ -111,6 +111,9 @@
         /* Elevate to higher stacking context without position:fixed */
         position: relative !important;
         z-index: 10000 !important;
+        /* Ensure flex layout works properly */
+        display: flex !important;
+        flex-direction: column !important;
         /* All other styling inherited - gradient, borders, corners, etc. */
     }
     
@@ -159,11 +162,20 @@
         -webkit-overflow-scrolling: touch !important;
     }
     
-    /* Chatbar must stay at bottom of modal in fullscreen */
+    /* Chatbar stays at bottom of flex container - no flex property */
     .chat-window-container.fullscreen .chat-input-bar {
-        position: sticky !important;
-        bottom: 0 !important;
+        /* Don't use position sticky in flex container - just let flexbox handle it */
+        flex-shrink: 0 !important;
+        position: relative !important;
         z-index: 5 !important;
+    }
+    
+    /* Model bar must stay at top and never move */
+    .chat-window-container.fullscreen .chat-model-bar {
+        flex-shrink: 0 !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
     }
 
     /* Attachment preview & analysis styles */
