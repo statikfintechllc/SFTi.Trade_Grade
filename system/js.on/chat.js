@@ -308,17 +308,19 @@ function showFilePreview(attachment) {
 
     previewDiv.innerHTML = previewInner;
 
-    // Choose insertion point: fullscreen input area preferred if active
-    const fullscreenModal = document.getElementById('fullscreenChatModal');
-    let target = null;
-    if (fullscreenModal && fullscreenModal.classList.contains('active')) {
-        target = document.getElementById('fullscreenChatInputArea');
-    }
-    if (!target) target = document.querySelector('.chat-input-bar') || document.querySelector('.chat-input-wrapper') || document.body;
-
-    if (target) {
-        // insert at top
-        target.insertBefore(previewDiv, target.firstChild);
+    // Choose insertion point: insert before .chat-input-wrapper inside .chat-input-bar
+    // This makes the preview appear above the text input, expanding the chatbar naturally
+    const chatInputBar = document.querySelector('.chat-input-bar');
+    const chatInputWrapper = document.querySelector('.chat-input-wrapper');
+    
+    if (chatInputBar && chatInputWrapper) {
+        // Insert preview before the input wrapper (so it appears above the text input)
+        chatInputBar.insertBefore(previewDiv, chatInputWrapper);
+    } else {
+        // Fallback: if structure is different, append to chat-input-bar
+        if (chatInputBar) {
+            chatInputBar.insertBefore(previewDiv, chatInputBar.firstChild);
+        }
     }
 
     // Small helper functions bound to global so buttons can call them
