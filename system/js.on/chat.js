@@ -88,8 +88,8 @@ function handleChatKeyPress(event) {
 // FILE ATTACHMENT HANDLING
 // ============================================================================
 
-// Pending file attachment storage
-let pendingFileAttachment = null;
+// Pending file attachments storage - support multiple files
+let pendingFileAttachments = [];
 
 // Handle file upload for chat - full implementation
 function handleChatFileUpload(input) {
@@ -147,7 +147,7 @@ async function processImageFile(file) {
         const description = mod.generateDescription(analysis);
         const fingerprint = mod.generateFingerprint(analysis);
 
-        pendingFileAttachment = {
+        const attachment = {
             type: 'image',
             name: file.name,
             mimeType: file.type,
@@ -161,9 +161,12 @@ async function processImageFile(file) {
             // store only thumbnail by default to keep memory small; full data can be included on demand
             data: analysis.thumbnail
         };
+        
+        // Add to array instead of replacing
+        pendingFileAttachments.push(attachment);
 
         // Show enhanced preview with analysis
-        showFilePreview(pendingFileAttachment);
+        showFilePreviews();
         showToast(`Image analyzed and attached: ${file.name}`, 'success', 'File Attached');
     } catch (error) {
         console.warn('Image analysis failed, falling back to basic preview:', error);
@@ -171,14 +174,15 @@ async function processImageFile(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const base64Data = e.target.result;
-            pendingFileAttachment = {
+            const attachment = {
                 type: 'image',
                 name: file.name,
                 mimeType: file.type,
                 data: base64Data,
                 size: file.size
             };
-            showFilePreview(pendingFileAttachment);
+            pendingFileAttachments.push(attachment);
+            showFilePreviews();
             showToast(`Image ready: ${file.name}. Type your message or click send.`, 'success', 'File Attached');
         };
         reader.onerror = function() {
@@ -193,7 +197,7 @@ function processTextFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const textContent = e.target.result;
-        pendingFileAttachment = {
+        const attachment = {
             type: 'text',
             name: file.name,
             mimeType: file.type || 'text/plain',
@@ -201,7 +205,8 @@ function processTextFile(file) {
             size: file.size
         };
         
-        showFilePreview(pendingFileAttachment);
+        pendingFileAttachments.push(attachment);
+        showFilePreviews();
         showToast(`File ready: ${file.name}. Type your message or click send.`, 'success', 'File Attached');
     };
     reader.onerror = function() {
@@ -217,7 +222,7 @@ function processPdfFile(file) {
         // For now, we'll send the PDF as base64 for models that support it
         // or inform user that PDF text extraction is limited
         const base64Data = e.target.result;
-        pendingFileAttachment = {
+        const attachment = {
             type: 'pdf',
             name: file.name,
             mimeType: 'application/pdf',
@@ -225,7 +230,8 @@ function processPdfFile(file) {
             size: file.size
         };
         
-        showFilePreview(pendingFileAttachment);
+        pendingFileAttachments.push(attachment);
+        showFilePreviews();
         showToast(`PDF ready: ${file.name}. Note: PDF support varies by model.`, 'success', 'File Attached');
     };
     reader.onerror = function() {
@@ -239,7 +245,7 @@ function processOfficeFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const base64Data = e.target.result;
-        pendingFileAttachment = {
+        const attachment = {
             type: 'document',
             name: file.name,
             mimeType: file.type,
@@ -247,7 +253,8 @@ function processOfficeFile(file) {
             size: file.size
         };
         
-        showFilePreview(pendingFileAttachment);
+        pendingFileAttachments.push(attachment);
+        showFilePreviews();
         showToast(`Document ready: ${file.name}. Note: Full parsing coming soon.`, 'success', 'File Attached');
     };
     reader.onerror = function() {
@@ -260,117 +267,87 @@ function processOfficeFile(file) {
 // FILE PREVIEW AND DISPLAY
 // ============================================================================
 
-// Show file preview in the chat area (supports fullscreen input area too)
-function showFilePreview(attachment) {
-    // Remove any existing preview
-    clearFilePreview();
-
-    const previewDiv = document.createElement('div');
-    previewDiv.id = 'fileAttachmentPreview';
-    previewDiv.className = 'file-attachment-preview';
-
-    // Build basic preview HTML
-    let previewInner = `
-        <div class="file-preview-content">
-            ${attachment.type === 'image' 
-                ? `<img src="${attachment.thumbnail || attachment.data}" alt="${attachment.name}" class="file-preview-image">`
-                : `<div class="file-preview-icon">${getFileIcon(attachment.type)}</div>`
-            }
-            <div class="file-preview-info">
-                <span class="file-preview-name">${attachment.name}</span>
-                <span class="file-preview-size">${formatFileSize(attachment.size)}</span>
-            </div>
-            <div style="flex:1 1 auto"></div>
-            <button class="file-preview-remove" onclick="clearFilePreview()" title="Remove attachment">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-    `;
-
-    // Add analysis section if available
-    if (attachment.analysis) {
-        const a = attachment.analysis;
-        const colorsHtml = (a.dominantColors || []).map(c => `<span class="color-swatch" style="background:${c}" title="${c}"></span>`).join('');
-        previewInner += `
-            <div class="file-analysis">
-                <div class="analysis-summary">${escapeHtml(a.analysisSummary || '')}</div>
-                <div class="analysis-meta">
-                    <div class="analysis-colors">${colorsHtml}</div>
-                    <div class="analysis-details">
-                        <span>${a.chartDetected ? 'Chart-like features detected' : 'No chart-like features'}</span>
-                        <span> · </span>
-                        <span>${(a.textRegions || []).length} text regions</span>
-                        ${a.numericOCR && a.numericOCR.length ? `<span> · Numeric samples: ${a.numericOCR.slice(0,3).join(', ')}</span>` : ''}
-                    </div>
-                </div>
-                <div class="analysis-actions">
-                    ${a.numericOCR && a.numericOCR.length ? `<button class="small-btn" onclick="insertOcrText()">Insert OCR text</button>` : ''}
-                    <button class="small-btn" onclick="reAnalyzeImage()">Re-run analysis</button>
-                    <button class="small-btn" onclick="viewFullAttachment()">View</button>
-                </div>
-            </div>
-        `;
-    }
-
-    previewDiv.innerHTML = previewInner;
-
-    // Choose insertion point: insert before .chat-input-wrapper inside .chat-input-bar
-    // This makes the preview appear above the text input, expanding the chatbar naturally
-    const chatInputBar = document.querySelector('.chat-input-bar');
-    const chatInputWrapper = document.querySelector('.chat-input-wrapper');
+// Show file previews as small thumbnails inside the chat input wrapper (Claude/ChatGPT style)
+function showFilePreviews() {
+    // Remove any existing previews
+    clearFilePreviews();
     
-    if (chatInputBar && chatInputWrapper) {
-        // Insert preview before the input wrapper (so it appears above the text input)
-        chatInputBar.insertBefore(previewDiv, chatInputWrapper);
-    } else {
-        // Fallback: if structure is different, append to chat-input-bar
-        if (chatInputBar) {
-            chatInputBar.insertBefore(previewDiv, chatInputBar.firstChild);
-        }
+    if (pendingFileAttachments.length === 0) {
+        return;
     }
-
-    // Small helper functions bound to global so buttons can call them
-    window.insertOcrText = function() {
-        const aiPrompt = document.getElementById('aiPrompt');
-        if (!aiPrompt || !attachment.analysis || !attachment.analysis.numericOCR) return;
-        const text = (attachment.analysis.numericOCR || []).slice(0,3).join(' ');
-        aiPrompt.value = (aiPrompt.value ? aiPrompt.value + '\n' : '') + text;
-        aiPrompt.focus();
-        autoResizeTextarea(aiPrompt);
-    };
-
-    window.reAnalyzeImage = async function() {
-        if (!attachment || !attachment.name) return;
-        showToast('Re-analyzing image...', 'info', 'Analyzing');
-        try {
-            const mod = await import('/system/js.on/image-processor.js');
-            const res = await mod.analyzeImage(attachment.data || attachment.thumbnail, { numericOCR: true, detectCharts: true });
-            attachment.analysis = res;
-            // Update preview
-            showFilePreview(attachment);
-            showToast('Re-analysis complete', 'success', 'Analyzed');
-        } catch (e) {
-            showToast('Re-analysis failed', 'error', 'Error');
+    
+    const chatInputWrapper = document.querySelector('.chat-input-wrapper');
+    if (!chatInputWrapper) return;
+    
+    // Create thumbnails container
+    const thumbnailsContainer = document.createElement('div');
+    thumbnailsContainer.id = 'file-thumbnails-container';
+    thumbnailsContainer.className = 'file-thumbnails-container';
+    
+    // Add each file as a small thumbnail
+    pendingFileAttachments.forEach((attachment, index) => {
+        const thumbnail = document.createElement('div');
+        thumbnail.className = 'file-thumbnail';
+        thumbnail.dataset.index = index;
+        
+        if (attachment.type === 'image') {
+            const img = document.createElement('img');
+            img.src = attachment.thumbnail || attachment.data;
+            img.alt = attachment.name;
+            img.className = 'file-thumbnail-image';
+            thumbnail.appendChild(img);
+        } else {
+            const icon = document.createElement('div');
+            icon.className = 'file-thumbnail-icon';
+            icon.textContent = getFileIcon(attachment.type);
+            thumbnail.appendChild(icon);
         }
-    };
-
-    window.viewFullAttachment = function() {
-        // open full size data in new tab if available
-        const url = attachment.data || attachment.thumbnail;
-        if (url) window.open(url, '_blank');
-    };
+        
+        // Remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'file-thumbnail-remove';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeFileAttachment(index);
+        };
+        removeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>`;
+        thumbnail.appendChild(removeBtn);
+        
+        thumbnailsContainer.appendChild(thumbnail);
+    });
+    
+    // Insert thumbnails container at the beginning of input wrapper
+    chatInputWrapper.insertBefore(thumbnailsContainer, chatInputWrapper.firstChild);
 }
 
-// Clear file preview and pending attachment
-function clearFilePreview() {
-    pendingFileAttachment = null;
-    const preview = document.getElementById('fileAttachmentPreview');
-    if (preview) {
-        preview.remove();
+// Clear all file previews
+function clearFilePreviews() {
+    const existing = document.getElementById('file-thumbnails-container');
+    if (existing) {
+        existing.remove();
     }
+}
+
+// Remove a specific file attachment
+function removeFileAttachment(index) {
+    if (index >= 0 && index < pendingFileAttachments.length) {
+        pendingFileAttachments.splice(index, 1);
+        showFilePreviews();
+        
+        if (pendingFileAttachments.length === 0) {
+            showToast('All attachments removed', 'info', 'Files');
+        }
+    }
+}
+
+// Old function for backwards compatibility - now clears all
+function clearFilePreview() {
+    pendingFileAttachments = [];
+    clearFilePreviews();
 }
 
 // Get file icon based on type
@@ -397,86 +374,107 @@ function formatFileSize(bytes) {
 
 // Build message content with attachment
 function buildMessageWithAttachment(userMessage) {
-    if (!pendingFileAttachment) {
+    // Support both old singular and new plural format
+    const attachments = pendingFileAttachments && pendingFileAttachments.length > 0 
+        ? pendingFileAttachments 
+        : (pendingFileAttachment ? [pendingFileAttachment] : []);
+    
+    if (attachments.length === 0) {
         return userMessage;
     }
     
-    const attachment = pendingFileAttachment;
-    let content = [];
+    // Check if current model supports vision
+    const currentModel = document.getElementById('chatModelSelect')?.value || '';
+    const supportsVision = CONFIG.VISION_MODELS.some(v => currentModel.toLowerCase().includes(v));
     
-    // For images, use multimodal format if model supports it
-    if (attachment.type === 'image') {
-        // Check if current model supports vision
-        const currentModel = document.getElementById('chatModelSelect')?.value || '';
-        const supportsVision = CONFIG.VISION_MODELS.some(v => currentModel.toLowerCase().includes(v));
+    // Separate images from other files
+    const images = attachments.filter(att => att.type === 'image');
+    const otherFiles = attachments.filter(att => att.type !== 'image');
+    
+    // For vision models with images - build multimodal content
+    if (supportsVision && images.length > 0) {
+        const content = [];
         
-        if (supportsVision) {
-            // Build multimodal message following OpenAI/Azure Vision API format
+        // Add all images to content array (images first per OpenAI spec)
+        images.forEach((attachment, index) => {
             const imageUrl = attachment.data || attachment.thumbnail || '';
-            
-            // Build text prompt that includes metadata context if available
-            let textPrompt = userMessage || `Please analyze this image: ${attachment.name}`;
-            
-            // Add structured metadata as context for better analysis
-            if (attachment.metadata) {
-                const meta = attachment.metadata;
-                if (meta.isChart) {
-                    textPrompt += `\n\n[Chart Context: Confidence ${(meta.confidence * 100).toFixed(0)}%`;
-                    if (meta.numericValues && meta.numericValues.length > 0) {
-                        textPrompt += `, Values: ${meta.numericValues.slice(0, 5).join(', ')}`;
-                    }
-                    if (meta.patternHints && meta.patternHints.length > 0) {
-                        textPrompt += `, Patterns: ${meta.patternHints.join(', ')}`;
-                    }
-                    textPrompt += `]`;
+            content.push({
+                type: 'image_url',
+                image_url: {
+                    url: imageUrl,
+                    detail: 'high'
                 }
+            });
+        });
+        
+        // Build text prompt with metadata
+        let textPrompt = userMessage || `Please analyze ${images.length > 1 ? 'these images' : 'this image'}.`;
+        
+        // Add metadata context for each image
+        images.forEach((attachment, index) => {
+            if (attachment.metadata && attachment.metadata.isChart) {
+                const meta = attachment.metadata;
+                textPrompt += `\n\n[Image ${index + 1}: Chart (Confidence ${(meta.confidence * 100).toFixed(0)}%)`;
+                if (meta.numericValues && meta.numericValues.length > 0) {
+                    textPrompt += `, Values: ${meta.numericValues.slice(0, 5).join(', ')}`;
+                }
+                if (meta.patternHints && meta.patternHints.length > 0) {
+                    textPrompt += `, Patterns: ${meta.patternHints.join(', ')}`;
+                }
+                textPrompt += `]`;
             } else if (attachment.analysis && attachment.analysis.analysisSummary) {
-                // Fallback to legacy analysis summary
-                textPrompt += `\n\n[Image Analysis: ${attachment.analysis.analysisSummary}]`;
+                textPrompt += `\n\n[Image ${index + 1} Analysis: ${attachment.analysis.analysisSummary}]`;
             }
-            
-            return {
-                multimodal: true,
-                content: [
-                    {
-                        type: 'image_url',
-                        image_url: {
-                            url: imageUrl,
-                            detail: 'high'
-                        }
-                    },
-                    {
-                        type: 'text',
-                        text: textPrompt
-                    }
-                ]
-            };
+        });
+        
+        // Add text content after images
+        content.push({
+            type: 'text',
+            text: textPrompt
+        });
+        
+        // Include text files in the text prompt
+        otherFiles.forEach(attachment => {
+            if (attachment.type === 'text') {
+                const fileContent = attachment.content.length > CONFIG.MAX_TEXT_FILE_CONTENT 
+                    ? attachment.content.substring(0, CONFIG.MAX_TEXT_FILE_CONTENT) + '\n\n... [truncated]'
+                    : attachment.content;
+                content[content.length - 1].text += `\n\nFile: ${attachment.name}\n\`\`\`\n${fileContent}\n\`\`\``;
+            }
+        });
+        
+        return {
+            multimodal: true,
+            content: content
+        };
+    }
+    
+    // For non-vision models or no images - build text description
+    let textMessage = userMessage;
+    
+    // Add image descriptions
+    images.forEach(attachment => {
+        if (attachment.description) {
+            textMessage = `[Image: ${attachment.name}]\n${attachment.description}\n\n${textMessage}`;
         } else {
-            // For non-vision models, use rich description
-            if (attachment.description) {
-                return `[Image Description]\n${attachment.description}\n\n${userMessage}`;
-            } else {
-                // Fallback to legacy format
-                const analysisSummary = attachment.analysis ? `\nAnalysis: ${attachment.analysis.analysisSummary || ''}` : '';
-                return `[Image attached: ${attachment.name} (${formatFileSize(attachment.size)})]${analysisSummary} - Note: Current model may not support image analysis.\n\n${userMessage}`;
-            }
+            const analysisSummary = attachment.analysis ? `Analysis: ${attachment.analysis.analysisSummary || ''}` : '';
+            textMessage = `[Image: ${attachment.name} (${formatFileSize(attachment.size)})] ${analysisSummary}\n\n${textMessage}`;
         }
-    }
+    });
     
-    // For text files, include the content
-    if (attachment.type === 'text') {
-        const fileContent = attachment.content.length > CONFIG.MAX_TEXT_FILE_CONTENT 
-            ? attachment.content.substring(0, CONFIG.MAX_TEXT_FILE_CONTENT) + '\n\n... [truncated, file too large]'
-            : attachment.content;
-        return `Here is the content of ${attachment.name}:\n\n\`\`\`\n${fileContent}\n\`\`\`\n\n${userMessage}`;
-    }
+    // Add text file contents
+    otherFiles.forEach(attachment => {
+        if (attachment.type === 'text') {
+            const fileContent = attachment.content.length > CONFIG.MAX_TEXT_FILE_CONTENT 
+                ? attachment.content.substring(0, CONFIG.MAX_TEXT_FILE_CONTENT) + '\n\n... [truncated]'
+                : attachment.content;
+            textMessage = `File: ${attachment.name}\n\`\`\`\n${fileContent}\n\`\`\`\n\n${textMessage}`;
+        } else if (attachment.type === 'pdf' || attachment.type === 'document') {
+            textMessage = `[${attachment.name} attached - ${formatFileSize(attachment.size)}]\n\n${textMessage}`;
+        }
+    });
     
-    // For PDFs and other documents, note the attachment
-    if (attachment.type === 'pdf' || attachment.type === 'document') {
-        return `[${attachment.name} attached - ${formatFileSize(attachment.size)}]\n\nNote: This file has been attached. Full content extraction for ${attachment.type} files is limited in this version.\n\n${userMessage}`;
-    }
-    
-    return userMessage;
+    return textMessage;
 }
 
 function highlightCode(code, lang) {
@@ -1409,14 +1407,16 @@ window.showChatWindow = showChatWindow;
 window.hideChatWindow = hideChatWindow;
 window.autoResizeTextarea = autoResizeTextarea;
 window.handleChatKeyPress = handleChatKeyPress;
-window.pendingFileAttachment = pendingFileAttachment;
+window.pendingFileAttachments = pendingFileAttachments;
 window.handleChatFileUpload = handleChatFileUpload;
 window.processImageFile = processImageFile;
 window.processTextFile = processTextFile;
 window.processPdfFile = processPdfFile;
 window.processOfficeFile = processOfficeFile;
-window.showFilePreview = showFilePreview;
+window.showFilePreviews = showFilePreviews;
+window.clearFilePreviews = clearFilePreviews;
 window.clearFilePreview = clearFilePreview;
+window.removeFileAttachment = removeFileAttachment;
 window.getFileIcon = getFileIcon;
 window.formatFileSize = formatFileSize;
 window.buildMessageWithAttachment = buildMessageWithAttachment;
