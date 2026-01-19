@@ -890,6 +890,9 @@ let originalChatInputNextSibling = null;
 let originalChatModelBarParent = null;
 let originalChatModelBarNextSibling = null;
 
+// Animation duration for AIView slide animations (in milliseconds)
+const AIVIEW_SLIDE_DURATION_MS = 300;
+
 function handleFullscreenKeydown(e) {
     if (e.key === 'Escape' || e.key === 'Esc') {
         if (isFullscreenChat) toggleFullscreenChat();
@@ -1022,12 +1025,40 @@ function preventTextareaZoom(e) {
 function toggleFullscreenChat() {
     const chatWindow = document.getElementById('chatWindow');
     const fullscreenBtn = document.getElementById('fullscreenChatBtn');
+    const aiView = document.getElementById('aiView');
     
     if (!chatWindow) return;
 
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
+        // Check if aiView needs to be pulled up from bottom (not currently visible or in overlay mode)
+        const needsSlideUpAnimation = aiView && 
+                                      (aiView.style.display === 'none' || 
+                                       aiView.style.position === 'fixed');
+        
+        if (needsSlideUpAnimation && aiView.style.position !== 'fixed') {
+            // AIView is hidden - need to show it with slide-up animation
+            const header = document.querySelector('.header');
+            const headerHeight = header ? header.getBoundingClientRect().height : 57;
+            
+            aiView.style.display = 'block';
+            aiView.style.position = 'fixed';
+            aiView.style.top = `${headerHeight}px`;
+            aiView.style.left = '0';
+            aiView.style.width = '100%';
+            aiView.style.height = `calc(100% - ${headerHeight}px)`;
+            aiView.style.zIndex = '10001';
+            aiView.style.background = 'transparent';
+            aiView.style.transform = 'translateY(100%)';
+            aiView.style.transition = `transform ${AIVIEW_SLIDE_DURATION_MS}ms ease-out`;
+            
+            // Trigger slide-up animation
+            setTimeout(() => {
+                aiView.style.transform = 'translateY(0)';
+            }, 10);
+        }
+        
         // Save scroll position and activate JS-driven scroll lock
         savedScrollPosition = window.scrollY || window.pageYOffset;
         scrollLockActive = true;
@@ -1110,7 +1141,7 @@ function toggleFullscreenChat() {
                     aiView.style.background = '';
                     aiView.style.transform = '';
                     aiView.style.transition = '';
-                }, 300); // Match the transition duration
+                }, AIVIEW_SLIDE_DURATION_MS);
             } else {
                 // Not an overlay, just reset styles immediately
                 aiView.style.position = '';
@@ -1175,68 +1206,34 @@ function openAIFromTab(sourceTab) {
     }, 100);
 }
 
-// Function for header Copilot button - open fullscreen chat overlay
+// Function for header Copilot button - uses EXACT same function as fullscreen button
 function openAIFullscreen() {
     const aiView = document.getElementById('aiView');
     const chatWindow = document.getElementById('chatWindow');
     
-    if (!chatWindow) {
-        console.error('chatWindow element not found');
+    if (!aiView || !chatWindow) {
+        console.error('Required elements not found');
         return;
     }
     
     // Check if we're already in the AI Assistant tab
-    const currentlyInAITab = aiView && aiView.style.display === 'block' && 
+    const currentlyInAITab = aiView.style.display === 'block' && 
                               document.body.classList.contains('ai-tab-active');
     
-    if (currentlyInAITab) {
-        // Already in AI tab - just toggle fullscreen using the same function
-        if (chatWindow.style.display !== 'flex') {
-            chatWindow.style.display = 'flex';
-        }
-        if (!isFullscreenChat) {
-            toggleFullscreenChat();
-        }
-    } else {
-        // Not in AI tab - prepare overlay and use toggleFullscreenChat
-        if (aiView) {
-            // Get header height
-            const header = document.querySelector('.header');
-            const headerHeight = header ? header.getBoundingClientRect().height : 57;
-            
-            // Position aiView as overlay below header with slide-up animation
-            aiView.style.display = 'block';
-            aiView.style.position = 'fixed';
-            aiView.style.top = `${headerHeight}px`;
-            aiView.style.left = '0';
-            aiView.style.width = '100%';
-            aiView.style.height = `calc(100% - ${headerHeight}px)`;
-            aiView.style.zIndex = '10001';
-            aiView.style.background = 'transparent';
-            
-            // Start with aiView below viewport for slide-up animation
-            aiView.style.transform = 'translateY(100%)';
-            aiView.style.transition = 'transform 0.3s ease-out';
-            
-            // Trigger slide-up animation
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    aiView.style.transform = 'translateY(0)';
-                });
-            });
-        }
-        
+    if (!currentlyInAITab) {
+        // Not in AI tab - ensure chatWindow is visible and load models
         chatWindow.style.display = 'flex';
         
         // Load models if not already loaded
         if (typeof loadToken === 'function') {
             loadToken();
         }
-        
-        // Use the EXACT same function as the fullscreen button
-        if (!isFullscreenChat) {
-            toggleFullscreenChat();
-        }
+    }
+    
+    // Use the EXACT same function as the fullscreen button
+    // toggleFullscreenChat now handles the slide-up animation automatically
+    if (!isFullscreenChat) {
+        toggleFullscreenChat();
     }
 }
 
