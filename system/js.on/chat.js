@@ -402,25 +402,34 @@ function buildMessageWithAttachment(userMessage) {
         const supportsVision = CONFIG.VISION_MODELS.some(v => currentModel.toLowerCase().includes(v));
         
         if (supportsVision) {
-            // Build multimodal message including structured analysis when available
+            // Build multimodal message following OpenAI/Azure Vision API format
             const imageUrl = attachment.data || attachment.thumbnail || '';
+            
+            // Build text prompt that includes analysis metadata if available
+            let textPrompt = userMessage || `Please analyze this image: ${attachment.name}`;
+            if (attachment.analysis && attachment.analysis.analysisSummary) {
+                textPrompt += `\n\nImage Analysis Context: ${attachment.analysis.analysisSummary}`;
+                if (attachment.analysis.dominantColors && attachment.analysis.dominantColors.length > 0) {
+                    textPrompt += `\nDominant colors: ${attachment.analysis.dominantColors.slice(0, 3).join(', ')}`;
+                }
+                if (attachment.analysis.chartDetected) {
+                    textPrompt += `\nChart-like features detected`;
+                }
+            }
+            
             return {
                 multimodal: true,
                 content: [
                     {
+                        type: 'text',
+                        text: textPrompt
+                    },
+                    {
                         type: 'image_url',
                         image_url: {
                             url: imageUrl,
-                            detail: 'auto'
+                            detail: 'high'
                         }
-                    },
-                    {
-                        type: 'attachment_analysis',
-                        analysis: attachment.analysis || {}
-                    },
-                    {
-                        type: 'text',
-                        text: userMessage || `Please analyze this image: ${attachment.name}`
                     }
                 ]
             };
