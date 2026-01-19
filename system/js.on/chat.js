@@ -1088,31 +1088,6 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
         
-        // Check if aiView is in overlay mode (opened from Copilot button)
-        const aiView = document.getElementById('aiView');
-        const inAITab = document.body.classList.contains('ai-tab-active');
-        
-        if (aiView && aiView.style.position === 'fixed' && !inAITab) {
-            // In overlay mode - animate out and clean up
-            aiView.style.transform = 'translateY(100%)';
-            
-            setTimeout(() => {
-                aiView.style.position = '';
-                aiView.style.top = '';
-                aiView.style.left = '';
-                aiView.style.right = '';
-                aiView.style.bottom = '';
-                aiView.style.width = '';
-                aiView.style.height = '';
-                aiView.style.zIndex = '';
-                aiView.style.background = '';
-                aiView.style.transform = '';
-                aiView.style.transition = '';
-                aiView.style.display = 'none';
-                chatWindow.style.display = 'none';
-            }, 300);
-        }
-        
         // Deactivate JS scroll lock and restore scroll position
         scrollLockActive = false;
         window.removeEventListener('scroll', lockScroll);

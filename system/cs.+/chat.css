@@ -116,41 +116,7 @@
         height: 18px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    /* Copilot Header Button - in header on far right */
-    .copilot-header-btn {
-        width: 32px;
-        height: 32px;
-        background: rgba(40, 40, 40, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        color: #888;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-    }
-
-    .copilot-header-btn:hover {
-        background: rgba(204, 0, 0, 0.2);
-        border-color: rgba(204, 0, 0, 0.4);
-        color: #cc0000;
-    }
-
-    .copilot-header-btn svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    /* Hide Copilot button when AI Assistant tab is active */
-    body.ai-tab-active .copilot-header-btn {
-        display: none;
-    }
     
-    /* Center header title when Copilot button is hidden in AI tab */
     body.ai-tab-active .header {
         justify-content: center;
     }
