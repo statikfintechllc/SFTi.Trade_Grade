@@ -1211,6 +1211,17 @@ function openAIFullscreen() {
         if (!isFullscreenChat) {
             isFullscreenChat = true;
             
+            // Save scroll position and activate JS-driven scroll lock (SAME as toggleFullscreenChat)
+            savedScrollPosition = window.scrollY || window.pageYOffset;
+            scrollLockActive = true;
+            
+            // Add JS scroll lock listeners (NO CSS position:fixed) - SAME as toggleFullscreenChat
+            window.addEventListener('scroll', lockScroll, { passive: false });
+            document.addEventListener('touchmove', lockScroll, { passive: false });
+            
+            // Immediately set scroll position - SAME as toggleFullscreenChat
+            window.scrollTo(0, savedScrollPosition);
+            
             // Apply same classes and styling as toggleFullscreenChat()
             chatWindow.classList.add('fullscreen');
             chatWindow.setAttribute('aria-expanded', 'true');
