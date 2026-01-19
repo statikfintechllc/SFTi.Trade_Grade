@@ -33,9 +33,15 @@
         z-index: 10;
         padding: 8px 12px;
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
         gap: 8px;
+    }
+    
+    .chat-model-bar .model-dropdown-wrapper {
+        flex: 1;
+        display: flex;
+        justify-content: center;
     }
 
     /* Floating Chat Buttons */
