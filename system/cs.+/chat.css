@@ -1228,104 +1228,63 @@
         display: none;
     }
 
-    /* File Thumbnails Container - Above Input Wrapper (Claude/ChatGPT style) */
+    /* File Thumbnails Container - Inside Input Wrapper (Simple, no borders) */
     .file-thumbnails-container {
         display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        padding: 12px;
-        background: rgba(20, 20, 20, 0.6);
-        border-radius: 12px 12px 0 0;
-        max-height: 200px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        scrollbar-width: thin;
-    }
-    
-    .file-thumbnails-container::-webkit-scrollbar {
-        width: 4px;
-    }
-    
-    .file-thumbnails-container::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-    }
-    
-    .file-thumbnails-container::-webkit-scrollbar-thumb {
-        background: rgba(204, 0, 0, 0.5);
-        border-radius: 2px;
+        gap: 8px;
+        align-items: center;
+        padding: 0 8px 0 0;
+        flex-shrink: 0;
     }
     
     .file-thumbnail {
         position: relative;
-        width: 90px;
-        min-height: 110px;
-        border-radius: 12px;
-        overflow: visible;
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        background: rgba(26, 26, 26, 0.9);
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: transparent;
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        padding: 8px;
+        justify-content: center;
+        flex-shrink: 0;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: transform 0.2s ease;
     }
     
     .file-thumbnail:hover {
-        transform: translateY(-2px);
-        border-color: rgba(204, 0, 0, 0.5);
-        box-shadow: 0 4px 12px rgba(204, 0, 0, 0.2);
+        transform: scale(1.05);
     }
     
     .file-thumbnail-image {
         width: 100%;
-        height: 70px;
+        height: 100%;
         object-fit: cover;
         border-radius: 8px;
-        margin-bottom: 6px;
     }
     
     .file-thumbnail-icon {
-        width: 70px;
-        height: 70px;
+        width: 100%;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 6px;
+        background: rgba(40, 40, 40, 0.8);
+        border-radius: 8px;
     }
     
     .file-thumbnail-icon svg {
-        width: 48px;
-        height: 48px;
+        width: 32px;
+        height: 32px;
         color: #888;
-    }
-    
-    .file-thumbnail-label {
-        font-size: 10px;
-        font-weight: 600;
-        color: #cc0000;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-        letter-spacing: 0.5px;
-    }
-    
-    .file-thumbnail-name {
-        font-size: 10px;
-        color: #aaa;
-        text-align: center;
-        word-break: break-all;
-        line-height: 1.2;
-        max-height: 24px;
-        overflow: hidden;
     }
     
     .file-thumbnail-remove {
         position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 24px;
-        height: 24px;
+        top: -6px;
+        right: -6px;
+        width: 20px;
+        height: 20px;
         background: rgba(204, 0, 0, 0.95);
         border: 2px solid rgba(0, 0, 0, 0.8);
         border-radius: 50%;
@@ -1348,72 +1307,50 @@
     }
     
     .file-thumbnail-remove svg {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         color: white;
-        stroke-width: 2.5;
+        stroke-width: 3;
     }
     
     /* Mobile responsive adjustments */
     @media (max-width: 768px) {
-        .file-thumbnails-container {
-            gap: 10px;
-            padding: 10px;
-        }
-        
         .file-thumbnail {
-            width: 80px;
-            min-height: 100px;
-        }
-        
-        .file-thumbnail-image,
-        .file-thumbnail-icon {
-            height: 60px;
+            width: 50px;
+            height: 50px;
         }
         
         .file-thumbnail-icon svg {
-            width: 40px;
-            height: 40px;
+            width: 28px;
+            height: 28px;
         }
     }
     
     @media (max-width: 480px) {
         .file-thumbnails-container {
-            gap: 8px;
-            padding: 8px;
-            max-height: 160px;
+            gap: 6px;
         }
         
         .file-thumbnail {
-            width: 70px;
-            min-height: 90px;
-            padding: 6px;
-        }
-        
-        .file-thumbnail-image,
-        .file-thumbnail-icon {
-            height: 50px;
+            width: 45px;
+            height: 45px;
         }
         
         .file-thumbnail-icon svg {
-            width: 32px;
-            height: 32px;
-        }
-        
-        .file-thumbnail-name {
-            font-size: 9px;
+            width: 24px;
+            height: 24px;
         }
         
         .file-thumbnail-remove {
-            width: 20px;
-            height: 20px;
-            top: -6px;
-            right: -6px;
+            width: 18px;
+            height: 18px;
+            top: -5px;
+            right: -5px;
         }
         
         .file-thumbnail-remove svg {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
         }
     }
 

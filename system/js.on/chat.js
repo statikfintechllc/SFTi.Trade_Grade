@@ -274,7 +274,7 @@ function processOfficeFile(file) {
 // FILE PREVIEW AND DISPLAY
 // ============================================================================
 
-// Show file previews as thumbnails above the chat input (Claude/ChatGPT style)
+// Show file previews as simple thumbnails inside the chat input wrapper
 function showFilePreviews() {
     // Remove any existing previews
     clearFilePreviews();
@@ -284,16 +284,14 @@ function showFilePreviews() {
     }
     
     const chatInputWrapper = document.querySelector('.chat-input-wrapper');
-    const chatInputBar = chatInputWrapper ? chatInputWrapper.parentElement : null;
-    
-    if (!chatInputBar) return;
+    if (!chatInputWrapper) return;
     
     // Create thumbnails container
     const thumbnailsContainer = document.createElement('div');
     thumbnailsContainer.id = 'file-thumbnails-container';
     thumbnailsContainer.className = 'file-thumbnails-container';
     
-    // Add each file as a thumbnail
+    // Add each file as a simple thumbnail
     pendingFileAttachments.forEach((attachment, index) => {
         const thumbnail = document.createElement('div');
         thumbnail.className = 'file-thumbnail';
@@ -310,25 +308,7 @@ function showFilePreviews() {
             icon.className = 'file-thumbnail-icon';
             icon.innerHTML = getFileIcon(attachment.type);
             thumbnail.appendChild(icon);
-            
-            // Add file type label
-            const label = document.createElement('div');
-            label.className = 'file-thumbnail-label';
-            const nameParts = attachment.name.split('.');
-            const ext = nameParts.length > 1 ? nameParts.pop().toUpperCase() : 'FILE';
-            label.textContent = ext;
-            thumbnail.appendChild(label);
         }
-        
-        // Add filename below thumbnail
-        const filename = document.createElement('div');
-        filename.className = 'file-thumbnail-name';
-        const MAX_FILENAME_LENGTH = 20;
-        const TRUNCATE_AT = 17;
-        filename.textContent = attachment.name.length > MAX_FILENAME_LENGTH 
-            ? attachment.name.substring(0, TRUNCATE_AT) + '...' 
-            : attachment.name;
-        thumbnail.appendChild(filename);
         
         // Remove button
         const removeBtn = document.createElement('button');
@@ -337,18 +317,22 @@ function showFilePreviews() {
             e.stopPropagation();
             removeFileAttachment(index);
         };
-        removeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
+        removeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>`;
         thumbnail.appendChild(removeBtn);
         
         thumbnailsContainer.appendChild(thumbnail);
     });
     
-    // Insert thumbnails container ABOVE input wrapper (not inside it)
-    chatInputBar.insertBefore(thumbnailsContainer, chatInputWrapper);
+    // Insert thumbnails container INSIDE input wrapper, before textarea
+    const textarea = chatInputWrapper.querySelector('.chat-textarea');
+    if (textarea) {
+        chatInputWrapper.insertBefore(thumbnailsContainer, textarea);
+    } else {
+        chatInputWrapper.insertBefore(thumbnailsContainer, chatInputWrapper.firstChild);
+    }
 }
 
 // Clear all file previews
