@@ -1233,6 +1233,13 @@ function openAIFullscreen() {
             // Setup keyboard handling - same as toggleFullscreenChat()
             setupKeyboardHandling();
             
+            // Prevent viewport zoom on textarea focus (keep textarea functional) - same as toggleFullscreenChat()
+            const textarea = document.getElementById('aiPrompt');
+            if (textarea) {
+                textarea.addEventListener('focus', preventTextareaZoom);
+                textarea.addEventListener('touchstart', preventTextareaZoom);
+            }
+            
             // Update fullscreen button if it exists
             const fullscreenBtn = document.getElementById('fullscreenChatBtn');
             if (fullscreenBtn) {
