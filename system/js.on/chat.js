@@ -1154,31 +1154,85 @@ function openAIFromTab(sourceTab) {
 
 // Function for header Copilot button - open fullscreen chat overlay
 function openAIFullscreen() {
-    // Use EXACT same approach as AI Assistant tab fullscreen button
-    // Switch to AI tab first, then toggle fullscreen
-    const currentlyInAITab = document.body.classList.contains('ai-tab-active');
-    
-    if (!currentlyInAITab) {
-        // Switch to AI Assistant tab using the same method as menu buttons
-        if (typeof switchView === 'function') {
-            switchView('ai');
-        }
-    }
-    
-    // Show chat window if hidden
+    const aiView = document.getElementById('aiView');
     const chatWindow = document.getElementById('chatWindow');
-    if (chatWindow && chatWindow.style.display !== 'flex') {
+    
+    if (!chatWindow) {
+        console.error('chatWindow element not found');
+        return;
+    }
+    
+    // Check if we're already in the AI Assistant tab
+    const currentlyInAITab = aiView && aiView.style.display === 'block' && 
+                              document.body.classList.contains('ai-tab-active');
+    
+    if (currentlyInAITab) {
+        // Already in AI tab - just toggle fullscreen using the same function
+        if (chatWindow.style.display !== 'flex') {
+            chatWindow.style.display = 'flex';
+        }
+        if (!isFullscreenChat) {
+            toggleFullscreenChat();
+        }
+    } else {
+        // Not in AI tab - create overlay with EXACT same styling as AI Assistant tab fullscreen
+        if (aiView) {
+            // Get header height
+            const header = document.querySelector('.header');
+            const headerHeight = header ? header.getBoundingClientRect().height : 57;
+            
+            // Position aiView as overlay below header
+            aiView.style.display = 'block';
+            aiView.style.position = 'fixed';
+            aiView.style.top = `${headerHeight}px`;
+            aiView.style.left = '0';
+            aiView.style.width = '100%';
+            aiView.style.height = `calc(100% - ${headerHeight}px)`;
+            aiView.style.zIndex = '10001';
+            aiView.style.background = 'transparent';
+        }
+        
         chatWindow.style.display = 'flex';
-    }
-    
-    // Load models if not already loaded
-    if (typeof loadToken === 'function') {
-        loadToken();
-    }
-    
-    // Toggle fullscreen using the EXACT same function as AI Assistant tab
-    if (!isFullscreenChat) {
-        toggleFullscreenChat();
+        
+        // Load models if not already loaded
+        if (typeof loadToken === 'function') {
+            loadToken();
+        }
+        
+        // Apply EXACT same fullscreen styling as toggleFullscreenChat()
+        if (!isFullscreenChat) {
+            isFullscreenChat = true;
+            
+            // Apply same classes and styling as toggleFullscreenChat()
+            chatWindow.classList.add('fullscreen');
+            chatWindow.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('chat-fullscreen-active');
+            
+            // Use the SAME height calculation as toggleFullscreenChat()
+            applyFullscreenHeight(0);
+            
+            // Setup keyboard handling - same as toggleFullscreenChat()
+            setupKeyboardHandling();
+            
+            // Update fullscreen button if it exists
+            const fullscreenBtn = document.getElementById('fullscreenChatBtn');
+            if (fullscreenBtn) {
+                fullscreenBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                    </svg>
+                `;
+                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+                fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
+            }
+            
+            // Add keyboard handler
+            document.addEventListener('keydown', handleFullscreenKeydown);
+            
+            // Add resize handlers - same as toggleFullscreenChat()
+            window.addEventListener('resize', applyFullscreenHeight);
+            window.addEventListener('orientationchange', applyFullscreenHeight);
+        }
     }
 }
 
