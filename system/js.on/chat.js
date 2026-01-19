@@ -439,15 +439,15 @@ function buildMessageWithAttachment(userMessage) {
                 multimodal: true,
                 content: [
                     {
-                        type: 'text',
-                        text: textPrompt
-                    },
-                    {
                         type: 'image_url',
                         image_url: {
                             url: imageUrl,
                             detail: 'high'
                         }
+                    },
+                    {
+                        type: 'text',
+                        text: textPrompt
                     }
                 ]
             };

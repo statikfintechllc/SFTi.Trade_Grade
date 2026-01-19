@@ -577,7 +577,7 @@ export function generateFingerprint(analysisResult) {
         projection.vertical?.peaks || 0,
         analysisResult.chartDetected ? 1 : 0,
         (analysisResult.textRegions || []).length,
-        ...analysisResult.dominantColors.slice(0, 3)
+        ...(analysisResult.dominantColors || []).slice(0, 3)
     ];
     
     // Simple hash function
@@ -634,10 +634,13 @@ function _inferColorScheme(colors) {
     
     // Simple heuristic: check if colors are mostly dark or light
     const luminance = colors.map(c => {
-        // Extract RGB from hex color
-        const r = parseInt(c.slice(1, 3), 16);
-        const g = parseInt(c.slice(3, 5), 16);
-        const b = parseInt(c.slice(5, 7), 16);
+        // Validate and extract RGB from hex color
+        if (!c || typeof c !== 'string' || !c.startsWith('#') || c.length !== 7) {
+            return 128; // Default neutral luminance for invalid colors
+        }
+        const r = parseInt(c.slice(1, 3), 16) || 0;
+        const g = parseInt(c.slice(3, 5), 16) || 0;
+        const b = parseInt(c.slice(5, 7), 16) || 0;
         return (0.299 * r + 0.587 * g + 0.114 * b);
     });
     
