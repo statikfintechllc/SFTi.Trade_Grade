@@ -274,7 +274,7 @@ function processOfficeFile(file) {
 // FILE PREVIEW AND DISPLAY
 // ============================================================================
 
-// Show file previews as small thumbnails inside the chat input wrapper (Claude/ChatGPT style)
+// Show file previews as thumbnails above the chat input (Claude/ChatGPT style)
 function showFilePreviews() {
     // Remove any existing previews
     clearFilePreviews();
@@ -284,14 +284,16 @@ function showFilePreviews() {
     }
     
     const chatInputWrapper = document.querySelector('.chat-input-wrapper');
-    if (!chatInputWrapper) return;
+    const chatInputBar = chatInputWrapper ? chatInputWrapper.parentElement : null;
+    
+    if (!chatInputBar) return;
     
     // Create thumbnails container
     const thumbnailsContainer = document.createElement('div');
     thumbnailsContainer.id = 'file-thumbnails-container';
     thumbnailsContainer.className = 'file-thumbnails-container';
     
-    // Add each file as a small thumbnail
+    // Add each file as a thumbnail
     pendingFileAttachments.forEach((attachment, index) => {
         const thumbnail = document.createElement('div');
         thumbnail.className = 'file-thumbnail';
@@ -306,9 +308,22 @@ function showFilePreviews() {
         } else {
             const icon = document.createElement('div');
             icon.className = 'file-thumbnail-icon';
-            icon.textContent = getFileIcon(attachment.type);
+            icon.innerHTML = getFileIcon(attachment.type);
             thumbnail.appendChild(icon);
+            
+            // Add file type label
+            const label = document.createElement('div');
+            label.className = 'file-thumbnail-label';
+            const ext = attachment.name.split('.').pop().toUpperCase();
+            label.textContent = ext;
+            thumbnail.appendChild(label);
         }
+        
+        // Add filename below thumbnail
+        const filename = document.createElement('div');
+        filename.className = 'file-thumbnail-name';
+        filename.textContent = attachment.name.length > 20 ? attachment.name.substring(0, 17) + '...' : attachment.name;
+        thumbnail.appendChild(filename);
         
         // Remove button
         const removeBtn = document.createElement('button');
@@ -317,7 +332,7 @@ function showFilePreviews() {
             e.stopPropagation();
             removeFileAttachment(index);
         };
-        removeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        removeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="15" y1="9" x2="9" y2="15"></line>
             <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -327,8 +342,8 @@ function showFilePreviews() {
         thumbnailsContainer.appendChild(thumbnail);
     });
     
-    // Insert thumbnails container at the beginning of input wrapper
-    chatInputWrapper.insertBefore(thumbnailsContainer, chatInputWrapper.firstChild);
+    // Insert thumbnails container ABOVE input wrapper (not inside it)
+    chatInputBar.insertBefore(thumbnailsContainer, chatInputWrapper);
 }
 
 // Clear all file previews
@@ -360,12 +375,33 @@ function clearFilePreview() {
 // Get file icon based on type
 function getFileIcon(type) {
     const icons = {
-        'text': '📄',
-        'pdf': '📑',
-        'document': '📋',
-        'image': '🖼️'
+        'text': `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="13" x2="18" y2="13"/>
+            <line x1="12" y1="17" x2="18" y2="17"/>
+        </svg>`,
+        'pdf': `<svg viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <circle cx="12" cy="15" r="4" fill="#ff4444" stroke="none"/>
+        </svg>`,
+        'document': `<svg viewBox="0 0 24 24" fill="none" stroke="#4488ff" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="15" y2="17"/>
+        </svg>`,
+        'image': `<svg viewBox="0 0 24 24" fill="none" stroke="#44ff88" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+        </svg>`
     };
-    return icons[type] || '📎';
+    return icons[type] || `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="13 2 13 9 20 9"/>
+    </svg>`;
 }
 
 // Format file size for display
