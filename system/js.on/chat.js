@@ -381,14 +381,12 @@ function formatFileSize(bytes) {
 
 // Build message content with attachment
 function buildMessageWithAttachment(userMessage) {
-    // Support both old singular and new plural format
-    const attachments = pendingFileAttachments && pendingFileAttachments.length > 0 
-        ? pendingFileAttachments 
-        : (pendingFileAttachment ? [pendingFileAttachment] : []);
-    
-    if (attachments.length === 0) {
+    // Use new plural array format
+    if (!pendingFileAttachments || pendingFileAttachments.length === 0) {
         return userMessage;
     }
+    
+    const attachments = pendingFileAttachments;
     
     // Check if current model supports vision
     const currentModel = document.getElementById('chatModelSelect')?.value || '';
@@ -1414,7 +1412,7 @@ window.showChatWindow = showChatWindow;
 window.hideChatWindow = hideChatWindow;
 window.autoResizeTextarea = autoResizeTextarea;
 window.handleChatKeyPress = handleChatKeyPress;
-window.pendingFileAttachments = pendingFileAttachments;
+// Note: pendingFileAttachments not exposed - use proper functions instead
 window.handleChatFileUpload = handleChatFileUpload;
 window.processImageFile = processImageFile;
 window.processTextFile = processTextFile;
