@@ -566,14 +566,14 @@
 
     .chat-textarea::placeholder {
         color: #666;
-        line-height: 30px;
+        line-height: 1.4;
     }
 
     .chat-controls {
         display: flex;
         gap: 6px;
         align-items: center;
-        align-self: flex-end;
+        width: 100%;
     }
 
     .chat-icon-btn {
