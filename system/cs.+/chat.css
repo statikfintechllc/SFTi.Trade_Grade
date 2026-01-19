@@ -39,6 +39,39 @@
     }
 
     /* Floating Chat Buttons */
+    /* Liquid Glass Morphic Base Styles for Chat Buttons */
+    .chat-floating-btn,
+    .chat-icon-btn,
+    .more-menu-btn,
+    .file-attach-btn,
+    .web-search-toggle,
+    .fullscreen-chat-btn,
+    .model-dropdown-trigger {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.15) 0%, rgba(30, 30, 30, 0.08) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .chat-floating-btn:hover,
+    .chat-icon-btn:hover,
+    .more-menu-btn:hover,
+    .file-attach-btn:hover,
+    .web-search-toggle:hover,
+    .fullscreen-chat-btn:hover,
+    .model-dropdown-trigger:hover {
+        filter: brightness(1.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 
+            0 12px 40px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
     .chat-floating-btn {
         width: 32px;
         height: 32px;
