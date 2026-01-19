@@ -141,6 +141,11 @@ async function processImageFile(file) {
 
         // Run analysis (thumbnail, colors, edges, text regions, numeric OCR)
         const analysis = await mod.analyzeImage(file, { numericOCR: true, detectCharts: true });
+        
+        // Generate enhanced outputs
+        const metadata = mod.generateMetadata(analysis);
+        const description = mod.generateDescription(analysis);
+        const fingerprint = mod.generateFingerprint(analysis);
 
         pendingFileAttachment = {
             type: 'image',
@@ -149,6 +154,10 @@ async function processImageFile(file) {
             size: file.size,
             thumbnail: analysis.thumbnail,
             analysis: analysis,
+            // Enhanced outputs for API optimization
+            metadata: metadata,           // Structured JSON for vision APIs
+            description: description,     // Rich text for text-only models
+            fingerprint: fingerprint,     // Hash for similarity detection
             // store only thumbnail by default to keep memory small; full data can be included on demand
             data: analysis.thumbnail
         };
@@ -405,16 +414,25 @@ function buildMessageWithAttachment(userMessage) {
             // Build multimodal message following OpenAI/Azure Vision API format
             const imageUrl = attachment.data || attachment.thumbnail || '';
             
-            // Build text prompt that includes analysis metadata if available
+            // Build text prompt that includes metadata context if available
             let textPrompt = userMessage || `Please analyze this image: ${attachment.name}`;
-            if (attachment.analysis && attachment.analysis.analysisSummary) {
-                textPrompt += `\n\nImage Analysis Context: ${attachment.analysis.analysisSummary}`;
-                if (attachment.analysis.dominantColors && attachment.analysis.dominantColors.length > 0) {
-                    textPrompt += `\nDominant colors: ${attachment.analysis.dominantColors.slice(0, 3).join(', ')}`;
+            
+            // Add structured metadata as context for better analysis
+            if (attachment.metadata) {
+                const meta = attachment.metadata;
+                if (meta.isChart) {
+                    textPrompt += `\n\n[Chart Context: Confidence ${(meta.confidence * 100).toFixed(0)}%`;
+                    if (meta.numericValues && meta.numericValues.length > 0) {
+                        textPrompt += `, Values: ${meta.numericValues.slice(0, 5).join(', ')}`;
+                    }
+                    if (meta.patternHints && meta.patternHints.length > 0) {
+                        textPrompt += `, Patterns: ${meta.patternHints.join(', ')}`;
+                    }
+                    textPrompt += `]`;
                 }
-                if (attachment.analysis.chartDetected) {
-                    textPrompt += `\nChart-like features detected`;
-                }
+            } else if (attachment.analysis && attachment.analysis.analysisSummary) {
+                // Fallback to legacy analysis summary
+                textPrompt += `\n\n[Image Analysis: ${attachment.analysis.analysisSummary}]`;
             }
             
             return {
@@ -434,9 +452,14 @@ function buildMessageWithAttachment(userMessage) {
                 ]
             };
         } else {
-            // For non-vision models, describe the attachment with analysis summary if present
-            const analysisSummary = attachment.analysis ? `\nAnalysis: ${attachment.analysis.analysisSummary || ''}` : '';
-            return `[Image attached: ${attachment.name} (${formatFileSize(attachment.size)})]${analysisSummary} - Note: Current model may not support image analysis.\n\n${userMessage}`;
+            // For non-vision models, use rich description
+            if (attachment.description) {
+                return `[Image Description]\n${attachment.description}\n\n${userMessage}`;
+            } else {
+                // Fallback to legacy format
+                const analysisSummary = attachment.analysis ? `\nAnalysis: ${attachment.analysis.analysisSummary || ''}` : '';
+                return `[Image attached: ${attachment.name} (${formatFileSize(attachment.size)})]${analysisSummary} - Note: Current model may not support image analysis.\n\n${userMessage}`;
+            }
         }
     }
     
