@@ -1088,14 +1088,29 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
         
-        // Check if we're in AI tab or opened from Copilot button
+        // Check if aiView is in overlay mode (opened from Copilot button)
         const aiView = document.getElementById('aiView');
         const inAITab = document.body.classList.contains('ai-tab-active');
         
-        // If not in AI tab, hide aiView since it was opened via Copilot button
-        if (aiView && !inAITab) {
-            aiView.style.display = 'none';
-            chatWindow.style.display = 'none';
+        if (aiView && aiView.style.position === 'fixed' && !inAITab) {
+            // In overlay mode - animate out and clean up
+            aiView.style.transform = 'translateY(100%)';
+            
+            setTimeout(() => {
+                aiView.style.position = '';
+                aiView.style.top = '';
+                aiView.style.left = '';
+                aiView.style.right = '';
+                aiView.style.bottom = '';
+                aiView.style.width = '';
+                aiView.style.height = '';
+                aiView.style.zIndex = '';
+                aiView.style.background = '';
+                aiView.style.transform = '';
+                aiView.style.transition = '';
+                aiView.style.display = 'none';
+                chatWindow.style.display = 'none';
+            }, 300);
         }
         
         // Deactivate JS scroll lock and restore scroll position
@@ -1172,13 +1187,12 @@ function openAIFullscreen() {
             toggleFullscreenChat();
         }
     } else {
-        // NOT in AI tab - show aiView as fixed overlay from bottom
-        // This shows the NORMAL chat window (with header/stats visible), NOT fullscreen
+        // NOT in AI tab - show aiView and apply EXACT same fullscreen mode
+        // Position aiView as fixed overlay first
         if (aiView) {
             const header = document.querySelector('.header');
             const headerHeight = header ? header.getBoundingClientRect().height : 57;
             
-            // Position aiView as fixed overlay covering from header to bottom
             aiView.style.display = 'block';
             aiView.style.position = 'fixed';
             aiView.style.top = `${headerHeight}px`;
@@ -1189,10 +1203,18 @@ function openAIFullscreen() {
             aiView.style.height = `calc(100% - ${headerHeight}px)`;
             aiView.style.zIndex = '10001';
             aiView.style.background = '#0d0d0d';
-            aiView.style.overflow = 'auto';
+            
+            // Animate from bottom
+            aiView.style.transform = 'translateY(100%)';
+            aiView.style.transition = 'transform 0.3s ease-out';
+            
+            // Trigger animation
+            setTimeout(() => {
+                aiView.style.transform = 'translateY(0)';
+            }, 10);
         }
         
-        // Show chat window in NORMAL mode (not fullscreen)
+        // Show chat window
         chatWindow.style.display = 'flex';
         
         // Load models if not already loaded
@@ -1200,8 +1222,58 @@ function openAIFullscreen() {
             loadToken();
         }
         
-        // Add escape handler to close overlay
-        document.addEventListener('keydown', handleCopilotEscape);
+        // Apply EXACT same fullscreen mode as toggleFullscreenChat()
+        if (!isFullscreenChat) {
+            isFullscreenChat = true;
+            
+            // Save scroll position and activate JS-driven scroll lock
+            savedScrollPosition = window.scrollY || window.pageYOffset;
+            scrollLockActive = true;
+            
+            // Add JS scroll lock listeners
+            window.addEventListener('scroll', lockScroll, { passive: false });
+            document.addEventListener('touchmove', lockScroll, { passive: false });
+            
+            // Immediately set scroll position
+            window.scrollTo(0, savedScrollPosition);
+            
+            // Enter fullscreen - expand chat and hide header elements
+            chatWindow.classList.add('fullscreen');
+            chatWindow.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('chat-fullscreen-active');
+            
+            // Calculate and apply dynamic height immediately
+            applyFullscreenHeight(0);
+            
+            // Setup keyboard handling
+            setupKeyboardHandling();
+            
+            // Prevent viewport zoom on textarea focus
+            const textarea = document.getElementById('aiPrompt');
+            if (textarea) {
+                textarea.addEventListener('focus', preventTextareaZoom);
+                textarea.addEventListener('touchstart', preventTextareaZoom);
+            }
+            
+            // Update button icon for exit fullscreen
+            const fullscreenBtn = document.getElementById('fullscreenChatBtn');
+            if (fullscreenBtn) {
+                fullscreenBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                    </svg>
+                `;
+                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+                fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
+            }
+            
+            // Keyboard handler
+            document.addEventListener('keydown', handleFullscreenKeydown);
+            
+            // Update height on keyboard open/close and orientation change
+            window.addEventListener('resize', applyFullscreenHeight);
+            window.addEventListener('orientationchange', applyFullscreenHeight);
+        }
     }
 }
 
@@ -1213,21 +1285,24 @@ function handleCopilotEscape(event) {
         
         // Only close if in overlay mode (not AI tab)
         if (aiView && aiView.style.position === 'fixed' && !inAITab) {
-            // Reset aiView styles
-            aiView.style.position = '';
-            aiView.style.top = '';
-            aiView.style.left = '';
-            aiView.style.right = '';
-            aiView.style.bottom = '';
-            aiView.style.width = '';
-            aiView.style.height = '';
-            aiView.style.zIndex = '';
-            aiView.style.background = '';
-            aiView.style.overflow = '';
-            aiView.style.display = 'none';
+            // Animate out to bottom
+            aiView.style.transform = 'translateY(100%)';
             
-            // Remove escape handler
-            document.removeEventListener('keydown', handleCopilotEscape);
+            setTimeout(() => {
+                // Reset aiView styles
+                aiView.style.position = '';
+                aiView.style.top = '';
+                aiView.style.left = '';
+                aiView.style.right = '';
+                aiView.style.bottom = '';
+                aiView.style.width = '';
+                aiView.style.height = '';
+                aiView.style.zIndex = '';
+                aiView.style.background = '';
+                aiView.style.transform = '';
+                aiView.style.transition = '';
+                aiView.style.display = 'none';
+            }, 300);
         }
     }
 }
