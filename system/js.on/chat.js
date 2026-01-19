@@ -1091,6 +1091,9 @@ function toggleFullscreenChat() {
         // Reset aiView inline styles if they were set by openAIFullscreen
         const aiView = document.getElementById('aiView');
         if (aiView) {
+            // Check if this was an overlay (fixed position means it was opened via Copilot button)
+            const wasOverlay = aiView.style.position === 'fixed';
+            
             aiView.style.position = '';
             aiView.style.top = '';
             aiView.style.left = '';
@@ -1098,6 +1101,11 @@ function toggleFullscreenChat() {
             aiView.style.height = '';
             aiView.style.zIndex = '';
             aiView.style.background = '';
+            
+            // If was overlay mode, hide aiView to return to original tab
+            if (wasOverlay) {
+                aiView.style.display = 'none';
+            }
         }
         
         // Deactivate JS scroll lock and restore scroll position
