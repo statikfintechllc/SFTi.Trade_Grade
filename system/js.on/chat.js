@@ -82,17 +82,8 @@ function autoResizeTextarea(textarea) {
     if (!textarea.value.trim()) {
         textarea.style.height = minHeight + 'px';
     } else {
-        // Calculate needed height based on content
-        const scrollHeight = textarea.scrollHeight;
-        
-        // Set height between min and max
-        if (scrollHeight <= minHeight) {
-            textarea.style.height = minHeight + 'px';
-        } else if (scrollHeight >= maxHeight) {
-            textarea.style.height = maxHeight + 'px';
-        } else {
-            textarea.style.height = scrollHeight + 'px';
-        }
+        // Set height between min and max based on content
+        textarea.style.height = Math.max(minHeight, Math.min(textarea.scrollHeight, maxHeight)) + 'px';
     }
 }
 
