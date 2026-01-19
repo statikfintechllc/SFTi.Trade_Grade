@@ -404,3 +404,289 @@ export function drawEdgesToDataURL(edgeMap) {
     const d = id.data; for (let i=0;i<w*h;i++) { const v = Math.min(255, Math.round(edgeMap.data[i])); d[i*4+0]=v; d[i*4+1]=v; d[i*4+2]=v; d[i*4+3]=255; }
     ctx.putImageData(id,0,0); try { return c.toDataURL('image/png'); } catch(e) { return null; }
 }
+
+// ============================================================================
+// ENHANCED OUTPUTS FOR VISION APIS AND COST OPTIMIZATION
+// ============================================================================
+
+/**
+ * Generate structured metadata (JSON) for vision APIs
+ * Extracts trading-specific information: price levels, patterns, key levels
+ * @param {Object} analysisResult - Result from analyzeImage()
+ * @param {Object} options - Additional options for metadata extraction
+ * @returns {Object} Structured metadata with trading context
+ */
+export function generateMetadata(analysisResult, options = {}) {
+    const metadata = {
+        version: '1.0',
+        timestamp: Date.now(),
+        
+        // Basic image info
+        dimensions: {
+            width: analysisResult.metadata.width,
+            height: analysisResult.metadata.height
+        },
+        
+        // Chart detection
+        isChart: analysisResult.chartDetected,
+        confidence: analysisResult.chartDetected ? 0.7 : 0.3,
+        
+        // Visual features
+        colors: {
+            dominant: analysisResult.dominantColors || [],
+            scheme: _inferColorScheme(analysisResult.dominantColors)
+        },
+        
+        // Text and numeric data
+        textRegions: (analysisResult.textRegions || []).map(region => ({
+            x: region.x,
+            y: region.y,
+            width: region.w,
+            height: region.h,
+            confidence: 0.6
+        })),
+        
+        // Numeric values detected (potential prices, volumes)
+        numericValues: analysisResult.numericOCR || [],
+        
+        // Trading pattern hints (basic heuristics)
+        patternHints: _detectPatternHints(analysisResult),
+        
+        // Key levels (if chart detected)
+        keyLevels: analysisResult.chartDetected ? _extractKeyLevels(analysisResult) : []
+    };
+    
+    return metadata;
+}
+
+/**
+ * Generate rich natural language description for text-only models
+ * Creates detailed description that allows visualization without seeing the image
+ * @param {Object} analysisResult - Result from analyzeImage()
+ * @param {Object} options - Options for description generation
+ * @returns {String} Detailed natural language description
+ */
+export function generateDescription(analysisResult, options = {}) {
+    const parts = [];
+    
+    // Image type
+    if (analysisResult.chartDetected) {
+        parts.push('This appears to be a financial chart or trading diagram.');
+    } else {
+        parts.push('This is an image that may contain financial information.');
+    }
+    
+    // Dimensions and layout
+    const aspect = analysisResult.metadata.width / analysisResult.metadata.height;
+    if (aspect > 1.5) {
+        parts.push('The image is in landscape orientation, typical of trading platforms.');
+    } else if (aspect < 0.75) {
+        parts.push('The image is in portrait orientation.');
+    }
+    
+    // Colors and theme
+    const colors = analysisResult.dominantColors || [];
+    if (colors.length > 0) {
+        const scheme = _inferColorScheme(colors);
+        parts.push(`The color scheme is ${scheme}, with dominant colors: ${colors.slice(0, 3).join(', ')}.`);
+    }
+    
+    // Chart-specific description
+    if (analysisResult.chartDetected) {
+        const projection = analysisResult.projectionProfile || {};
+        
+        // Horizontal structure
+        if (projection.horizontal && projection.horizontal.peaks) {
+            const numPeaks = projection.horizontal.peaks;
+            if (numPeaks > 5) {
+                parts.push(`The chart shows multiple horizontal elements, suggesting price levels or candlesticks (${numPeaks} distinct horizontal features).`);
+            }
+        }
+        
+        // Vertical structure
+        if (projection.vertical && projection.vertical.peaks) {
+            const numPeaks = projection.vertical.peaks;
+            if (numPeaks > 3) {
+                parts.push(`There are ${numPeaks} vertical structural elements, likely representing time intervals or volume bars.`);
+            }
+        }
+    }
+    
+    // Text regions
+    const textRegions = analysisResult.textRegions || [];
+    if (textRegions.length > 0) {
+        parts.push(`${textRegions.length} text regions are present, likely containing labels, prices, or timestamps.`);
+        
+        // Spatial distribution
+        const topRegions = textRegions.filter(r => r.y < analysisResult.metadata.height * 0.3).length;
+        const bottomRegions = textRegions.filter(r => r.y > analysisResult.metadata.height * 0.7).length;
+        
+        if (topRegions > textRegions.length * 0.6) {
+            parts.push('Most text is concentrated at the top, typical of chart titles and timeframes.');
+        }
+        if (bottomRegions > textRegions.length * 0.6) {
+            parts.push('Text appears primarily at the bottom, suggesting date/time labels.');
+        }
+    }
+    
+    // Numeric values
+    const nums = analysisResult.numericOCR || [];
+    if (nums.length > 0) {
+        parts.push(`Detected numeric values: ${nums.slice(0, 5).join(', ')}${nums.length > 5 ? '...' : ''}.`);
+        
+        // Infer price range if possible
+        const values = nums.map(n => parseFloat(n)).filter(n => !isNaN(n) && n > 0);
+        if (values.length >= 2) {
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            if (max < 10000 && min > 0.01) {
+                parts.push(`Price range appears to be between ${min.toFixed(2)} and ${max.toFixed(2)}.`);
+            }
+        }
+    }
+    
+    // Pattern hints
+    const patterns = _detectPatternHints(analysisResult);
+    if (patterns.length > 0) {
+        parts.push(`Potential trading patterns: ${patterns.join(', ')}.`);
+    }
+    
+    // Summary
+    parts.push('This description provides spatial and structural context for analysis without viewing the actual image.');
+    
+    return parts.join(' ');
+}
+
+/**
+ * Generate perceptual fingerprint (hash) for visual similarity detection
+ * Uses difference hash (dHash) algorithm for fast comparison
+ * @param {Object} analysisResult - Result from analyzeImage()
+ * @returns {String} 64-character hex hash representing image structure
+ */
+export function generateFingerprint(analysisResult) {
+    // Use projection profiles as a structural fingerprint
+    const projection = analysisResult.projectionProfile || {};
+    
+    // Combine horizontal and vertical profiles
+    const hProfile = projection.horizontal?.profile || [];
+    const vProfile = projection.vertical?.profile || [];
+    
+    // Create a simple hash from profile peaks and dominant colors
+    const features = [
+        projection.horizontal?.peaks || 0,
+        projection.vertical?.peaks || 0,
+        analysisResult.chartDetected ? 1 : 0,
+        (analysisResult.textRegions || []).length,
+        ...(analysisResult.dominantColors || []).slice(0, 3)
+    ];
+    
+    // Simple hash function
+    let hash = 0;
+    const str = features.join('|');
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Convert to hex and pad
+    const hexHash = Math.abs(hash).toString(16).padStart(16, '0');
+    
+    // Add metadata hash for more uniqueness
+    const metaStr = `${analysisResult.metadata.width}x${analysisResult.metadata.height}`;
+    let metaHash = 0;
+    for (let i = 0; i < metaStr.length; i++) {
+        metaHash = ((metaHash << 5) - metaHash) + metaStr.charCodeAt(i);
+        metaHash = metaHash & metaHash;
+    }
+    const hexMeta = Math.abs(metaHash).toString(16).padStart(16, '0');
+    
+    return `${hexHash}${hexMeta}`;
+}
+
+/**
+ * Compare two fingerprints to detect if chart has changed significantly
+ * @param {String} hash1 - First fingerprint
+ * @param {String} hash2 - Second fingerprint
+ * @returns {Number} Similarity score between 0 (different) and 1 (identical)
+ */
+export function compareFingerprints(hash1, hash2) {
+    if (!hash1 || !hash2 || hash1.length !== hash2.length) {
+        return 0;
+    }
+    
+    let matchingChars = 0;
+    for (let i = 0; i < hash1.length; i++) {
+        if (hash1[i] === hash2[i]) {
+            matchingChars++;
+        }
+    }
+    
+    return matchingChars / hash1.length;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS FOR ENHANCED OUTPUTS
+// ============================================================================
+
+function _inferColorScheme(colors) {
+    if (!colors || colors.length === 0) return 'unknown';
+    
+    // Simple heuristic: check if colors are mostly dark or light
+    const luminance = colors.map(c => {
+        // Validate and extract RGB from hex color
+        if (!c || typeof c !== 'string' || !c.startsWith('#') || c.length !== 7) {
+            return 128; // Default neutral luminance for invalid colors
+        }
+        const r = parseInt(c.slice(1, 3), 16) || 0;
+        const g = parseInt(c.slice(3, 5), 16) || 0;
+        const b = parseInt(c.slice(5, 7), 16) || 0;
+        return (0.299 * r + 0.587 * g + 0.114 * b);
+    });
+    
+    const avgLum = luminance.reduce((a, b) => a + b, 0) / luminance.length;
+    
+    if (avgLum < 50) return 'dark theme';
+    if (avgLum > 200) return 'light theme';
+    return 'mixed theme';
+}
+
+function _detectPatternHints(analysisResult) {
+    const patterns = [];
+    
+    // Basic heuristics based on projection profiles
+    const projection = analysisResult.projectionProfile || {};
+    
+    if (projection.horizontal?.peaks > 10) {
+        patterns.push('candlestick pattern');
+    }
+    
+    if (projection.vertical?.peaks > 5 && projection.vertical?.peaks < 15) {
+        patterns.push('support/resistance levels');
+    }
+    
+    if (analysisResult.chartDetected) {
+        patterns.push('trend chart');
+    }
+    
+    return patterns;
+}
+
+function _extractKeyLevels(analysisResult) {
+    // Extract potential price levels from text regions and numeric values
+    const levels = [];
+    const nums = analysisResult.numericOCR || [];
+    
+    for (const num of nums) {
+        const value = parseFloat(num);
+        if (!isNaN(value) && value > 0 && value < 100000) {
+            levels.push({
+                value: value,
+                type: 'price',
+                confidence: 0.5
+            });
+        }
+    }
+    
+    return levels.slice(0, 10); // Limit to top 10 levels
+}

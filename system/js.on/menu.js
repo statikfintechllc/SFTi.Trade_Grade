@@ -24,18 +24,29 @@ function switchView(view) {
     const historyBtn = document.getElementById('historyBtn');
     const aiBtn = document.getElementById('aiBtn');
 
+    // Check if fullscreen chat is active (defined in chat.js)
+    const isFullscreen = window.isFullscreenChat === true;
+
     // Hide all views and deactivate all buttons
     gradeView.style.display = 'none';
     trackerView.style.display = 'none';
     finalizeView.style.display = 'none';
     historyView.style.display = 'none';
-    aiView.style.display = 'none';
-    if (chatWindow) chatWindow.style.display = 'none';
+    
+    // Only hide aiView and chatWindow if NOT in fullscreen mode
+    if (!isFullscreen) {
+        aiView.style.display = 'none';
+        if (chatWindow) chatWindow.style.display = 'none';
+    }
+    
     gradeBtn.classList.remove('active');
     trackerBtn.classList.remove('active');
     finalizeBtn.classList.remove('active');
     historyBtn.classList.remove('active');
     aiBtn.classList.remove('active');
+
+    // Remove AI tab body class
+    document.body.classList.remove('ai-tab-active');
 
     // Store whether menu is open before view-specific code runs
     const menu = document.getElementById('sideMenu');
@@ -65,6 +76,8 @@ function switchView(view) {
             if (chatWindow) {
                 chatWindow.style.display = 'flex';
             }
+            // Add body class to hide Copilot button
+            document.body.classList.add('ai-tab-active');
         }
     } catch (error) {
         console.error('Error in switchView:', error);

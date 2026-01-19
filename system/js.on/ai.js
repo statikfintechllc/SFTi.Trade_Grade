@@ -48,24 +48,26 @@ async function askAI() {
     let hasAttachment = false;
     let attachmentPreview = '';
     
-    if (pendingFileAttachment) {
+    if (pendingFileAttachments && pendingFileAttachments.length > 0) {
         const built = buildMessageWithAttachment(prompt);
         if (typeof built === 'object' && built.multimodal) {
             // For multimodal messages, we'll handle this specially in the API call
             messageContent = built;
             hasAttachment = true;
-            attachmentPreview = `📎 ${pendingFileAttachment.name}\n\n${prompt}`;
+            const fileNames = pendingFileAttachments.map(f => f.name).join(', ');
+            attachmentPreview = `📎 ${fileNames}\n\n${prompt}`;
         } else {
             messageContent = built;
             hasAttachment = true;
-            attachmentPreview = `📎 ${pendingFileAttachment.name}\n\n${prompt}`;
+            const fileNames = pendingFileAttachments.map(f => f.name).join(', ');
+            attachmentPreview = `📎 ${fileNames}\n\n${prompt}`;
         }
-        // Capture and clear the attachment after use
-        const attachedFile = pendingFileAttachment;
+        // Capture attachments for message display
+        const attachedFiles = [...pendingFileAttachments];
         clearFilePreview();
 
-        // Add user message to chat with attachment card visible
-        addChatMessage('user', hasAttachment ? attachmentPreview : prompt, { attachments: hasAttachment ? [attachedFile] : undefined });
+        // Add user message to chat with attachment cards visible
+        addChatMessage('user', hasAttachment ? attachmentPreview : prompt, { attachments: hasAttachment ? attachedFiles : undefined });
     } else {
         // No attachment - just add the message
         addChatMessage('user', prompt);

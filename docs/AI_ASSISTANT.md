@@ -94,7 +94,7 @@ The chat window is located at the bottom of the AI Assistant view and contains:
    - Text input area with auto-resize
    - Web Search toggle (globe icon)
    - More Actions menu (three dots)
-   - File attachment button (coming soon)
+   - **File attachment button (paperclip icon)** - Upload images, documents, and code files for analysis
    - Send button
 
 ### Sending Messages
@@ -107,6 +107,55 @@ The chat window is located at the bottom of the AI Assistant view and contains:
 - Type message in text area
 - Press `Enter` to send
 - Press `Shift+Enter` for new line
+
+---
+
+## File Attachments
+
+### Overview
+
+Attach images, documents, and code files to your messages for AI analysis. The system supports multiple file types and automatically processes them for optimal model compatibility.
+
+### How to Attach Files
+
+1. **Click the paperclip icon** (📎) in the chat input bar
+2. **Select one or more files** from your device (up to 10 files, 10MB each)
+3. **Thumbnails appear** inside the input bar showing your attachments
+4. **Type your message** (optional)
+5. **Click send** to submit message with attachments
+
+### File Controls
+
+- **Hover** over thumbnail to see remove button (X)
+- **Click X** to remove individual file
+- **Scroll horizontally** through multiple file thumbnails
+- Files appear as small thumbnails inside the input (Claude/ChatGPT style)
+
+### Vision Model Support
+
+**For image analysis**, use vision-enabled models:
+- GPT-4o, GPT-4 Vision
+- Claude with vision
+- Gemini Pro Vision
+
+**Vision capabilities:**
+- Analyze charts and trading patterns
+- Extract text via OCR
+- Identify candlesticks, support/resistance levels
+- Read numeric values from screenshots
+
+### Supported File Types
+
+| Type | Extensions | Max Size |
+|------|-----------|----------|
+| Images | .png, .jpg, .gif, .webp | 10MB |
+| Text | .txt, .md, .json, .csv | 10MB |
+| Code | .js, .py, .java, .html, .css | 10MB |
+| PDF | .pdf | 10MB |
+
+**Note:** Non-vision models receive text descriptions of images.
+
+---
 
 ### Message Formatting
 
