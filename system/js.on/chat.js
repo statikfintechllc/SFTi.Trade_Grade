@@ -1088,24 +1088,14 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
         
-        // Reset aiView inline styles if they were set by openAIFullscreen
+        // Check if we're in AI tab or opened from Copilot button
         const aiView = document.getElementById('aiView');
-        if (aiView) {
-            // Check if this was an overlay (fixed position means it was opened via Copilot button)
-            const wasOverlay = aiView.style.position === 'fixed';
-            
-            aiView.style.position = '';
-            aiView.style.top = '';
-            aiView.style.left = '';
-            aiView.style.width = '';
-            aiView.style.height = '';
-            aiView.style.zIndex = '';
-            aiView.style.background = '';
-            
-            // If was overlay mode, hide aiView to return to original tab
-            if (wasOverlay) {
-                aiView.style.display = 'none';
-            }
+        const inAITab = document.body.classList.contains('ai-tab-active');
+        
+        // If not in AI tab, hide aiView since it was opened via Copilot button
+        if (aiView && !inAITab) {
+            aiView.style.display = 'none';
+            chatWindow.style.display = 'none';
         }
         
         // Deactivate JS scroll lock and restore scroll position
@@ -1164,101 +1154,79 @@ function openAIFromTab(sourceTab) {
 function openAIFullscreen() {
     const aiView = document.getElementById('aiView');
     const chatWindow = document.getElementById('chatWindow');
+    const fullscreenBtn = document.getElementById('fullscreenChatBtn');
     
     if (!chatWindow) {
         console.error('chatWindow element not found');
         return;
     }
     
-    // Check if we're already in the AI Assistant tab
-    const currentlyInAITab = aiView && aiView.style.display === 'block' && 
-                              document.body.classList.contains('ai-tab-active');
+    // Check if we're in AI tab or coming from another tab
+    const inAITab = document.body.classList.contains('ai-tab-active');
     
-    if (currentlyInAITab) {
-        // Already in AI tab - just toggle fullscreen using the same function
-        if (chatWindow.style.display !== 'flex') {
-            chatWindow.style.display = 'flex';
-        }
-        if (!isFullscreenChat) {
-            toggleFullscreenChat();
-        }
-    } else {
-        // Not in AI tab - create overlay with EXACT same styling as AI Assistant tab fullscreen
-        if (aiView) {
-            // Get header height
-            const header = document.querySelector('.header');
-            const headerHeight = header ? header.getBoundingClientRect().height : 57;
-            
-            // Position aiView as overlay below header
-            aiView.style.display = 'block';
-            aiView.style.position = 'fixed';
-            aiView.style.top = `${headerHeight}px`;
-            aiView.style.left = '0';
-            aiView.style.width = '100%';
-            aiView.style.height = `calc(100% - ${headerHeight}px)`;
-            aiView.style.zIndex = '10001';
-            aiView.style.background = 'transparent';
+    // Show aiView (which contains chatWindow)
+    if (aiView) {
+        aiView.style.display = 'block';
+    }
+    
+    // Show chat window
+    chatWindow.style.display = 'flex';
+    
+    // Load models if not already loaded
+    if (typeof loadToken === 'function') {
+        loadToken();
+    }
+    
+    // Apply fullscreen mode using EXACT same logic as toggleFullscreenChat
+    if (!isFullscreenChat) {
+        isFullscreenChat = true;
+        
+        // Save scroll position and activate JS-driven scroll lock
+        savedScrollPosition = window.scrollY || window.pageYOffset;
+        scrollLockActive = true;
+        
+        // Add JS scroll lock listeners
+        window.addEventListener('scroll', lockScroll, { passive: false });
+        document.addEventListener('touchmove', lockScroll, { passive: false });
+        
+        // Immediately set scroll position
+        window.scrollTo(0, savedScrollPosition);
+        
+        // Enter fullscreen - expand chat and hide header elements
+        chatWindow.classList.add('fullscreen');
+        chatWindow.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('chat-fullscreen-active');
+        
+        // Calculate and apply dynamic height immediately
+        applyFullscreenHeight(0);
+        
+        // Setup keyboard handling
+        setupKeyboardHandling();
+        
+        // Prevent viewport zoom on textarea focus
+        const textarea = document.getElementById('aiPrompt');
+        if (textarea) {
+            textarea.addEventListener('focus', preventTextareaZoom);
+            textarea.addEventListener('touchstart', preventTextareaZoom);
         }
         
-        chatWindow.style.display = 'flex';
-        
-        // Load models if not already loaded
-        if (typeof loadToken === 'function') {
-            loadToken();
+        // Update button icon for exit fullscreen
+        if (fullscreenBtn) {
+            fullscreenBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                </svg>
+            `;
+            fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
+            fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
         }
         
-        // Apply EXACT same fullscreen styling as toggleFullscreenChat()
-        if (!isFullscreenChat) {
-            isFullscreenChat = true;
-            
-            // Save scroll position and activate JS-driven scroll lock (SAME as toggleFullscreenChat)
-            savedScrollPosition = window.scrollY || window.pageYOffset;
-            scrollLockActive = true;
-            
-            // Add JS scroll lock listeners (NO CSS position:fixed) - SAME as toggleFullscreenChat
-            window.addEventListener('scroll', lockScroll, { passive: false });
-            document.addEventListener('touchmove', lockScroll, { passive: false });
-            
-            // Immediately set scroll position - SAME as toggleFullscreenChat
-            window.scrollTo(0, savedScrollPosition);
-            
-            // Apply same classes and styling as toggleFullscreenChat()
-            chatWindow.classList.add('fullscreen');
-            chatWindow.setAttribute('aria-expanded', 'true');
-            document.body.classList.add('chat-fullscreen-active');
-            
-            // Use the SAME height calculation as toggleFullscreenChat()
-            applyFullscreenHeight(0);
-            
-            // Setup keyboard handling - same as toggleFullscreenChat()
-            setupKeyboardHandling();
-            
-            // Prevent viewport zoom on textarea focus (keep textarea functional) - same as toggleFullscreenChat()
-            const textarea = document.getElementById('aiPrompt');
-            if (textarea) {
-                textarea.addEventListener('focus', preventTextareaZoom);
-                textarea.addEventListener('touchstart', preventTextareaZoom);
-            }
-            
-            // Update fullscreen button if it exists
-            const fullscreenBtn = document.getElementById('fullscreenChatBtn');
-            if (fullscreenBtn) {
-                fullscreenBtn.innerHTML = `
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-                    </svg>
-                `;
-                fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-                fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
-            }
-            
-            // Add keyboard handler
-            document.addEventListener('keydown', handleFullscreenKeydown);
-            
-            // Add resize handlers - same as toggleFullscreenChat()
-            window.addEventListener('resize', applyFullscreenHeight);
-            window.addEventListener('orientationchange', applyFullscreenHeight);
-        }
+        // Keyboard handler
+        document.addEventListener('keydown', handleFullscreenKeydown);
+        
+        // Update height on keyboard open/close and orientation change
+        window.addEventListener('resize', applyFullscreenHeight);
+        window.addEventListener('orientationchange', applyFullscreenHeight);
     }
 }
 
