@@ -1088,6 +1088,18 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
         
+        // Reset aiView inline styles if they were set by openAIFullscreen
+        const aiView = document.getElementById('aiView');
+        if (aiView) {
+            aiView.style.position = '';
+            aiView.style.top = '';
+            aiView.style.left = '';
+            aiView.style.width = '';
+            aiView.style.height = '';
+            aiView.style.zIndex = '';
+            aiView.style.background = '';
+        }
+        
         // Deactivate JS scroll lock and restore scroll position
         scrollLockActive = false;
         window.removeEventListener('scroll', lockScroll);

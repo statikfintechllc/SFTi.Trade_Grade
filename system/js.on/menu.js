@@ -24,13 +24,21 @@ function switchView(view) {
     const historyBtn = document.getElementById('historyBtn');
     const aiBtn = document.getElementById('aiBtn');
 
+    // Check if fullscreen chat is active (defined in chat.js)
+    const isFullscreen = window.isFullscreenChat === true;
+
     // Hide all views and deactivate all buttons
     gradeView.style.display = 'none';
     trackerView.style.display = 'none';
     finalizeView.style.display = 'none';
     historyView.style.display = 'none';
-    aiView.style.display = 'none';
-    if (chatWindow) chatWindow.style.display = 'none';
+    
+    // Only hide aiView and chatWindow if NOT in fullscreen mode
+    if (!isFullscreen) {
+        aiView.style.display = 'none';
+        if (chatWindow) chatWindow.style.display = 'none';
+    }
+    
     gradeBtn.classList.remove('active');
     trackerBtn.classList.remove('active');
     finalizeBtn.classList.remove('active');
