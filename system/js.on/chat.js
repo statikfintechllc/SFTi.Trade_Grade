@@ -1140,18 +1140,9 @@ function openAIFromTab(sourceTab) {
     }, 100);
 }
 
-// Function for header Copilot button
+// Function for header Copilot button - switch to AI tab
 function openAIFullscreen() {
-    // Ensure chatWindow is visible first
-    const chatWindow = document.getElementById('chatWindow');
-    if (chatWindow) {
-        chatWindow.style.display = 'flex';
-    }
-    
-    // Open fullscreen overlay
-    if (!isFullscreenChat) {
-        toggleFullscreenChat();
-    }
+    switchView('ai');
 }
 
 // Expose function globally
