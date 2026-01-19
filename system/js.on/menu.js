@@ -37,6 +37,9 @@ function switchView(view) {
     historyBtn.classList.remove('active');
     aiBtn.classList.remove('active');
 
+    // Remove AI tab body class
+    document.body.classList.remove('ai-tab-active');
+
     // Store whether menu is open before view-specific code runs
     const menu = document.getElementById('sideMenu');
     const shouldCloseMenu = menu && menu.classList.contains('active');
@@ -65,6 +68,8 @@ function switchView(view) {
             if (chatWindow) {
                 chatWindow.style.display = 'flex';
             }
+            // Add body class to hide Copilot button
+            document.body.classList.add('ai-tab-active');
         }
     } catch (error) {
         console.error('Error in switchView:', error);

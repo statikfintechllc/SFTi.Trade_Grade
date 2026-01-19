@@ -39,114 +39,70 @@
     }
 
     /* Floating Chat Buttons */
-    /* Liquid Glass Morphic Base Styles for Chat Buttons - SVG Styling Only */
-    .chat-floating-btn,
-    .chat-icon-btn,
-    .more-menu-btn,
-    .file-attach-btn,
-    .web-search-toggle,
-    .model-dropdown-trigger {
-        background: transparent;
-        border: none;
-        padding: 0;
+    .chat-floating-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #888;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: transform 0.2s ease;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-        user-select: none;
-        -webkit-touch-callout: none;
-    }
-
-    /* Apply glassmorphism to SVG elements inside buttons */
-    .chat-floating-btn svg,
-    .chat-icon-btn svg,
-    .more-menu-btn svg,
-    .file-attach-btn svg,
-    .web-search-toggle svg,
-    .model-dropdown-trigger svg {
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        background: linear-gradient(135deg, rgba(40, 40, 40, 0.15) 0%, rgba(30, 30, 30, 0.08) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding: 6px;
-        box-shadow: 
-            0 8px 32px rgba(0, 0, 0, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .chat-floating-btn:hover svg,
-    .chat-icon-btn:hover svg,
-    .more-menu-btn:hover svg,
-    .file-attach-btn:hover svg,
-    .web-search-toggle:hover svg,
-    .model-dropdown-trigger:hover svg {
-        filter: brightness(1.15);
-        border-color: rgba(255, 255, 255, 0.35);
-        box-shadow: 
-            0 12px 40px rgba(0, 0, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-
-    .chat-floating-btn:active svg,
-    .chat-icon-btn:active svg,
-    .more-menu-btn:active svg,
-    .file-attach-btn:active svg,
-    .web-search-toggle:active svg,
-    .model-dropdown-trigger:active svg {
-        transform: scale(0.95);
-    }
-
-    .chat-floating-btn {
-        width: 32px;
-        height: 32px;
+        transition: all 0.2s ease;
         flex-shrink: 0;
+    }
+
+    .chat-floating-btn:hover {
+        background: rgba(204, 0, 0, 0.2);
+        border-color: rgba(204, 0, 0, 0.4);
+        color: #cc0000;
     }
 
     .chat-floating-btn svg {
         width: 16px;
         height: 16px;
-        border-radius: 50%;
     }
 
-    /* Fullscreen Chat Button - fixed position, no background, larger hit area */
+    /* Fullscreen Chat Button - small floating centered button */
     .fullscreen-chat-btn {
-        position: fixed;
+        position: absolute;
         left: 50%;
         transform: translateX(-50%);
         top: 44px;
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 14px;
         background: transparent;
         border: none;
+        color: #666;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 0;
-        transition: opacity 0.2s ease;
-        z-index: 50;
+        transition: color 0.2s ease, opacity 0.2s ease;
+        z-index: 10;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-        user-select: none;
-        -webkit-touch-callout: none;
     }
 
-    .fullscreen-chat-btn:hover svg {
-        filter: brightness(1.2);
-        border-color: rgba(204, 0, 0, 0.4);
-    }
-
-    .fullscreen-chat-btn:active {
-        transform: translateX(-50%) scale(0.95);
+    .fullscreen-chat-btn:hover {
+        color: #cc0000;
     }
 
     .fullscreen-chat-btn:focus {
         outline: none;
+    }
+
+    .fullscreen-chat-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .fullscreen-chat-btn.hidden {
+        opacity: 0;
+        pointer-events: none;
     }
 
     .fullscreen-chat-btn svg {
@@ -164,53 +120,37 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Copilot Quick Access Button - appears in all non-AI tabs */
-    .copilot-quick-access-btn {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 36px;
-        height: 36px;
-        background: transparent;
-        border: none;
+    /* Copilot Header Button - in header on far right */
+    .copilot-header-btn {
+        width: 32px;
+        height: 32px;
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        color: #888;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 0;
-        z-index: 100;
+        transition: all 0.2s ease;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-        user-select: none;
-        -webkit-touch-callout: none;
-        transition: transform 0.2s ease;
     }
 
-    .copilot-quick-access-btn svg {
-        width: 24px;
-        height: 24px;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        background: linear-gradient(135deg, rgba(204, 0, 0, 0.2) 0%, rgba(153, 0, 0, 0.15) 100%);
-        border: 1px solid rgba(204, 0, 0, 0.3);
-        border-radius: 8px;
-        padding: 6px;
-        box-shadow: 
-            0 8px 32px rgba(204, 0, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    .copilot-header-btn:hover {
+        background: rgba(204, 0, 0, 0.2);
+        border-color: rgba(204, 0, 0, 0.4);
+        color: #cc0000;
     }
 
-    .copilot-quick-access-btn:hover svg {
-        filter: brightness(1.2);
-        border-color: rgba(204, 0, 0, 0.5);
-        box-shadow: 
-            0 12px 40px rgba(204, 0, 0, 0.6),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    .copilot-header-btn svg {
+        width: 18px;
+        height: 18px;
     }
 
-    .copilot-quick-access-btn:active {
-        transform: scale(0.95);
+    /* Hide Copilot button when AI Assistant tab is active */
+    body.ai-tab-active .copilot-header-btn {
+        display: none;
     }
 
     .fullscreen-chat-btn.hidden {

@@ -1140,6 +1140,25 @@ function openAIFromTab(sourceTab) {
     }, 100);
 }
 
+// Function for header Copilot button
+function openAIFullscreen() {
+    // Switch to AI Assistant tab
+    const aiBtn = document.getElementById('aiBtn');
+    if (aiBtn) {
+        aiBtn.click(); // Trigger tab switch
+    }
+    
+    // Small delay to allow view switch, then open fullscreen
+    setTimeout(() => {
+        if (!isFullscreenChat) {
+            toggleFullscreenChat();
+        }
+    }, 100);
+}
+
+// Expose function globally
+window.openAIFullscreen = openAIFullscreen;
+
 // Hide fullscreen button when model dropdown is open
 function updateFullscreenBtnVisibility() {
     const fullscreenBtn = document.getElementById('fullscreenChatBtn');
