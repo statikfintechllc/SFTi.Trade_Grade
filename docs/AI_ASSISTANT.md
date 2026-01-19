@@ -108,6 +108,24 @@ The chat window is located at the bottom of the AI Assistant view and contains:
 - Press `Enter` to send
 - Press `Shift+Enter` for new line
 
+### Fullscreen Mode
+
+**Access Fullscreen Chat:**
+- **From AI Assistant Tab**: Click the fullscreen button (expand icon) in the chat header
+- **From Any Tab**: Click the "Open AI Assistant" button in the header (Copilot button)
+
+**Fullscreen Features:**
+- Chat expands to fill viewport below header
+- Body scroll locked (prevents accidental navigation)
+- Dropdowns and chat messages remain scrollable
+- Dynamic height adjustment for mobile keyboard
+- Press `Escape` key to exit fullscreen
+- Click "Exit Fullscreen" button to return
+
+**Behavior Differences:**
+- **AI Assistant Tab**: Fullscreen within tab, returns to same tab
+- **Copilot Button**: Creates overlay, closes when exiting (returns to original tab)
+
 ---
 
 ## File Attachments
