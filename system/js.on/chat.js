@@ -314,7 +314,8 @@ function showFilePreviews() {
             // Add file type label
             const label = document.createElement('div');
             label.className = 'file-thumbnail-label';
-            const ext = attachment.name.split('.').pop().toUpperCase();
+            const nameParts = attachment.name.split('.');
+            const ext = nameParts.length > 1 ? nameParts.pop().toUpperCase() : 'FILE';
             label.textContent = ext;
             thumbnail.appendChild(label);
         }
@@ -322,7 +323,11 @@ function showFilePreviews() {
         // Add filename below thumbnail
         const filename = document.createElement('div');
         filename.className = 'file-thumbnail-name';
-        filename.textContent = attachment.name.length > 20 ? attachment.name.substring(0, 17) + '...' : attachment.name;
+        const MAX_FILENAME_LENGTH = 20;
+        const TRUNCATE_AT = 17;
+        filename.textContent = attachment.name.length > MAX_FILENAME_LENGTH 
+            ? attachment.name.substring(0, TRUNCATE_AT) + '...' 
+            : attachment.name;
         thumbnail.appendChild(filename);
         
         // Remove button
