@@ -1162,29 +1162,41 @@ function openAIFullscreen() {
         return;
     }
     
-    // Ensure aiView is visible (chatWindow is inside aiView)
-    if (aiView) {
-        aiView.style.display = 'block';
-        aiView.style.position = 'fixed';
-        aiView.style.top = '0';
-        aiView.style.left = '0';
-        aiView.style.width = '100%';
-        aiView.style.height = '100%';
-        aiView.style.zIndex = '10001';
-        aiView.style.background = 'transparent';
-    }
+    // Check if we're already in the AI Assistant tab
+    const currentlyInAITab = aiView && aiView.style.display === 'block' && 
+                              document.body.classList.contains('ai-tab-active');
     
-    // Make chatWindow visible
-    chatWindow.style.display = 'flex';
-    
-    // Load models if not already loaded
-    if (typeof loadToken === 'function') {
-        loadToken();
-    }
-    
-    // Open fullscreen chat overlay (works on any tab)
-    if (!isFullscreenChat) {
-        toggleFullscreenChat();
+    if (currentlyInAITab) {
+        // Already in AI tab - just open fullscreen chat without overlay
+        if (chatWindow.style.display !== 'flex') {
+            chatWindow.style.display = 'flex';
+        }
+        if (!isFullscreenChat) {
+            toggleFullscreenChat();
+        }
+    } else {
+        // Not in AI tab - create fixed overlay
+        if (aiView) {
+            aiView.style.display = 'block';
+            aiView.style.position = 'fixed';
+            aiView.style.top = '0';
+            aiView.style.left = '0';
+            aiView.style.width = '100%';
+            aiView.style.height = '100%';
+            aiView.style.zIndex = '10001';
+            aiView.style.background = 'transparent';
+        }
+        
+        chatWindow.style.display = 'flex';
+        
+        // Load models if not already loaded
+        if (typeof loadToken === 'function') {
+            loadToken();
+        }
+        
+        if (!isFullscreenChat) {
+            toggleFullscreenChat();
+        }
     }
 }
 
