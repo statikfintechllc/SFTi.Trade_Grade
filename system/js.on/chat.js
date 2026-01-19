@@ -102,6 +102,13 @@ function handleChatFileUpload(input) {
         return;
     }
     
+    // Check if we already have too many attachments
+    if (pendingFileAttachments.length >= 10) {
+        showToast('Maximum 10 files allowed. Remove some files before adding more.', 'warning', 'Too Many Files');
+        input.value = '';
+        return;
+    }
+    
     // Determine file type and process accordingly
     const fileType = file.type;
     const fileName = file.name;

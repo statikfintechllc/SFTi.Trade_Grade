@@ -14,6 +14,10 @@ A Progressive Web App (PWA) for grading trades using the PREPARE methodology, fe
 - **Trade Tracker**: Plan builder with entry price, stop loss (5-10%), and profit target (15-30%) sliders
 - **Trade History**: Search and filter saved trades with detailed trade plan display
 - **AI Assistant**: Integration with GitHub Models API for trade analysis
+  - **File Attachments**: Upload images, charts, and documents for AI analysis
+  - **Vision Models**: Automatic chart analysis, OCR, and pattern recognition
+  - **Multiple Files**: Attach up to 10 files simultaneously
+  - **Smart Processing**: Images analyzed, text extracted, patterns detected
   - **Web Search Tool**: AI-powered web search via DuckDuckGo (free public API) with custom DOM-based scraping
   - **Static Backend Server**: Client-side OAuth authentication handler for GitHub Copilot models
   - **CORS Widget**: Public CORS proxy fallback system (corsproxy.io, cors.sh, codetabs)

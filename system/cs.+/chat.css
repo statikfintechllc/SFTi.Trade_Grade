@@ -1309,6 +1309,51 @@
         color: white;
         stroke-width: 2.5;
     }
+    
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+        .file-thumbnails-container {
+            max-width: 280px;
+        }
+        
+        .file-thumbnail {
+            width: 42px;
+            height: 42px;
+        }
+        
+        .file-thumbnail-icon {
+            font-size: 20px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .file-thumbnails-container {
+            max-width: 200px;
+            gap: 4px;
+        }
+        
+        .file-thumbnail {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+        }
+        
+        .file-thumbnail-icon {
+            font-size: 18px;
+        }
+        
+        .file-thumbnail-remove {
+            width: 18px;
+            height: 18px;
+            top: -5px;
+            right: -5px;
+        }
+        
+        .file-thumbnail-remove svg {
+            width: 10px;
+            height: 10px;
+        }
+    }
 
     .file-attachment-preview {
         padding: 8px 12px;
