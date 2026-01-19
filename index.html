@@ -205,10 +205,10 @@
     </div>
 </div>
 
-                <path d="M12 8v4l3 3"/>
-                <path d="M12 16h.01"/>
-            </svg>
-        </button>
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="container">
+    <div id="gradeView">
         <div class="card compact-card">
             <input type="text" class="ticker-input" id="tickerInput" placeholder="ENTER TICKER" maxlength="10">
         </div>
@@ -329,10 +329,10 @@
                 <line x1="8" y1="12" x2="16" y2="12"></line>
             </svg>
             Continue
-                <path d="M12 8v4l3 3"/>
-                <path d="M12 16h.01"/>
-            </svg>
         </button>
+    </div>
+
+    <div id="trackerView" style="display: none;">
         <div class="card" style="background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
             <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cc0000" stroke-width="2">
@@ -457,10 +457,10 @@
                 <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
             Back to Grade
-                <path d="M12 8v4l3 3"/>
-                <path d="M12 16h.01"/>
-            </svg>
         </button>
+    </div>
+
+    <div id="finalizeView" style="display: none;">
         <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 12px;">Finalize Trades</h2>
         
         <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
@@ -469,10 +469,10 @@
             </div>
         </div>
         
-                <path d="M12 8v4l3 3"/>
-                <path d="M12 16h.01"/>
-            </svg>
-        </button>
+        <div id="finalizeContainer"></div>
+    </div>
+
+    <div id="historyView" style="display: none;">
         <h2 style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 12px;">Trade History</h2>
         
         <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, rgba(40, 40, 40, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 8px;">
