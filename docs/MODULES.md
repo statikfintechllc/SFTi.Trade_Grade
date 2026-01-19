@@ -219,7 +219,10 @@ The application has been refactored from 2 large monolithic files (app.js: 4941 
   - `toggleWebSearch()` - Enable/disable web search
   - `triggerFileUpload()` - File upload trigger
 - Fullscreen mode:
-  - `toggleFullscreenChat()` - Fullscreen toggle
+  - `toggleFullscreenChat()` - Fullscreen toggle for AI Assistant tab
+  - `openAIFullscreen()` - Fullscreen overlay from Copilot button (any tab)
+  - JS-driven scroll lock (prevents body scroll, allows chat/dropdown scroll)
+  - Dynamic height calculation for mobile keyboard support
   - Mobile swipe handlers
 - Status indicators:
   - `showChatStatus()`/`hideChatStatus()`
