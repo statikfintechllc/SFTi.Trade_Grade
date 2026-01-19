@@ -41,6 +41,7 @@
     .chat-model-bar .model-dropdown-wrapper {
         display: flex;
         justify-content: center;
+        align-items: center;
     }
 
     /* Floating Chat Buttons */
@@ -1061,12 +1062,14 @@
         cursor: pointer;
         transition: all 0.3s ease;
         outline: none;
-        display: flex;
+        display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         min-width: 150px;
         max-width: 280px;
         position: relative;
+        margin: 0 auto;
     }
 
     .model-dropdown-trigger::after {
