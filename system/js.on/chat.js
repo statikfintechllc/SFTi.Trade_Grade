@@ -1154,79 +1154,81 @@ function openAIFromTab(sourceTab) {
 function openAIFullscreen() {
     const aiView = document.getElementById('aiView');
     const chatWindow = document.getElementById('chatWindow');
-    const fullscreenBtn = document.getElementById('fullscreenChatBtn');
     
     if (!chatWindow) {
         console.error('chatWindow element not found');
         return;
     }
     
-    // Check if we're in AI tab or coming from another tab
+    // Check if we're already in AI tab
     const inAITab = document.body.classList.contains('ai-tab-active');
     
-    // Show aiView (which contains chatWindow)
-    if (aiView) {
-        aiView.style.display = 'block';
-    }
-    
-    // Show chat window
-    chatWindow.style.display = 'flex';
-    
-    // Load models if not already loaded
-    if (typeof loadToken === 'function') {
-        loadToken();
-    }
-    
-    // Apply fullscreen mode using EXACT same logic as toggleFullscreenChat
-    if (!isFullscreenChat) {
-        isFullscreenChat = true;
-        
-        // Save scroll position and activate JS-driven scroll lock
-        savedScrollPosition = window.scrollY || window.pageYOffset;
-        scrollLockActive = true;
-        
-        // Add JS scroll lock listeners
-        window.addEventListener('scroll', lockScroll, { passive: false });
-        document.addEventListener('touchmove', lockScroll, { passive: false });
-        
-        // Immediately set scroll position
-        window.scrollTo(0, savedScrollPosition);
-        
-        // Enter fullscreen - expand chat and hide header elements
-        chatWindow.classList.add('fullscreen');
-        chatWindow.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('chat-fullscreen-active');
-        
-        // Calculate and apply dynamic height immediately
-        applyFullscreenHeight(0);
-        
-        // Setup keyboard handling
-        setupKeyboardHandling();
-        
-        // Prevent viewport zoom on textarea focus
-        const textarea = document.getElementById('aiPrompt');
-        if (textarea) {
-            textarea.addEventListener('focus', preventTextareaZoom);
-            textarea.addEventListener('touchstart', preventTextareaZoom);
+    if (inAITab) {
+        // In AI tab - just toggle fullscreen if needed
+        if (chatWindow.style.display !== 'flex') {
+            chatWindow.style.display = 'flex';
+        }
+        if (!isFullscreenChat) {
+            toggleFullscreenChat();
+        }
+    } else {
+        // NOT in AI tab - show aiView as fixed overlay from bottom
+        // This shows the NORMAL chat window (with header/stats visible), NOT fullscreen
+        if (aiView) {
+            const header = document.querySelector('.header');
+            const headerHeight = header ? header.getBoundingClientRect().height : 57;
+            
+            // Position aiView as fixed overlay covering from header to bottom
+            aiView.style.display = 'block';
+            aiView.style.position = 'fixed';
+            aiView.style.top = `${headerHeight}px`;
+            aiView.style.left = '0';
+            aiView.style.right = '0';
+            aiView.style.bottom = '0';
+            aiView.style.width = '100%';
+            aiView.style.height = `calc(100% - ${headerHeight}px)`;
+            aiView.style.zIndex = '10001';
+            aiView.style.background = '#0d0d0d';
+            aiView.style.overflow = 'auto';
         }
         
-        // Update button icon for exit fullscreen
-        if (fullscreenBtn) {
-            fullscreenBtn.innerHTML = `
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-                </svg>
-            `;
-            fullscreenBtn.setAttribute('title', 'Exit Fullscreen');
-            fullscreenBtn.setAttribute('aria-label', 'Exit Fullscreen');
+        // Show chat window in NORMAL mode (not fullscreen)
+        chatWindow.style.display = 'flex';
+        
+        // Load models if not already loaded
+        if (typeof loadToken === 'function') {
+            loadToken();
         }
         
-        // Keyboard handler
-        document.addEventListener('keydown', handleFullscreenKeydown);
+        // Add escape handler to close overlay
+        document.addEventListener('keydown', handleCopilotEscape);
+    }
+}
+
+// Handle Escape key when in Copilot overlay mode
+function handleCopilotEscape(event) {
+    if (event.key === 'Escape') {
+        const aiView = document.getElementById('aiView');
+        const inAITab = document.body.classList.contains('ai-tab-active');
         
-        // Update height on keyboard open/close and orientation change
-        window.addEventListener('resize', applyFullscreenHeight);
-        window.addEventListener('orientationchange', applyFullscreenHeight);
+        // Only close if in overlay mode (not AI tab)
+        if (aiView && aiView.style.position === 'fixed' && !inAITab) {
+            // Reset aiView styles
+            aiView.style.position = '';
+            aiView.style.top = '';
+            aiView.style.left = '';
+            aiView.style.right = '';
+            aiView.style.bottom = '';
+            aiView.style.width = '';
+            aiView.style.height = '';
+            aiView.style.zIndex = '';
+            aiView.style.background = '';
+            aiView.style.overflow = '';
+            aiView.style.display = 'none';
+            
+            // Remove escape handler
+            document.removeEventListener('keydown', handleCopilotEscape);
+        }
     }
 }
 
