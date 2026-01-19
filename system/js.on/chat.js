@@ -1121,6 +1121,25 @@ function toggleFullscreenChat() {
     }
 }
 
+// Open AI Assistant from any tab in fullscreen mode
+function openAIFromTab(sourceTab) {
+    // Switch to AI Assistant tab
+    const aiBtn = document.getElementById('aiBtn');
+    if (aiBtn) {
+        aiBtn.click(); // Trigger tab switch
+    }
+    
+    // Small delay to allow view switch, then open fullscreen
+    setTimeout(() => {
+        if (!isFullscreenChat) {
+            toggleFullscreenChat();
+        }
+        
+        // Optional: Log context for future enhancements
+        console.log(`AI Assistant opened from ${sourceTab} tab`);
+    }, 100);
+}
+
 // Hide fullscreen button when model dropdown is open
 function updateFullscreenBtnVisibility() {
     const fullscreenBtn = document.getElementById('fullscreenChatBtn');
@@ -1475,6 +1494,7 @@ window.originalChatInputParent = originalChatInputParent;
 window.originalChatInputNextSibling = originalChatInputNextSibling;
 window.handleFullscreenKeydown = handleFullscreenKeydown;
 window.toggleFullscreenChat = toggleFullscreenChat;
+window.openAIFromTab = openAIFromTab;
 window.updateFullscreenBtnVisibility = updateFullscreenBtnVisibility;
 window._createAttachmentTestWidget = _createAttachmentTestWidget;
 window.runAttachmentScraperTests = runAttachmentScraperTests;
