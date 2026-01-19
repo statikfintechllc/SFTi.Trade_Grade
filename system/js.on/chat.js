@@ -1142,10 +1142,22 @@ function openAIFromTab(sourceTab) {
 
 // Function for header Copilot button - open fullscreen chat overlay
 function openAIFullscreen() {
-    // Make chatWindow visible first (in case user is on another tab)
+    const aiView = document.getElementById('aiView');
     const chatWindow = document.getElementById('chatWindow');
+    
+    // Show aiView (contains the chat interface)
+    if (aiView) {
+        aiView.style.display = 'block';
+    }
+    
+    // Make chatWindow visible (the actual chat container)
     if (chatWindow) {
         chatWindow.style.display = 'flex';
+    }
+    
+    // Load models if not already loaded
+    if (typeof loadToken === 'function') {
+        loadToken();
     }
     
     // Open the exact same fullscreen chat window as the fullscreen button
