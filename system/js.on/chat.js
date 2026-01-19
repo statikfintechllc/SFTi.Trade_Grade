@@ -1032,12 +1032,12 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Check if aiView needs to be pulled up from bottom (not currently visible or in overlay mode)
+        // Check if aiView needs to be pulled up from bottom (not currently visible)
+        // This handles the case when copilot button is clicked from non-AI tabs
         const needsSlideUpAnimation = aiView && 
-                                      (aiView.style.display === 'none' || 
-                                       aiView.style.position === 'fixed');
+                                      aiView.style.display === 'none';
         
-        if (needsSlideUpAnimation && aiView.style.position !== 'fixed') {
+        if (needsSlideUpAnimation) {
             // AIView is hidden - need to show it with slide-up animation
             const header = document.querySelector('.header');
             const headerHeight = header ? header.getBoundingClientRect().height : 57;
