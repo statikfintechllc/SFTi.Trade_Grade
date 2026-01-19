@@ -1154,53 +1154,31 @@ function openAIFromTab(sourceTab) {
 
 // Function for header Copilot button - open fullscreen chat overlay
 function openAIFullscreen() {
-    const aiView = document.getElementById('aiView');
-    const chatWindow = document.getElementById('chatWindow');
+    // Use EXACT same approach as AI Assistant tab fullscreen button
+    // Switch to AI tab first, then toggle fullscreen
+    const currentlyInAITab = document.body.classList.contains('ai-tab-active');
     
-    if (!chatWindow) {
-        console.error('chatWindow element not found');
-        return;
+    if (!currentlyInAITab) {
+        // Switch to AI Assistant tab using the same method as menu buttons
+        if (typeof switchView === 'function') {
+            switchView('ai');
+        }
     }
     
-    // Check if we're already in the AI Assistant tab
-    const currentlyInAITab = aiView && aiView.style.display === 'block' && 
-                              document.body.classList.contains('ai-tab-active');
-    
-    if (currentlyInAITab) {
-        // Already in AI tab - just open fullscreen chat without overlay
-        if (chatWindow.style.display !== 'flex') {
-            chatWindow.style.display = 'flex';
-        }
-        if (!isFullscreenChat) {
-            toggleFullscreenChat();
-        }
-    } else {
-        // Not in AI tab - create fixed overlay BELOW the header
-        if (aiView) {
-            // Get header height
-            const header = document.querySelector('.header');
-            const headerHeight = header ? header.getBoundingClientRect().height : 57;
-            
-            aiView.style.display = 'block';
-            aiView.style.position = 'fixed';
-            aiView.style.top = `${headerHeight}px`;
-            aiView.style.left = '0';
-            aiView.style.width = '100%';
-            aiView.style.height = `calc(100% - ${headerHeight}px)`;
-            aiView.style.zIndex = '10001';
-            aiView.style.background = 'transparent';
-        }
-        
+    // Show chat window if hidden
+    const chatWindow = document.getElementById('chatWindow');
+    if (chatWindow && chatWindow.style.display !== 'flex') {
         chatWindow.style.display = 'flex';
-        
-        // Load models if not already loaded
-        if (typeof loadToken === 'function') {
-            loadToken();
-        }
-        
-        if (!isFullscreenChat) {
-            toggleFullscreenChat();
-        }
+    }
+    
+    // Load models if not already loaded
+    if (typeof loadToken === 'function') {
+        loadToken();
+    }
+    
+    // Toggle fullscreen using the EXACT same function as AI Assistant tab
+    if (!isFullscreenChat) {
+        toggleFullscreenChat();
     }
 }
 
