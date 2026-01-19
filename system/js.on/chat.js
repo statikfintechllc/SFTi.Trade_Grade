@@ -70,10 +70,30 @@ function hideChatWindow() {
     }
 }
 
-// Auto-resize textarea as user types
+// Smart auto-resize textarea: small when empty, grows as user types
 function autoResizeTextarea(textarea) {
+    const minHeight = 20; // Minimum height when empty (matches CSS min-height)
+    const maxHeight = 100; // Maximum height
+    
+    // Reset height to recalculate
     textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+    
+    // If empty or only whitespace, use minimum height
+    if (!textarea.value.trim()) {
+        textarea.style.height = minHeight + 'px';
+    } else {
+        // Calculate needed height based on content
+        const scrollHeight = textarea.scrollHeight;
+        
+        // Set height between min and max
+        if (scrollHeight <= minHeight) {
+            textarea.style.height = minHeight + 'px';
+        } else if (scrollHeight >= maxHeight) {
+            textarea.style.height = maxHeight + 'px';
+        } else {
+            textarea.style.height = scrollHeight + 'px';
+        }
+    }
 }
 
 // Handle Enter key to send message (Shift+Enter for new line)
