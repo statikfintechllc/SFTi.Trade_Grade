@@ -1175,14 +1175,18 @@ function openAIFullscreen() {
             toggleFullscreenChat();
         }
     } else {
-        // Not in AI tab - create fixed overlay
+        // Not in AI tab - create fixed overlay BELOW the header
         if (aiView) {
+            // Get header height
+            const header = document.querySelector('.header');
+            const headerHeight = header ? header.getBoundingClientRect().height : 57;
+            
             aiView.style.display = 'block';
             aiView.style.position = 'fixed';
-            aiView.style.top = '0';
+            aiView.style.top = `${headerHeight}px`;
             aiView.style.left = '0';
             aiView.style.width = '100%';
-            aiView.style.height = '100%';
+            aiView.style.height = `calc(100% - ${headerHeight}px)`;
             aiView.style.zIndex = '10001';
             aiView.style.background = 'transparent';
         }

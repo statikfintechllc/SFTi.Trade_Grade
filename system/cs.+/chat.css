@@ -149,6 +149,16 @@
     body.ai-tab-active .copilot-header-btn {
         display: none;
     }
+    
+    /* Center header title when Copilot button is hidden in AI tab */
+    body.ai-tab-active .header {
+        justify-content: center;
+    }
+    
+    body.ai-tab-active .header .hamburger {
+        position: absolute;
+        left: 12px;
+    }
 
     .fullscreen-chat-btn.hidden {
         opacity: 0;
