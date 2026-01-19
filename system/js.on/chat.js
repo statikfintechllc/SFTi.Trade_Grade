@@ -1032,13 +1032,11 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Check if aiView needs to be pulled up from bottom (not currently visible)
-        // This handles the case when copilot button is clicked from non-AI tabs
-        const needsSlideUpAnimation = aiView && 
-                                      aiView.style.display === 'none';
+        // Check if we're NOT in AI Assistant tab
+        const notInAITab = !aiView || !document.body.classList.contains('ai-tab-active');
         
-        if (needsSlideUpAnimation) {
-            // AIView is hidden - need to show it with slide-up animation
+        if (notInAITab && aiView) {
+            // Not in AI tab - show AIView with slide-up animation from bottom
             const header = document.querySelector('.header');
             const headerHeight = header ? header.getBoundingClientRect().height : 57;
             
@@ -1057,6 +1055,14 @@ function toggleFullscreenChat() {
             setTimeout(() => {
                 aiView.style.transform = 'translateY(0)';
             }, 10);
+        }
+        
+        // Ensure chatWindow is visible
+        chatWindow.style.display = 'flex';
+        
+        // Load models if not already loaded
+        if (typeof loadToken === 'function') {
+            loadToken();
         }
         
         // Save scroll position and activate JS-driven scroll lock
@@ -1206,35 +1212,11 @@ function openAIFromTab(sourceTab) {
     }, 100);
 }
 
-// Function for header Copilot button - uses EXACT same function as fullscreen button
+// Function for header Copilot button - calls EXACT same function as fullscreen button
 function openAIFullscreen() {
-    const aiView = document.getElementById('aiView');
-    const chatWindow = document.getElementById('chatWindow');
-    
-    if (!aiView || !chatWindow) {
-        console.error('Required elements not found');
-        return;
-    }
-    
-    // Check if we're already in the AI Assistant tab
-    const currentlyInAITab = aiView.style.display === 'block' && 
-                              document.body.classList.contains('ai-tab-active');
-    
-    if (!currentlyInAITab) {
-        // Not in AI tab - ensure chatWindow is visible and load models
-        chatWindow.style.display = 'flex';
-        
-        // Load models if not already loaded
-        if (typeof loadToken === 'function') {
-            loadToken();
-        }
-    }
-    
-    // Use the EXACT same function as the fullscreen button
-    // toggleFullscreenChat now handles the slide-up animation automatically
-    if (!isFullscreenChat) {
-        toggleFullscreenChat();
-    }
+    // Use the EXACT same function as the fullscreen button in AI Assistant tab
+    // No special handling - just call the same function
+    toggleFullscreenChat();
 }
 
 // Expose function globally
