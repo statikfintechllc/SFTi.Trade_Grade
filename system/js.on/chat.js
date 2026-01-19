@@ -1091,9 +1091,6 @@ function toggleFullscreenChat() {
         // Reset aiView inline styles if they were set by openAIFullscreen
         const aiView = document.getElementById('aiView');
         if (aiView) {
-            // Check if aiView was opened as overlay (position: fixed means overlay mode)
-            const wasOverlay = aiView.style.position === 'fixed';
-            
             aiView.style.position = '';
             aiView.style.top = '';
             aiView.style.left = '';
@@ -1101,16 +1098,7 @@ function toggleFullscreenChat() {
             aiView.style.height = '';
             aiView.style.zIndex = '';
             aiView.style.background = '';
-            aiView.style.pointerEvents = '';
-            
-            // If it was overlay mode, aiView should stay hidden
-            if (wasOverlay) {
-                aiView.style.display = 'none';
-            }
         }
-        
-        // Reset chat window pointer events
-        chatWindow.style.pointerEvents = '';
         
         // Deactivate JS scroll lock and restore scroll position
         scrollLockActive = false;
@@ -1188,13 +1176,13 @@ function openAIFullscreen() {
         }
     } else {
         // Not in AI tab - create overlay with EXACT same styling as AI Assistant tab fullscreen
-        // Position aiView as fixed overlay (but keep it transparent/invisible)
-        const header = document.querySelector('.header');
-        const headerHeight = header ? header.getBoundingClientRect().height : 57;
-        
         if (aiView) {
-            // Don't set display:block - that would show AI tab content
-            // Just position it as container for the overlay
+            // Get header height
+            const header = document.querySelector('.header');
+            const headerHeight = header ? header.getBoundingClientRect().height : 57;
+            
+            // Position aiView as overlay below header
+            aiView.style.display = 'block';
             aiView.style.position = 'fixed';
             aiView.style.top = `${headerHeight}px`;
             aiView.style.left = '0';
@@ -1202,12 +1190,9 @@ function openAIFullscreen() {
             aiView.style.height = `calc(100% - ${headerHeight}px)`;
             aiView.style.zIndex = '10001';
             aiView.style.background = 'transparent';
-            aiView.style.pointerEvents = 'none'; // Don't block clicks to underlying content
         }
         
-        // Show only the chat window as overlay
         chatWindow.style.display = 'flex';
-        chatWindow.style.pointerEvents = 'auto'; // Chat window should receive clicks
         
         // Load models if not already loaded
         if (typeof loadToken === 'function') {
