@@ -890,6 +890,9 @@ let originalChatInputNextSibling = null;
 let originalChatModelBarParent = null;
 let originalChatModelBarNextSibling = null;
 
+// Track which tab we came from when opening fullscreen via copilot button
+let returnToTab = null;
+
 // Animation duration for AIView slide animations (in milliseconds)
 const AIVIEW_SLIDE_DURATION_MS = 300;
 
@@ -1032,31 +1035,6 @@ function toggleFullscreenChat() {
     isFullscreenChat = !isFullscreenChat;
 
     if (isFullscreenChat) {
-        // Check if we're NOT in AI Assistant tab
-        const notInAITab = !aiView || !document.body.classList.contains('ai-tab-active');
-        
-        if (notInAITab && aiView) {
-            // Not in AI tab - show AIView with slide-up animation from bottom
-            const header = document.querySelector('.header');
-            const headerHeight = header ? header.getBoundingClientRect().height : 57;
-            
-            aiView.style.display = 'block';
-            aiView.style.position = 'fixed';
-            aiView.style.top = `${headerHeight}px`;
-            aiView.style.left = '0';
-            aiView.style.width = '100%';
-            aiView.style.height = `calc(100% - ${headerHeight}px)`;
-            aiView.style.zIndex = '10001';
-            aiView.style.background = 'transparent';
-            aiView.style.transform = 'translateY(100%)';
-            aiView.style.transition = `transform ${AIVIEW_SLIDE_DURATION_MS}ms ease-out`;
-            
-            // Trigger slide-up animation
-            setTimeout(() => {
-                aiView.style.transform = 'translateY(0)';
-            }, 10);
-        }
-        
         // Ensure chatWindow is visible
         chatWindow.style.display = 'flex';
         
@@ -1125,41 +1103,6 @@ function toggleFullscreenChat() {
         chatWindow.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('chat-fullscreen-active');
         
-        // Reset aiView inline styles if they were set by openAIFullscreen
-        const aiView = document.getElementById('aiView');
-        if (aiView) {
-            // Check if this was an overlay (fixed position means it was opened via Copilot button)
-            const wasOverlay = aiView.style.position === 'fixed';
-            
-            if (wasOverlay) {
-                // Slide down animation before hiding
-                aiView.style.transform = 'translateY(100%)';
-                
-                // After animation completes, hide and reset styles
-                setTimeout(() => {
-                    aiView.style.display = 'none';
-                    aiView.style.position = '';
-                    aiView.style.top = '';
-                    aiView.style.left = '';
-                    aiView.style.width = '';
-                    aiView.style.height = '';
-                    aiView.style.zIndex = '';
-                    aiView.style.background = '';
-                    aiView.style.transform = '';
-                    aiView.style.transition = '';
-                }, AIVIEW_SLIDE_DURATION_MS);
-            } else {
-                // Not an overlay, just reset styles immediately
-                aiView.style.position = '';
-                aiView.style.top = '';
-                aiView.style.left = '';
-                aiView.style.width = '';
-                aiView.style.height = '';
-                aiView.style.zIndex = '';
-                aiView.style.background = '';
-            }
-        }
-        
         // Deactivate JS scroll lock and restore scroll position
         scrollLockActive = false;
         window.removeEventListener('scroll', lockScroll);
@@ -1190,6 +1133,14 @@ function toggleFullscreenChat() {
         // Remove resize handlers
         window.removeEventListener('resize', () => applyFullscreenHeight(0));
         window.removeEventListener('orientationchange', () => applyFullscreenHeight(0));
+        
+        // If we came from another tab via copilot button, return to that tab
+        if (returnToTab && typeof switchView === 'function') {
+            setTimeout(() => {
+                switchView(returnToTab);
+                returnToTab = null; // Reset for next time
+            }, 50);
+        }
     }
 }
 
@@ -1212,11 +1163,41 @@ function openAIFromTab(sourceTab) {
     }, 100);
 }
 
-// Function for header Copilot button - calls EXACT same function as fullscreen button
+// Function for header Copilot button - switches to AI Assistant tab and opens fullscreen
 function openAIFullscreen() {
-    // Use the EXACT same function as the fullscreen button in AI Assistant tab
-    // No special handling - just call the same function
-    toggleFullscreenChat();
+    // Store which tab we're currently on so we can return to it when closing
+    const gradeBtn = document.getElementById('gradeBtn');
+    const trackerBtn = document.getElementById('trackerBtn');
+    const finalizeBtn = document.getElementById('finalizeBtn');
+    const historyBtn = document.getElementById('historyBtn');
+    const aiBtn = document.getElementById('aiBtn');
+    
+    // Determine current tab
+    if (gradeBtn && gradeBtn.classList.contains('active')) {
+        returnToTab = 'grade';
+    } else if (trackerBtn && trackerBtn.classList.contains('active')) {
+        returnToTab = 'tracker';
+    } else if (finalizeBtn && finalizeBtn.classList.contains('active')) {
+        returnToTab = 'finalize';
+    } else if (historyBtn && historyBtn.classList.contains('active')) {
+        returnToTab = 'history';
+    } else if (aiBtn && aiBtn.classList.contains('active')) {
+        returnToTab = null; // Already in AI tab
+    } else {
+        returnToTab = 'grade'; // Default fallback
+    }
+    
+    // Switch to AI Assistant tab
+    if (typeof switchView === 'function') {
+        switchView('ai');
+    }
+    
+    // Small delay to allow tab switch, then open fullscreen
+    setTimeout(() => {
+        if (!isFullscreenChat) {
+            toggleFullscreenChat();
+        }
+    }, 50);
 }
 
 // Expose function globally
