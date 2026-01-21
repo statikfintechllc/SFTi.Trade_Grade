@@ -61,6 +61,23 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
     
+    // Handle OPTIONS preflight requests immediately
+    if (request.method === 'OPTIONS') {
+        event.respondWith(
+            new Response(null, {
+                status: 204,
+                statusText: 'No Content',
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Max-Age': '86400'
+                }
+            })
+        );
+        return;
+    }
+    
     // Only handle requests with our custom proxy header
     if (!request.headers.get('X-Cors-Proxy')) {
         return; // Let browser handle normally
@@ -103,35 +120,56 @@ async function handleCorsRequest(request) {
     }
     
     try {
-        // Attempt direct fetch with no-cors mode
-        // This allows the request to go through but limits response access
+        // Attempt fetch with cors mode first
+        // Note: Service workers have more flexibility with CORS
         const response = await fetch(request.url, {
             method: request.method,
             headers: stripCorsHeaders(request.headers),
             body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.blob() : undefined,
-            mode: 'no-cors',
+            mode: 'cors',
             credentials: 'omit'
         });
         
-        // For no-cors mode, we get an opaque response
-        // Create a synthetic response with CORS headers
-        const syntheticResponse = new Response(null, {
-            status: 200,
-            statusText: 'OK',
-            headers: {
+        // Clone response and add CORS headers
+        const responseBody = await response.blob();
+        const corsResponse = new Response(responseBody, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers({
+                ...Object.fromEntries(response.headers.entries()),
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': '*',
                 'X-Proxied': 'true'
-            }
+            })
         });
         
+        // Cache successful GET requests
+        if (request.method === 'GET' && response.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, corsResponse.clone());
+        }
+        
         log('CORS request completed:', url.href);
-        return syntheticResponse;
+        return corsResponse;
         
     } catch (error) {
-        log('Direct fetch failed:', error);
-        throw error;
+        log('CORS fetch failed:', error);
+        
+        // Return error response with CORS headers
+        return new Response(JSON.stringify({
+            error: error.message,
+            note: 'Service worker CORS proxy failed. Consider using Device Flow for GitHub authentication.'
+        }), {
+            status: 502,
+            statusText: 'Bad Gateway',
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': '*'
+            }
+        });
     }
 }
 
@@ -151,25 +189,7 @@ function stripCorsHeaders(headers) {
     return newHeaders;
 }
 
-/**
- * Handle OPTIONS preflight requests
- */
-self.addEventListener('fetch', (event) => {
-    if (event.request.method === 'OPTIONS') {
-        event.respondWith(
-            new Response(null, {
-                status: 204,
-                statusText: 'No Content',
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Max-Age': '86400'
-                }
-            })
-        );
-    }
-});
+// Note: OPTIONS preflight requests are handled in the main fetch listener above
 
 /**
  * Message handler for manual cache control

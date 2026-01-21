@@ -183,8 +183,8 @@ class CustomStaticBackend {
                         clearInterval(pollInterval);
                         this.state.pollingIntervals.delete(deviceCode);
                         
-                        // Store token
-                        this.storeToken(data.access_token, 'copilot');
+                        // Store token (Device Flow provides GitHub token)
+                        this.storeToken(data.access_token, 'github');
                         
                         resolve({
                             success: true,
@@ -359,7 +359,7 @@ class CustomStaticBackend {
         try {
             const response = await fetch(this.config.ENDPOINTS.GITHUB_API + '/user', {
                 headers: {
-                    'Authorization': `token ${token}`,
+                    'Authorization': `Bearer ${token}`,
                     'Accept': 'application/vnd.github.v3+json'
                 }
             });
@@ -534,9 +534,18 @@ class CustomStaticBackend {
     }
     
     generateState() {
-        const array = new Uint8Array(32);
-        crypto.getRandomValues(array);
-        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        // Use crypto.getRandomValues if available, fallback to Math.random
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            const array = new Uint8Array(32);
+            crypto.getRandomValues(array);
+            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        } else {
+            // Fallback for older browsers (less secure)
+            console.warn('[CustomStaticBackend] crypto.getRandomValues not available, using Math.random fallback');
+            return Array.from({ length: 32 }, () => 
+                Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
+            ).join('');
+        }
     }
 }
 

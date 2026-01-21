@@ -21,7 +21,8 @@ const CustomCorsWidget = {
         debug: true,
         timeout: 30000,
         maxRetries: 3,
-        serviceWorkerPath: '/system/js.on/cors-sw.js'
+        // Use relative path for GitHub Pages subdirectory compatibility
+        serviceWorkerPath: './system/js.on/cors-sw.js'
     },
 
     // State
@@ -369,7 +370,7 @@ const CustomCorsWidget = {
      * Generate unique ID
      */
     generateId() {
-        return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        return 'id_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
     },
 
     /**
