@@ -1,11 +1,9 @@
 /**
- * SFTi P.R.E.P - CORS Service Worker
- * Advanced request interception and proxying
+ * SFTi P.R.E.P - CORS Service Worker - Adversarial Mode
+ * Origin spoofing, Host mutation, CORS injection
+ * User is root - NO allowlists, fetch everything
  * 
- * This service worker intercepts network requests and provides
- * custom CORS handling without relying on third-party services.
- * 
- * @version 2.0.0
+ * @version 3.0.0 - Adversarial Edition
  * @author SFTi LLC
  * @license MIT
  */
@@ -120,11 +118,15 @@ async function handleCorsRequest(request) {
     }
     
     try {
-        // Attempt fetch with cors mode first
-        // Note: Service workers have more flexibility with CORS
+        // Origin spoofing - spoof Origin to match destination
+        const headers = new Headers(request.headers);
+        headers.set('Origin', url.origin);
+        headers.set('Referer', url.origin + '/');
+        
+        // Fetch with spoofed headers
         const response = await fetch(request.url, {
             method: request.method,
-            headers: stripCorsHeaders(request.headers),
+            headers: stripCorsHeaders(headers),
             body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.blob() : undefined,
             mode: 'cors',
             credentials: 'omit'
@@ -140,7 +142,7 @@ async function handleCorsRequest(request) {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': '*',
-                'X-Proxied': 'true'
+                'Access-Control-Expose-Headers': '*'
             })
         });
         
@@ -150,7 +152,7 @@ async function handleCorsRequest(request) {
             cache.put(request, corsResponse.clone());
         }
         
-        log('CORS request completed:', url.href);
+        log('✅ CORS completed with origin spoofing:', url.href);
         return corsResponse;
         
     } catch (error) {

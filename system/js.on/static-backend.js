@@ -58,9 +58,9 @@ class CustomStaticBackend {
             // Rate limiting - LOCAL RESOURCE PROTECTION ONLY
             // No artificial throttling - if API has limits, let them 429 us
             RATE_LIMIT: {
-                enabled: false, // Disabled - user is root
-                maxConcurrent: 100, // Only to prevent UI freeze
-                maxQueueSize: 1000 // Only to prevent memory exhaustion
+                enabled: false, // User is root
+                maxConcurrent: 100, // Only prevent UI freeze
+                maxQueueSize: 1000
             },
             
             // Cache settings
@@ -319,51 +319,64 @@ class CustomStaticBackend {
     }
     
     /**
-     * Store authentication token using encrypted vault
+     * Store authentication token - with encrypted vault support
      */
     async storeToken(token, type = 'copilot', passphrase = null) {
-        // Try encrypted vault first if passphrase provided
-        if (passphrase && window.EncryptedVault) {
-            const success = await window.EncryptedVault.storeToken(
-                `token_${type}`,
-                token,
-                passphrase,
-                { type, timestamp: Date.now() }
-            );
-            
-            if (success) {
-                console.log(`[CustomStaticBackend] 🔐 Token stored in encrypted vault: ${type}`);
+        // Try encrypted vault if passphrase provided and widget available
+        if (passphrase && window.CustomCorsWidget && window.CustomCorsWidget.state.vaultDb) {
+            try {
+                const db = window.CustomCorsWidget.state.vaultDb;
+                const cryptoKey = await this.deriveVaultKey(passphrase);
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, new TextEncoder().encode(token));
+                const transaction = db.transaction(['tokens'], 'readwrite');
+                const store = transaction.objectStore('tokens');
+                await new Promise((res, rej) => {
+                    const req = store.put({ key: `token_${type}`, encrypted: { iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) }, timestamp: Date.now() });
+                    req.onsuccess = () => res();
+                    req.onerror = () => rej(req.error);
+                });
+                console.log(`[Backend] 🔐 Token stored in encrypted vault: ${type}`);
+            } catch (e) {
+                console.warn('[Backend] Vault storage failed:', e.message);
             }
         }
         
-        // Fallback to localStorage for backwards compatibility
+        // Always store in localStorage as fallback
         if (type === 'copilot') {
             localStorage.setItem(this.config.STORAGE.COPILOT_TOKEN, token);
-            // Set expiry to 8 hours
             const expiry = Date.now() + (8 * 60 * 60 * 1000);
             localStorage.setItem(this.config.STORAGE.COPILOT_EXPIRY, expiry.toString());
         } else {
             localStorage.setItem(this.config.STORAGE.GITHUB_TOKEN, token);
         }
         
-        // Broadcast token update to other tabs
-        this.broadcast({
-            type: 'TOKEN_UPDATE',
-            tokenType: type,
-            token: token
-        });
-    }
+        this.broadcast({ type: 'TOKEN_UPDATE', tokenType: type, token: token });
+    },
     
     /**
      * Get stored token - try encrypted vault first
      */
     async getToken(type = 'copilot', passphrase = null) {
-        // Try encrypted vault first if passphrase provided
-        if (passphrase && window.EncryptedVault) {
-            const token = await window.EncryptedVault.retrieveToken(`token_${type}`, passphrase);
-            if (token) {
-                console.log(`[CustomStaticBackend] 🔓 Token retrieved from encrypted vault: ${type}`);
-                return token;
+        // Try encrypted vault if passphrase provided
+        if (passphrase && window.CustomCorsWidget && window.CustomCorsWidget.state.vaultDb) {
+            try {
+                const db = window.CustomCorsWidget.state.vaultDb;
+                const transaction = db.transaction(['tokens'], 'readonly');
+                const store = transaction.objectStore('tokens');
+                const record = await new Promise((res, rej) => {
+                    const req = store.get(`token_${type}`);
+                    req.onsuccess = () => res(req.result);
+                    req.onerror = () => rej(req.error);
+                });
+                if (record) {
+                    const cryptoKey = await this.deriveVaultKey(passphrase);
+                    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(record.encrypted.iv) }, cryptoKey, new Uint8Array(record.encrypted.data));
+                    console.log(`[Backend] 🔓 Token retrieved from vault: ${type}`);
+                    return new TextDecoder().decode(decrypted);
+                }
+            } catch (e) {
+                console.warn('[Backend] Vault retrieval failed:', e.message);
             }
         }
         
@@ -371,8 +384,6 @@ class CustomStaticBackend {
         if (type === 'copilot') {
             const token = localStorage.getItem(this.config.STORAGE.COPILOT_TOKEN);
             const expiry = localStorage.getItem(this.config.STORAGE.COPILOT_EXPIRY);
-            
-            // Check if expired
             if (token && expiry && Date.now() < parseInt(expiry)) {
                 return token;
             }
@@ -418,9 +429,13 @@ class CustomStaticBackend {
     
     /**
      * Make API request with authentication
-     * No artificial rate limiting - user is root
      */
     async apiRequest(endpoint, options = {}) {
+        // Check rate limit
+        if (!this.checkRateLimit(endpoint)) {
+            throw new Error('Rate limit exceeded. Please try again later.');
+        }
+        
         // Check cache for GET requests
         if (options.method === 'GET' || !options.method) {
             const cached = this.getFromCache(endpoint);
@@ -430,16 +445,14 @@ class CustomStaticBackend {
             }
         }
         
-        // Get appropriate token (async now for encrypted vault support)
-        const token = await this.getToken('copilot') || await this.getToken('github');
+        // Get appropriate token
+        const token = this.getToken('copilot') || this.getToken('github');
         if (!token) {
             throw new Error('No authentication token available');
         }
         
-        // Make request using adversarial CORS engine if available
-        const fetchFn = window.AdversarialCorsEngine?.fetch || window.CustomCorsWidget?.fetch || fetch;
-        
-        const response = await fetchFn(endpoint, {
+        // Make request
+        const response = await fetch(endpoint, {
             ...options,
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -463,16 +476,26 @@ class CustomStaticBackend {
     }
     
     /**
-     * Local resource protection - prevent UI freeze only
-     * No artificial throttling - if API has limits, let them 429 us
+     * Rate limiting
      */
-    checkLocalResourceLimit() {
-        // Only check concurrent requests to prevent browser hang
-        const concurrent = Array.from(this.state.pendingRequests.values()).length;
-        if (concurrent > this.config.RATE_LIMIT.maxConcurrent) {
-            console.warn('[CustomStaticBackend] Too many concurrent requests - may freeze UI');
+    checkRateLimit(key) {
+        const now = Date.now();
+        const requests = this.state.rateLimitCounter.get(key) || [];
+        
+        // Remove old requests outside the window
+        const validRequests = requests.filter(
+            timestamp => now - timestamp < this.config.RATE_LIMIT.windowMs
+        );
+        
+        // Check if limit exceeded
+        if (validRequests.length >= this.config.RATE_LIMIT.maxRequests) {
             return false;
         }
+        
+        // Add current request
+        validRequests.push(now);
+        this.state.rateLimitCounter.set(key, validRequests);
+        
         return true;
     }
     
@@ -574,10 +597,20 @@ class CustomStaticBackend {
     }
     
     /**
-     * Set client secret (SECURITY WARNING: sessionStorage only, prefer Device Flow)
+     * Derive vault encryption key from passphrase
+     */
+    async deriveVaultKey(passphrase) {
+        const salt = window.CustomCorsWidget?.state.vaultDb ? new Uint8Array(JSON.parse(localStorage.getItem('sfti_vault_salt') || '[]')) : null;
+        if (!salt) throw new Error('Vault salt not available');
+        const passphraseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+        return await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, passphraseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    }
+    
+    /**
+     * Set client secret (SECURITY WARNING: prefer Device Flow)
      */
     setClientSecret(clientSecret) {
-        console.warn('[CustomStaticBackend] Client secret storage is a security risk. Consider using Device Flow instead.');
+        console.warn('[Backend] Client secret storage is a security risk. Use Device Flow instead.');
         this.config.OAUTH.CLIENT_SECRET = clientSecret;
         sessionStorage.setItem(this.config.STORAGE.OAUTH_CLIENT_SECRET, clientSecret);
     }
