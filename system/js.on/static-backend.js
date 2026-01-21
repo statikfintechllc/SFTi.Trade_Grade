@@ -55,10 +55,12 @@ class CustomStaticBackend {
                 CACHE_PREFIX: 'sfti_cache_'
             },
             
-            // Rate limiting
+            // Rate limiting - LOCAL RESOURCE PROTECTION ONLY
+            // No artificial throttling - if API has limits, let them 429 us
             RATE_LIMIT: {
-                maxRequests: 60,
-                windowMs: 60000 // 1 minute
+                enabled: false, // Disabled - user is root
+                maxConcurrent: 100, // Only to prevent UI freeze
+                maxQueueSize: 1000 // Only to prevent memory exhaustion
             },
             
             // Cache settings
@@ -317,9 +319,24 @@ class CustomStaticBackend {
     }
     
     /**
-     * Store authentication token
+     * Store authentication token using encrypted vault
      */
-    storeToken(token, type = 'copilot') {
+    async storeToken(token, type = 'copilot', passphrase = null) {
+        // Try encrypted vault first if passphrase provided
+        if (passphrase && window.EncryptedVault) {
+            const success = await window.EncryptedVault.storeToken(
+                `token_${type}`,
+                token,
+                passphrase,
+                { type, timestamp: Date.now() }
+            );
+            
+            if (success) {
+                console.log(`[CustomStaticBackend] 🔐 Token stored in encrypted vault: ${type}`);
+            }
+        }
+        
+        // Fallback to localStorage for backwards compatibility
         if (type === 'copilot') {
             localStorage.setItem(this.config.STORAGE.COPILOT_TOKEN, token);
             // Set expiry to 8 hours
@@ -338,9 +355,19 @@ class CustomStaticBackend {
     }
     
     /**
-     * Get stored token
+     * Get stored token - try encrypted vault first
      */
-    getToken(type = 'copilot') {
+    async getToken(type = 'copilot', passphrase = null) {
+        // Try encrypted vault first if passphrase provided
+        if (passphrase && window.EncryptedVault) {
+            const token = await window.EncryptedVault.retrieveToken(`token_${type}`, passphrase);
+            if (token) {
+                console.log(`[CustomStaticBackend] 🔓 Token retrieved from encrypted vault: ${type}`);
+                return token;
+            }
+        }
+        
+        // Fallback to localStorage
         if (type === 'copilot') {
             const token = localStorage.getItem(this.config.STORAGE.COPILOT_TOKEN);
             const expiry = localStorage.getItem(this.config.STORAGE.COPILOT_EXPIRY);
@@ -391,13 +418,9 @@ class CustomStaticBackend {
     
     /**
      * Make API request with authentication
+     * No artificial rate limiting - user is root
      */
     async apiRequest(endpoint, options = {}) {
-        // Check rate limit
-        if (!this.checkRateLimit(endpoint)) {
-            throw new Error('Rate limit exceeded. Please try again later.');
-        }
-        
         // Check cache for GET requests
         if (options.method === 'GET' || !options.method) {
             const cached = this.getFromCache(endpoint);
@@ -407,14 +430,16 @@ class CustomStaticBackend {
             }
         }
         
-        // Get appropriate token
-        const token = this.getToken('copilot') || this.getToken('github');
+        // Get appropriate token (async now for encrypted vault support)
+        const token = await this.getToken('copilot') || await this.getToken('github');
         if (!token) {
             throw new Error('No authentication token available');
         }
         
-        // Make request
-        const response = await fetch(endpoint, {
+        // Make request using adversarial CORS engine if available
+        const fetchFn = window.AdversarialCorsEngine?.fetch || window.CustomCorsWidget?.fetch || fetch;
+        
+        const response = await fetchFn(endpoint, {
             ...options,
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -438,26 +463,16 @@ class CustomStaticBackend {
     }
     
     /**
-     * Rate limiting
+     * Local resource protection - prevent UI freeze only
+     * No artificial throttling - if API has limits, let them 429 us
      */
-    checkRateLimit(key) {
-        const now = Date.now();
-        const requests = this.state.rateLimitCounter.get(key) || [];
-        
-        // Remove old requests outside the window
-        const validRequests = requests.filter(
-            timestamp => now - timestamp < this.config.RATE_LIMIT.windowMs
-        );
-        
-        // Check if limit exceeded
-        if (validRequests.length >= this.config.RATE_LIMIT.maxRequests) {
+    checkLocalResourceLimit() {
+        // Only check concurrent requests to prevent browser hang
+        const concurrent = Array.from(this.state.pendingRequests.values()).length;
+        if (concurrent > this.config.RATE_LIMIT.maxConcurrent) {
+            console.warn('[CustomStaticBackend] Too many concurrent requests - may freeze UI');
             return false;
         }
-        
-        // Add current request
-        validRequests.push(now);
-        this.state.rateLimitCounter.set(key, validRequests);
-        
         return true;
     }
     
