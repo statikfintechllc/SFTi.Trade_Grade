@@ -21,12 +21,16 @@
 class CustomStaticBackend {
     constructor() {
         this.config = {
-            // GitHub OAuth
+            // GitHub OAuth (configurable)
             OAUTH: {
-                APP_ID: '2631011',
+                // App ID can be overridden via setAppId() method
+                APP_ID: localStorage.getItem('oauth_app_id') || '2631011',
                 CLIENT_ID: localStorage.getItem('oauth_client_id') || '',
-                CLIENT_SECRET: localStorage.getItem('oauth_client_secret') || '',
-                REDIRECT_URI: window.location.origin + '/SFTi.Trade_Grade/system/auth/callback',
+                // Note: Client Secret storage is a security risk on static sites
+                // Device Flow (recommended) doesn't require client secret
+                CLIENT_SECRET: sessionStorage.getItem('oauth_client_secret') || '', // Using sessionStorage for better security
+                // Construct redirect URI dynamically based on current location
+                REDIRECT_URI: window.location.origin + window.location.pathname.replace('/index.html', '') + '/system/auth/callback',
                 SCOPES: ['read:user', 'user:email'],
                 DEVICE_CODE_URL: 'https://github.com/login/device/code',
                 TOKEN_URL: 'https://github.com/login/oauth/access_token',
@@ -269,10 +273,10 @@ class CustomStaticBackend {
      */
     async exchangeCodeForToken(code) {
         const clientId = this.getClientId();
-        const clientSecret = localStorage.getItem(this.config.STORAGE.OAUTH_CLIENT_SECRET);
+        const clientSecret = sessionStorage.getItem(this.config.STORAGE.OAUTH_CLIENT_SECRET);
         
         if (!clientId || !clientSecret) {
-            throw new Error('OAuth credentials not configured');
+            throw new Error('OAuth credentials not configured. Note: For better security, use Device Flow which does not require client secret.');
         }
         
         // Use custom CORS widget for token exchange
@@ -485,12 +489,25 @@ class CustomStaticBackend {
     }
     
     startCacheCleanup() {
+        // Clean up expired cache entries periodically
+        // Only if cache is enabled and has entries
         setInterval(() => {
+            if (!this.config.CACHE.enabled || this.state.cache.size === 0) {
+                return; // Skip if cache disabled or empty
+            }
+            
             const now = Date.now();
+            let cleaned = 0;
+            
             for (const [key, value] of this.state.cache.entries()) {
                 if (now > value.expiry) {
                     this.state.cache.delete(key);
+                    cleaned++;
                 }
+            }
+            
+            if (cleaned > 0 && this.config.debug) {
+                console.log(`[CustomStaticBackend] Cleaned ${cleaned} expired cache entries`);
             }
         }, 60000); // Clean up every minute
     }
@@ -531,6 +548,23 @@ class CustomStaticBackend {
     setClientId(clientId) {
         this.config.OAUTH.CLIENT_ID = clientId;
         localStorage.setItem(this.config.STORAGE.OAUTH_CLIENT_ID, clientId);
+    }
+    
+    /**
+     * Set OAuth App ID (for custom OAuth apps)
+     */
+    setAppId(appId) {
+        this.config.OAUTH.APP_ID = appId;
+        localStorage.setItem('oauth_app_id', appId);
+    }
+    
+    /**
+     * Set client secret (SECURITY WARNING: sessionStorage only, prefer Device Flow)
+     */
+    setClientSecret(clientSecret) {
+        console.warn('[CustomStaticBackend] Client secret storage is a security risk. Consider using Device Flow instead.');
+        this.config.OAUTH.CLIENT_SECRET = clientSecret;
+        sessionStorage.setItem(this.config.STORAGE.OAUTH_CLIENT_SECRET, clientSecret);
     }
     
     generateState() {

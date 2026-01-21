@@ -21,8 +21,14 @@ const CustomCorsWidget = {
         debug: true,
         timeout: 30000,
         maxRetries: 3,
-        // Use relative path for GitHub Pages subdirectory compatibility
-        serviceWorkerPath: './system/js.on/cors-sw.js'
+        // Service worker path - configurable, defaults to common location
+        serviceWorkerPath: './system/js.on/cors-sw.js',
+        // Can be overridden: CustomCorsWidget.config.serviceWorkerPath = '/custom/path/cors-sw.js';
+        
+        // Security note: Iframe sandbox
+        // We use 'allow-scripts' for functionality but avoid 'allow-same-origin'
+        // to prevent potential security issues
+        iframeSandbox: 'allow-scripts'
     },
 
     // State
@@ -213,7 +219,9 @@ const CustomCorsWidget = {
             // Create sandboxed iframe
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.sandbox = 'allow-scripts allow-same-origin';
+            // Security: Use restrictive sandbox - only allow scripts, not same-origin
+            // This prevents the iframe from accessing parent document
+            iframe.sandbox = this.config.iframeSandbox || 'allow-scripts';
             
             // Create iframe HTML content
             const iframeContent = this.createIframeProxyContent(requestId, url, options);
