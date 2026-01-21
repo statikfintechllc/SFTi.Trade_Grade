@@ -488,7 +488,7 @@ const StaticBackend = {
     // =============================================
     // GitHub OAuth App ID: 2631011
     // Homepage: https://statikfintechllc.github.io/SFTi.Trade_Grade/
-    // Callback: https://statikfintechllc.github.io/SFTi.Trade_Grade/auth/callback
+    // Callback: https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback
     
     // OAuth Configuration
     OAUTH_CONFIG: {
@@ -499,8 +499,8 @@ const StaticBackend = {
         // Client Secret - provided by user (40-char hex string)
         CLIENT_SECRET: localStorage.getItem('oauth_client_secret') || '',
         // IMPORTANT: Callback URL must match EXACTLY what's registered in GitHub OAuth App
-        // User registered: https://statikfintechllc.github.io/SFTi.Trade_Grade/auth/callback
-        REDIRECT_URI: 'https://statikfintechllc.github.io/SFTi.Trade_Grade/auth/callback',
+        // User registered: https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback
+        REDIRECT_URI: 'https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback',
         SCOPES: ['read:user', 'user:email'],
         AUTH_URL: 'https://github.com/login/oauth/authorize',
         TOKEN_URL: 'https://github.com/login/oauth/access_token',

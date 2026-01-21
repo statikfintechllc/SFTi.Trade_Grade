@@ -1,0 +1,74 @@
+# Jekyll Configuration for SFTi P.R.E.P
+# GitHub Pages compatible configuration
+
+# Site settings
+title: SFTi P.R.E.P
+description: Professional Real Estate Photography - AI-Powered Trade Grading System
+baseurl: "/SFTi.Trade_Grade"
+url: "https://statikfintechllc.github.io"
+
+# Build settings
+markdown: kramdown
+theme: null
+highlighter: rouge
+
+# Include/Exclude
+include:
+  - system
+  - docs
+  - _headers
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - .github
+  - README.md
+  - LICENSE
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /docs/:path/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+
+# Plugins
+plugins:
+  - jekyll-sitemap
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# Security headers
+headers:
+  /*:
+    - "X-Frame-Options: SAMEORIGIN"
+    - "X-Content-Type-Options: nosniff"
+    - "X-XSS-Protection: 1; mode=block"
+    - "Referrer-Policy: strict-origin-when-cross-origin"
+    - "Permissions-Policy: camera=(), microphone=(), geolocation=()"
+    - "Content-Security-Policy: default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src 'self' https:;"
+
+# Custom configuration
+sfti:
+  oauth:
+    callback_url: "https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback"
+    device_flow_recommended: true
+  
+  cors:
+    custom_widget: true
+    service_worker_enabled: true
+    
+  features:
+    ai_assistant: true
+    web_search: false
+    offline_mode: true
