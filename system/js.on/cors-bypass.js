@@ -202,7 +202,7 @@ const CustomCorsWidget = {
                         method: options.method || 'GET',
                         headers: options.headers || {},
                         body: options.body,
-                        mode: 'cors', // Use CORS mode to read response
+                        mode: 'cors', // Use CORS mode to read response body/headers (may trigger preflight)
                         signal: controller.signal
                     });
                     

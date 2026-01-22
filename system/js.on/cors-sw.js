@@ -255,10 +255,5 @@ self.addEventListener('message', (event) => {
             }
     }
 });
-            
-        default:
-            log('Unknown message type:', type);
-    }
-});
 
 log('CORS Service Worker loaded');

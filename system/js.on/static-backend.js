@@ -26,7 +26,8 @@ class CustomStaticBackend {
                 // App ID can be overridden via setAppId() method
                 APP_ID: localStorage.getItem('oauth_app_id') || '2631011',
                 CLIENT_ID: localStorage.getItem('oauth_client_id') || '',
-                // Note: Client Secret now stored in IndexedDB for persistence
+                // Note: Client Secret stored in IndexedDB vault (key: 'oauth_client_secret')
+                // Loaded asynchronously on init, persistent across sessions
                 // Device Flow (recommended) doesn't require client secret
                 CLIENT_SECRET: '', // Loaded from IndexedDB on init
                 // Construct redirect URI dynamically based on current location
@@ -107,12 +108,20 @@ class CustomStaticBackend {
     
     /**
      * Load CLIENT_SECRET from IndexedDB for persistence
+     * Retries if vault not ready
      */
-    async loadClientSecretFromIndexedDB() {
+    async loadClientSecretFromIndexedDB(retryCount = 0) {
         try {
             if (!window.CustomCorsWidget?.state.vaultDb) {
-                console.log('[CustomStaticBackend] Vault not ready yet for CLIENT_SECRET load');
-                return;
+                // Vault not ready yet, retry up to 3 times with delay
+                if (retryCount < 3) {
+                    console.log(`[CustomStaticBackend] Vault not ready, retrying CLIENT_SECRET load (attempt ${retryCount + 1}/3)...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                    return await this.loadClientSecretFromIndexedDB(retryCount + 1);
+                } else {
+                    console.warn('[CustomStaticBackend] Vault not ready after 3 retries, CLIENT_SECRET not loaded');
+                    return;
+                }
             }
             
             const db = window.CustomCorsWidget.state.vaultDb;
