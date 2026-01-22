@@ -121,6 +121,87 @@
             overflow-y: auto;
         }
 
+        /* Verbose Debug Terminal */
+        .debug-terminal {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 2px solid #cc0000;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            padding: 12px;
+            z-index: 9999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .debug-terminal.collapsed {
+            max-height: 40px;
+            overflow: hidden;
+        }
+
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .debug-title {
+            color: #cc0000;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .debug-toggle {
+            color: #666;
+            font-size: 10px;
+        }
+
+        .debug-line {
+            margin: 2px 0;
+            padding: 4px;
+            border-left: 2px solid transparent;
+        }
+
+        .debug-line.info {
+            color: #00bcd4;
+            border-left-color: #00bcd4;
+        }
+
+        .debug-line.success {
+            color: #00cc66;
+            border-left-color: #00cc66;
+        }
+
+        .debug-line.error {
+            color: #cc0000;
+            border-left-color: #cc0000;
+        }
+
+        .debug-line.warning {
+            color: #ff9800;
+            border-left-color: #ff9800;
+        }
+
+        .debug-line.debug {
+            color: #666;
+            border-left-color: #333;
+        }
+
+        .debug-timestamp {
+            color: #444;
+            font-size: 9px;
+            margin-right: 8px;
+        }
+
         .btn {
             display: inline-block;
             background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
@@ -244,6 +325,15 @@
                 <div class="debug-info" id="debug-info"></div>
             </div>
 
+            <!-- Verbose Debug Terminal -->
+            <div class="debug-terminal" id="debug-terminal">
+                <div class="debug-header" onclick="toggleDebugTerminal()">
+                    <span class="debug-title">🔧 DEBUG TERMINAL - OAuth Flow Monitor</span>
+                    <span class="debug-toggle" id="debug-toggle">▼ Click to collapse</span>
+                </div>
+                <div id="debug-output"></div>
+            </div>
+
             <!-- No Code State -->
             <div id="state-no-code" class="hidden">
                 <svg class="icon" style="color: #888;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -258,6 +348,118 @@
     </div>
 
     <script>
+        /**
+         * Verbose Debug Terminal System
+         * Provides real-time visibility into OAuth flow execution
+         */
+        const DebugTerminal = {
+            collapsed: false,
+            maxLines: 500,
+            
+            init() {
+                console.log('[DebugTerminal] Initializing verbose logging system...');
+                this.log('info', 'Debug Terminal initialized - monitoring OAuth flow');
+                this.log('info', `Timestamp: ${new Date().toISOString()}`);
+                this.log('info', `URL: ${window.location.href}`);
+                this.log('info', `User Agent: ${navigator.userAgent}`);
+                
+                // Intercept console methods
+                this.interceptConsole();
+            },
+            
+            log(level, message, data = null) {
+                const timestamp = new Date().toLocaleTimeString('en-US', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit',
+                    fractionalSecondDigits: 3
+                });
+                
+                const output = document.getElementById('debug-output');
+                if (!output) return;
+                
+                const line = document.createElement('div');
+                line.className = `debug-line ${level}`;
+                
+                let content = `<span class="debug-timestamp">[${timestamp}]</span> ${message}`;
+                if (data) {
+                    content += `\n  ${JSON.stringify(data, null, 2)}`;
+                }
+                line.innerHTML = content;
+                
+                output.appendChild(line);
+                
+                // Auto-scroll to bottom
+                const terminal = document.getElementById('debug-terminal');
+                if (terminal && !this.collapsed) {
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+                
+                // Limit lines
+                while (output.children.length > this.maxLines) {
+                    output.removeChild(output.firstChild);
+                }
+                
+                // Also log to console with prefix
+                const prefix = `[OAuth Debug ${level.toUpperCase()}]`;
+                if (level === 'error') {
+                    console.error(prefix, message, data || '');
+                } else if (level === 'warning') {
+                    console.warn(prefix, message, data || '');
+                } else {
+                    console.log(prefix, message, data || '');
+                }
+            },
+            
+            interceptConsole() {
+                const original = {
+                    log: console.log,
+                    warn: console.warn,
+                    error: console.error
+                };
+                
+                console.log = (...args) => {
+                    original.log.apply(console, args);
+                    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+                    if (msg.includes('[Callback]') || msg.includes('[CustomCorsWidget]')) {
+                        this.log('debug', msg);
+                    }
+                };
+                
+                console.warn = (...args) => {
+                    original.warn.apply(console, args);
+                    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+                    this.log('warning', msg);
+                };
+                
+                console.error = (...args) => {
+                    original.error.apply(console, args);
+                    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+                    this.log('error', msg);
+                };
+            }
+        };
+        
+        // Toggle terminal collapse
+        function toggleDebugTerminal() {
+            const terminal = document.getElementById('debug-terminal');
+            const toggle = document.getElementById('debug-toggle');
+            DebugTerminal.collapsed = !DebugTerminal.collapsed;
+            
+            if (DebugTerminal.collapsed) {
+                terminal.classList.add('collapsed');
+                toggle.textContent = '▲ Click to expand';
+            } else {
+                terminal.classList.remove('collapsed');
+                toggle.textContent = '▼ Click to collapse';
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        }
+        
+        // Initialize debug terminal immediately
+        DebugTerminal.init();
+        
         /**
          * SFTi P.R.E.P - Static OAuth Callback Handler
          * 
@@ -434,52 +636,81 @@
             // Exchange authorization code for token
             // Uses our self-hosted CORS bypass proxy system
             async exchangeCodeForToken(code) {
+                DebugTerminal.log('info', '🔄 Starting OAuth token exchange process');
+                DebugTerminal.log('debug', `Authorization code: ${code.substring(0, 10)}...`);
+                
                 // Get stored OAuth app credentials
                 const clientId = localStorage.getItem('oauth_client_id');
                 const clientSecret = localStorage.getItem('oauth_client_secret');
                 
+                DebugTerminal.log('debug', `Client ID: ${clientId ? clientId.substring(0, 10) + '...' : 'NOT SET'}`);
+                DebugTerminal.log('debug', `Client Secret: ${clientSecret ? 'SET' : 'NOT SET'}`);
+                
                 if (!clientId) {
+                    DebugTerminal.log('error', '❌ OAuth Client ID not configured');
                     throw new Error('OAuth Client ID not configured. Please set up your GitHub OAuth App credentials in the main application.');
                 }
                 
                 if (!clientSecret) {
+                    DebugTerminal.log('error', '❌ OAuth Client Secret not configured');
                     throw new Error('OAuth Client Secret not configured. GitHub OAuth Web Flow requires both Client ID and Client Secret.');
                 }
                 
-                console.log('[Callback] Exchanging code for token using self-hosted proxy...');
+                const redirectUri = window.location.origin + window.location.pathname;
+                DebugTerminal.log('debug', `Redirect URI: ${redirectUri}`);
                 
                 const tokenExchangeParams = new URLSearchParams({
                     client_id: clientId,
                     client_secret: clientSecret,
                     code: code,
-                    redirect_uri: window.location.origin + window.location.pathname
+                    redirect_uri: redirectUri
                 });
+                
+                DebugTerminal.log('debug', `Token exchange URL: ${this.config.TOKEN_URL}`);
+                DebugTerminal.log('debug', `Request body (params): ${tokenExchangeParams.toString().replace(clientSecret, '***')}`);
                 
                 // Infrastructure is already loaded (synchronously in head)
                 // If CustomCorsWidget doesn't exist, the page is broken - fail immediately
                 
                 // Strategy 1: Try using CustomCorsWidget (loaded synchronously, must be available)
                 try {
+                    DebugTerminal.log('info', '📡 Strategy 1: CustomCorsWidget CORS Bypass');
+                    
                     if (!window.CustomCorsWidget) {
+                        DebugTerminal.log('error', '❌ FATAL: CustomCorsWidget not loaded');
                         throw new Error('FATAL: CustomCorsWidget not loaded. Infrastructure scripts failed to load.');
                     }
                     
+                    DebugTerminal.log('success', '✅ CustomCorsWidget class available');
+                    
                     // Initialize if not yet initialized - WITH TIMEOUT
                     if (!window.CustomCorsWidget.initialized) {
-                        console.log('[Callback] Initializing CustomCorsWidget (15s timeout)...');
+                        DebugTerminal.log('warning', '⚠️  CustomCorsWidget not initialized, initializing now (15s timeout)...');
+                        
+                        const initStartTime = Date.now();
                         
                         // Race initialization against 15-second timeout
-                        await Promise.race([
-                            window.CustomCorsWidget.init(),
-                            new Promise((_, reject) => 
-                                setTimeout(() => reject(new Error('CustomCorsWidget initialization timeout after 15 seconds')), 15000)
-                            )
-                        ]);
-                        
-                        console.log('[Callback] CustomCorsWidget initialized successfully');
+                        try {
+                            await Promise.race([
+                                window.CustomCorsWidget.init(),
+                                new Promise((_, reject) => 
+                                    setTimeout(() => reject(new Error('Initialization timeout')), 15000)
+                                )
+                            ]);
+                            
+                            const initDuration = Date.now() - initStartTime;
+                            DebugTerminal.log('success', `✅ CustomCorsWidget initialized in ${initDuration}ms`);
+                        } catch (initError) {
+                            DebugTerminal.log('error', `❌ Initialization failed: ${initError.message}`);
+                            throw initError;
+                        }
+                    } else {
+                        DebugTerminal.log('success', '✅ CustomCorsWidget already initialized');
                     }
                     
-                    console.log('[Callback] Using CustomCorsWidget proxy for token exchange...');
+                    DebugTerminal.log('info', '🚀 Attempting token exchange via CustomCorsWidget.fetch()');
+                    const fetchStartTime = Date.now();
+                    
                     const response = await window.CustomCorsWidget.fetch(this.config.TOKEN_URL, {
                         method: 'POST',
                         headers: {
@@ -489,62 +720,92 @@
                         body: tokenExchangeParams.toString()
                     });
                     
+                    const fetchDuration = Date.now() - fetchStartTime;
+                    DebugTerminal.log('debug', `Fetch completed in ${fetchDuration}ms`);
+                    DebugTerminal.log('debug', `Response: ${response ? `status ${response.status}, ok=${response.ok}` : 'null'}`);
+                    
                     if (response && response.ok) {
                         const tokenData = await response.json();
-                        console.log('[Callback] ✅ Token exchange successful via CustomCorsWidget!');
+                        DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via CustomCorsWidget!');
+                        DebugTerminal.log('debug', `Token type: ${tokenData.token_type || 'unknown'}`);
+                        DebugTerminal.log('debug', `Access token: ${tokenData.access_token ? tokenData.access_token.substring(0, 20) + '...' : 'missing'}`);
                         return tokenData;
                     } else {
-                        console.warn('[Callback] CustomCorsWidget fetch returned non-OK response:', response ? response.status : 'null response');
+                        const errorMsg = `Response not OK: ${response ? response.status : 'null response'}`;
+                        DebugTerminal.log('warning', `⚠️  ${errorMsg}`);
+                        if (response && !response.ok) {
+                            try {
+                                const errorText = await response.text();
+                                DebugTerminal.log('debug', `Response body: ${errorText.substring(0, 200)}`);
+                            } catch (e) {
+                                DebugTerminal.log('debug', 'Could not read response body');
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.warn('[Callback] ❌ CustomCorsWidget strategy failed:', error.message);
+                    DebugTerminal.log('error', `❌ Strategy 1 FAILED: ${error.message}`);
+                    DebugTerminal.log('debug', `Error stack: ${error.stack}`);
                     // Continue to next strategy
                 }
                 
                 // Strategy 2: Try JSONP approach for GET fallback
                 try {
-                    console.log('[Callback] Trying JSONP fallback for token exchange...');
+                    DebugTerminal.log('info', '📡 Strategy 2: JSONP Fallback');
                     const jsonpUrl = `${this.config.TOKEN_URL}?${tokenExchangeParams.toString()}`;
+                    DebugTerminal.log('debug', `JSONP URL: ${jsonpUrl.replace(clientSecret, '***')}`);
+                    
                     const tokenData = await this.jsonpFetch(jsonpUrl);
                     if (tokenData && tokenData.access_token) {
-                        console.log('[Callback] ✅ Token exchange successful via JSONP!');
+                        DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via JSONP!');
                         return tokenData;
                     }
+                    DebugTerminal.log('warning', '⚠️  JSONP returned no token');
                 } catch (error) {
-                    console.warn('[Callback] ❌ JSONP strategy failed:', error.message);
+                    DebugTerminal.log('error', `❌ Strategy 2 FAILED: ${error.message}`);
                     // Continue to next strategy
                 }
                 
                 // Strategy 3: Try using Service Worker proxy
                 try {
-                    console.log('[Callback] Trying Service Worker proxy for token exchange...');
-                    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                        const response = await fetch(this.config.TOKEN_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'Accept': 'application/json',
-                                'X-Cors-Proxy': 'true' // Marker for service worker
-                            },
-                            body: tokenExchangeParams.toString()
-                        });
-                        
-                        if (response.ok) {
-                            const tokenData = await response.json();
-                            console.log('[Callback] ✅ Token exchange successful via Service Worker!');
-                            return tokenData;
+                    DebugTerminal.log('info', '📡 Strategy 3: Service Worker Proxy');
+                    
+                    if ('serviceWorker' in navigator) {
+                        DebugTerminal.log('debug', 'Service Worker API available');
+                        if (navigator.serviceWorker.controller) {
+                            DebugTerminal.log('success', '✅ Service Worker controlling page');
+                            
+                            const response = await fetch(this.config.TOKEN_URL, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'Accept': 'application/json',
+                                    'X-Cors-Proxy': 'true' // Marker for service worker
+                                },
+                                body: tokenExchangeParams.toString()
+                            });
+                            
+                            DebugTerminal.log('debug', `SW Response: status ${response.status}, ok=${response.ok}`);
+                            
+                            if (response.ok) {
+                                const tokenData = await response.json();
+                                DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via Service Worker!');
+                                return tokenData;
+                            }
+                        } else {
+                            DebugTerminal.log('warning', '⚠️  Service Worker not controlling page');
                         }
                     } else {
-                        console.warn('[Callback] Service Worker not available or not controlling page');
+                        DebugTerminal.log('warning', '⚠️  Service Worker API not available');
                     }
                 } catch (error) {
-                    console.warn('[Callback] ❌ Service Worker strategy failed:', error.message);
+                    DebugTerminal.log('error', `❌ Strategy 3 FAILED: ${error.message}`);
                     // Continue to next strategy
                 }
                 
                 // Strategy 4: Try iframe proxy
                 try {
-                    console.log('[Callback] Trying iframe proxy for token exchange...');
+                    DebugTerminal.log('info', '📡 Strategy 4: Iframe Proxy');
+                    
                     const tokenData = await this.iframeProxyFetch(this.config.TOKEN_URL, {
                         method: 'POST',
                         headers: {
@@ -555,14 +816,18 @@
                     });
                     
                     if (tokenData && tokenData.access_token) {
-                        console.log('[Callback] ✅ Token exchange successful via iframe proxy!');
+                        DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via iframe proxy!');
                         return tokenData;
                     }
+                    DebugTerminal.log('warning', '⚠️  Iframe proxy returned no token');
                 } catch (error) {
-                    console.warn('[Callback] ❌ Iframe proxy strategy failed:', error.message);
+                    DebugTerminal.log('error', `❌ Strategy 4 FAILED: ${error.message}`);
                 }
                 
                 // All strategies failed
+                DebugTerminal.log('error', '💥 ALL STRATEGIES FAILED - Token exchange impossible');
+                DebugTerminal.log('info', '💡 Recommendation: Use Device Flow authentication instead');
+                
                 throw new Error(
                     `All OAuth proxy strategies failed. ` +
                     `For better reliability, please use Device Flow authentication ` +
@@ -671,34 +936,55 @@
 
             // Handle authorization code flow
             async handleCodeFlow(code, state) {
-                console.log('Handling authorization code flow');
+                DebugTerminal.log('info', '🔐 Starting authorization code flow');
+                DebugTerminal.log('debug', `Code: ${code.substring(0, 15)}...`);
+                DebugTerminal.log('debug', `State: ${state || 'not provided'}`);
                 
                 // Validate state
                 if (state && !this.validateState(state)) {
+                    DebugTerminal.log('error', '❌ State validation failed - possible CSRF attack');
+                    const expected = localStorage.getItem(this.config.STORAGE_KEYS.OAUTH_STATE);
+                    DebugTerminal.log('debug', `Expected: ${expected}`);
+                    DebugTerminal.log('debug', `Received: ${state}`);
+                    
                     this.showError('Invalid state parameter. This could be a CSRF attack.', { 
                         received: state,
-                        expected: localStorage.getItem(this.config.STORAGE_KEYS.OAUTH_STATE)
+                        expected: expected
                     });
                     return;
                 }
                 
+                if (state) {
+                    DebugTerminal.log('success', '✅ State validation passed');
+                }
+                
                 try {
+                    DebugTerminal.log('info', '🔄 Calling exchangeCodeForToken...');
                     const tokenData = await this.exchangeCodeForToken(code);
                     
+                    DebugTerminal.log('debug', 'Token exchange returned:', tokenData);
+                    
                     if (tokenData.access_token) {
+                        DebugTerminal.log('success', '🎉 ACCESS TOKEN OBTAINED SUCCESSFULLY!');
+                        DebugTerminal.log('debug', `Token: ${tokenData.access_token.substring(0, 20)}...`);
                         this.showSuccess(tokenData.access_token, 'copilot');
                     } else if (tokenData.error) {
+                        DebugTerminal.log('error', `❌ Token data contains error: ${tokenData.error}`);
+                        DebugTerminal.log('debug', `Error description: ${tokenData.error_description || 'none'}`);
                         this.showError(
                             tokenData.error_description || tokenData.error,
                             tokenData
                         );
                     } else {
+                        DebugTerminal.log('error', '❌ Token data missing access_token');
                         this.showError(
                             'Failed to obtain access token',
                             tokenData
                         );
                     }
                 } catch (error) {
+                    DebugTerminal.log('error', `💥 Exception during token exchange: ${error.message}`);
+                    DebugTerminal.log('debug', `Stack: ${error.stack}`);
                     this.showError(error.message, { 
                         code: code.substring(0, 10) + '...',
                         error: error.toString()
@@ -708,12 +994,16 @@
 
             // Main initialization
             async init() {
-                console.log('OAuth Callback Handler initializing...');
+                DebugTerminal.log('info', '🚀 OAuth Callback Handler initializing...');
+                DebugTerminal.log('debug', `Current URL: ${window.location.href}`);
                 
                 const params = this.getURLParams();
+                DebugTerminal.log('debug', 'URL Parameters:', params);
                 
                 // Handle errors from GitHub
                 if (params.error) {
+                    DebugTerminal.log('error', `❌ GitHub returned error: ${params.error}`);
+                    DebugTerminal.log('debug', `Error description: ${params.error_description || 'none'}`);
                     this.showError(
                         params.error_description || params.error,
                         { error: params.error, description: params.error_description }
@@ -723,17 +1013,20 @@
                 
                 // Handle implicit grant (token in URL hash)
                 if (params.access_token) {
+                    DebugTerminal.log('info', '🎫 Implicit grant detected (token in URL)');
                     this.handleImplicitGrant(params.access_token, params.token_type);
                     return;
                 }
                 
                 // Handle authorization code flow
                 if (params.code) {
+                    DebugTerminal.log('info', '🔑 Authorization code detected - starting code flow');
                     await this.handleCodeFlow(params.code, params.state);
                     return;
                 }
                 
                 // No code or token found
+                DebugTerminal.log('warning', '⚠️  No authorization code or token found in URL');
                 this.setState('no-code');
             }
         };
