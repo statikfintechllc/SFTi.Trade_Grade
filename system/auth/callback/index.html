@@ -431,6 +431,21 @@
                 return receivedState === storedState;
             },
 
+            // Wait for CustomCorsWidget to be ready
+            async waitForCorsWidget(timeout = 10000) {
+                const startTime = Date.now();
+                while (Date.now() - startTime < timeout) {
+                    if (window.CustomCorsWidget && window.CustomCorsWidget.initialized) {
+                        console.log('[Callback] CustomCorsWidget is ready!');
+                        return window.CustomCorsWidget;
+                    }
+                    // Wait 100ms before checking again
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                console.warn('[Callback] CustomCorsWidget initialization timeout after', timeout, 'ms');
+                return null;
+            },
+
             // Exchange authorization code for token
             // Uses our self-hosted CORS bypass proxy system
             async exchangeCodeForToken(code) {
@@ -455,11 +470,11 @@
                     redirect_uri: window.location.origin + window.location.pathname
                 });
                 
-                // Use our self-hosted CORS bypass system
-                const corsWidget = window.CustomCorsWidget;
-                
+                // Strategy 1: Wait for and try using CustomCorsWidget
                 try {
-                    // Strategy 1: Try using CustomCorsWidget if available
+                    console.log('[Callback] Waiting for CustomCorsWidget to initialize...');
+                    const corsWidget = await this.waitForCorsWidget(10000);
+                    
                     if (corsWidget && typeof corsWidget.fetch === 'function') {
                         console.log('[Callback] Using CustomCorsWidget proxy...');
                         const response = await corsWidget.fetch(this.config.TOKEN_URL, {
@@ -471,11 +486,15 @@
                             body: tokenExchangeParams.toString()
                         });
                         
-                        if (response.ok) {
+                        if (response && response.ok) {
                             const tokenData = await response.json();
                             console.log('[Callback] Token exchange successful via CustomCorsWidget!');
                             return tokenData;
+                        } else {
+                            console.warn('[Callback] CustomCorsWidget fetch returned non-OK response:', response ? response.status : 'null response');
                         }
+                    } else {
+                        console.warn('[Callback] CustomCorsWidget not available or fetch method missing');
                     }
                 } catch (error) {
                     console.warn('[Callback] CustomCorsWidget strategy failed:', error);
