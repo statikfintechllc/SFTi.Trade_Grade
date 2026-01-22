@@ -194,65 +194,93 @@ function stripCorsHeaders(headers) {
 // Note: OPTIONS preflight requests are handled in the main fetch listener above
 
 /**
- * Message handler for manual cache control
+ * Safe postMessage helper - ensures responses always sent
+ */
+function safePostMessage(event, message) {
+    if (event.ports && event.ports[0]) {
+        try {
+            event.ports[0].postMessage(message);
+        } catch (err) {
+            log('Failed to postMessage response:', err);
+        }
+    }
+}
+
+/**
+ * Message handler for manual cache control - with comprehensive error handling
  */
 self.addEventListener('message', (event) => {
-    const { type, data } = event.data;
+    const { type, data } = event.data || {};
     
-    switch (type) {
-        case 'CLEAR_CACHE':
-            caches.delete(CACHE_NAME).then(() => {
-                log('Cache cleared');
-                event.ports[0].postMessage({ success: true });
-            });
-            break;
+    try {
+        switch (type) {
+            case 'CLEAR_CACHE':
+                caches.delete(CACHE_NAME)
+                    .then(() => {
+                        log('Cache cleared');
+                        safePostMessage(event, { success: true });
+                    })
+                    .catch((err) => {
+                        log('Failed to clear cache:', err);
+                        safePostMessage(event, { success: false, error: 'Failed to clear cache' });
+                    });
+                break;
+                
+            case 'GET_CACHE_KEYS':
+                caches.open(CACHE_NAME)
+                    .then((cache) => cache.keys())
+                    .then((keys) => {
+                        safePostMessage(event, { 
+                            success: true, 
+                            keys: keys.map(req => req.url) 
+                        });
+                    })
+                    .catch((err) => {
+                        log('Failed to get cache keys:', err);
+                        safePostMessage(event, { success: false, error: 'Failed to get cache keys' });
+                    });
+                break;
+                
+            case 'PREFETCH':
+                // Prefetch URLs provided in data
+                if (data && Array.isArray(data.urls)) {
+                    const promises = data.urls.map(url => {
+                        return fetch(url).then(response => {
+                            if (response.ok) {
+                                return caches.open(CACHE_NAME).then(cache => cache.put(url, response));
+                            }
+                        }).catch(err => log('Prefetch failed for', url, err));
+                    });
+                    Promise.all(promises)
+                        .then(() => {
+                            log(`Prefetched ${data.urls.length} URLs`);
+                            safePostMessage(event, { success: true, count: data.urls.length });
+                        })
+                        .catch((err) => {
+                            log('Prefetch batch failed:', err);
+                            safePostMessage(event, { success: false, error: 'Prefetch failed' });
+                        });
+                } else {
+                    safePostMessage(event, { success: false, error: 'Invalid prefetch data' });
+                }
+                break;
             
-        case 'GET_CACHE_KEYS':
-            caches.open(CACHE_NAME).then((cache) => {
-                return cache.keys();
-            }).then((keys) => {
-                event.ports[0].postMessage({ 
-                    success: true, 
-                    keys: keys.map(req => req.url) 
-                });
-            });
-            break;
-            
-        case 'PREFETCH':
-            // Prefetch URLs provided in data
-            if (data && Array.isArray(data.urls)) {
-                const promises = data.urls.map(url => {
-                    return fetch(url).then(response => {
-                        if (response.ok) {
-                            return caches.open(CACHE_NAME).then(cache => cache.put(url, response));
-                        }
-                    }).catch(err => log('Prefetch failed for', url, err));
-                });
-                Promise.all(promises).then(() => {
-                    log(`Prefetched ${data.urls.length} URLs`);
-                    if (event.ports && event.ports[0]) {
-                        event.ports[0].postMessage({ success: true, count: data.urls.length });
-                    }
-                });
-            }
-            break;
-        
-        case 'PING':
-            // Health check - respond with status
-            if (event.ports && event.ports[0]) {
-                event.ports[0].postMessage({ 
+            case 'PING':
+                // Health check - respond with status
+                safePostMessage(event, { 
                     success: true, 
                     status: 'active',
                     timestamp: Date.now()
                 });
-            }
-            break;
-            
-        default:
-            log('Unknown message type:', type);
-            if (event.ports && event.ports[0]) {
-                event.ports[0].postMessage({ success: false, error: 'Unknown message type' });
-            }
+                break;
+                
+            default:
+                log('Unknown message type:', type);
+                safePostMessage(event, { success: false, error: 'Unknown message type' });
+        }
+    } catch (error) {
+        log('Message handler error:', error);
+        safePostMessage(event, { success: false, error: 'Internal error' });
     }
 });
 

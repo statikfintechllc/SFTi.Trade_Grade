@@ -499,8 +499,28 @@ const StaticBackend = {
         // Client Secret - loaded from IndexedDB (persistent across sessions)
         CLIENT_SECRET: '', // Loaded async from IndexedDB
         // IMPORTANT: Callback URL must match EXACTLY what's registered in GitHub OAuth App
-        // Dynamic construction supports repository forks/renames
-        REDIRECT_URI: window.location.origin + window.location.pathname.replace('/index.html', '') + '/system/auth/callback',
+        // GitHub OAuth App callback: https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback
+        REDIRECT_URI: (() => {
+            // Construct the base path correctly to match GitHub OAuth app configuration
+            let basePath = window.location.pathname;
+            
+            // Remove index.html if present
+            if (basePath.endsWith('/index.html')) {
+                basePath = basePath.slice(0, -11); // Remove '/index.html'
+            }
+            
+            // Remove trailing slash if present
+            if (basePath.endsWith('/')) {
+                basePath = basePath.slice(0, -1);
+            }
+            
+            // If we're at root, basePath will be empty, which is correct
+            const redirectUri = window.location.origin + basePath + '/system/auth/callback';
+            console.log('[OAuth] Constructed redirect_uri:', redirectUri);
+            console.log('[OAuth] Expected redirect_uri: https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback');
+            
+            return redirectUri;
+        })(),
         SCOPES: ['read:user', 'user:email'],
         AUTH_URL: 'https://github.com/login/oauth/authorize',
         TOKEN_URL: 'https://github.com/login/oauth/access_token',

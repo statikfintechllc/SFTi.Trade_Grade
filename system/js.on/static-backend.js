@@ -360,80 +360,102 @@ class CustomStaticBackend {
     }
     
     /**
-     * Store authentication token - with encrypted vault support
+     * Store authentication token - VAULT ONLY (no localStorage fallback)
+     * Security: Tokens are only stored in encrypted vault
      */
     async storeToken(token, type = 'copilot', passphrase = null) {
-        // Try encrypted vault if passphrase provided and widget available
-        if (passphrase && window.CustomCorsWidget && window.CustomCorsWidget.state.vaultDb) {
-            try {
-                const db = window.CustomCorsWidget.state.vaultDb;
-                const cryptoKey = await this.deriveVaultKey(passphrase);
-                const iv = crypto.getRandomValues(new Uint8Array(12));
-                const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, new TextEncoder().encode(token));
-                const transaction = db.transaction(['tokens'], 'readwrite');
-                const store = transaction.objectStore('tokens');
-                await new Promise((res, rej) => {
-                    const req = store.put({ key: `token_${type}`, encrypted: { iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) }, timestamp: Date.now() });
-                    req.onsuccess = () => res();
-                    req.onerror = () => rej(req.error);
-                });
-                console.log(`[Backend] 🔐 Token stored in encrypted vault: ${type}`);
-            } catch (e) {
-                console.warn('[Backend] Vault storage failed:', e.message);
+        try {
+            // Ensure vault is available
+            if (!window.CustomCorsWidget || !window.CustomCorsWidget.state.vaultDb) {
+                throw new Error('Encrypted vault not initialized. Cannot store token securely.');
             }
+            
+            // Require passphrase for security
+            if (!passphrase) {
+                throw new Error('Passphrase required for secure token storage.');
+            }
+            
+            const db = window.CustomCorsWidget.state.vaultDb;
+            const cryptoKey = await this.deriveVaultKey(passphrase);
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encrypted = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv }, 
+                cryptoKey, 
+                new TextEncoder().encode(token)
+            );
+            
+            const transaction = db.transaction(['tokens'], 'readwrite');
+            const store = transaction.objectStore('tokens');
+            
+            await new Promise((resolve, reject) => {
+                const req = store.put({ 
+                    key: `token_${type}`, 
+                    encrypted: { 
+                        iv: Array.from(iv), 
+                        data: Array.from(new Uint8Array(encrypted)) 
+                    }, 
+                    timestamp: Date.now() 
+                });
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+            
+            console.log(`[Backend] 🔐 Token stored in encrypted vault: ${type}`);
+            
+            // Only broadcast AFTER successful storage
+            this.broadcast({ type: 'TOKEN_UPDATE', tokenType: type });
+        } catch (error) {
+            console.error(`[Backend] Failed to store token securely:`, error.message);
+            throw error; // Propagate error to caller
         }
-        
-        // Always store in localStorage as fallback
-        if (type === 'copilot') {
-            localStorage.setItem(this.config.STORAGE.COPILOT_TOKEN, token);
-            const expiry = Date.now() + (8 * 60 * 60 * 1000);
-            localStorage.setItem(this.config.STORAGE.COPILOT_EXPIRY, expiry.toString());
-        } else {
-            localStorage.setItem(this.config.STORAGE.GITHUB_TOKEN, token);
-        }
-        
-        this.broadcast({ type: 'TOKEN_UPDATE', tokenType: type });
     },
     
     /**
-     * Get stored token - try encrypted vault first
+     * Get stored token - VAULT ONLY (no localStorage fallback)
+     * Security: Tokens are only retrieved from encrypted vault
      */
     async getToken(type = 'copilot', passphrase = null) {
-        // Try encrypted vault if passphrase provided
-        if (passphrase && window.CustomCorsWidget && window.CustomCorsWidget.state.vaultDb) {
-            try {
-                const db = window.CustomCorsWidget.state.vaultDb;
-                const transaction = db.transaction(['tokens'], 'readonly');
-                const store = transaction.objectStore('tokens');
-                const record = await new Promise((res, rej) => {
-                    const req = store.get(`token_${type}`);
-                    req.onsuccess = () => res(req.result);
-                    req.onerror = () => rej(req.error);
-                });
-                if (record) {
-                    const cryptoKey = await this.deriveVaultKey(passphrase);
-                    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(record.encrypted.iv) }, cryptoKey, new Uint8Array(record.encrypted.data));
-                    console.log(`[Backend] 🔓 Token retrieved from vault: ${type}`);
-                    return new TextDecoder().decode(decrypted);
-                }
-            } catch (e) {
-                console.warn('[Backend] Vault retrieval failed:', e.message);
-            }
-        }
-        
-        // Fallback to localStorage
-        if (type === 'copilot') {
-            const token = localStorage.getItem(this.config.STORAGE.COPILOT_TOKEN);
-            const expiry = localStorage.getItem(this.config.STORAGE.COPILOT_EXPIRY);
-            if (token && expiry && Date.now() < parseInt(expiry)) {
-                return token;
+        try {
+            // Ensure vault is available
+            if (!window.CustomCorsWidget || !window.CustomCorsWidget.state.vaultDb) {
+                throw new Error('Encrypted vault not initialized');
             }
             
+            // Require passphrase
+            if (!passphrase) {
+                console.warn('[Backend] Passphrase required to retrieve token from vault');
+                return null;
+            }
+            
+            const db = window.CustomCorsWidget.state.vaultDb;
+            const transaction = db.transaction(['tokens'], 'readonly');
+            const store = transaction.objectStore('tokens');
+            
+            const record = await new Promise((resolve, reject) => {
+                const req = store.get(`token_${type}`);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+            
+            if (!record) {
+                console.log(`[Backend] No token found in vault: ${type}`);
+                return null;
+            }
+            
+            const cryptoKey = await this.deriveVaultKey(passphrase);
+            const decrypted = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: new Uint8Array(record.encrypted.iv) }, 
+                cryptoKey, 
+                new Uint8Array(record.encrypted.data)
+            );
+            
+            console.log(`[Backend] 🔓 Token retrieved from vault: ${type}`);
+            return new TextDecoder().decode(decrypted);
+        } catch (error) {
+            console.error(`[Backend] Failed to retrieve token:`, error.message);
             return null;
         }
-        
-        return localStorage.getItem(this.config.STORAGE.GITHUB_TOKEN);
-    }
+    },
     
     /**
      * Validate GitHub token

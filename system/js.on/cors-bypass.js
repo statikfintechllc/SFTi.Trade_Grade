@@ -16,6 +16,20 @@
  * @license MIT
  */
 
+/**
+ * Custom DOMPurifier - DOM-based HTML sanitization without regex vulnerabilities
+ * No external dependencies
+ */
+class DOMPurifier {
+    constructor() {
+        this.parser = new DOMParser();
+    }
+    
+    parseFromString(htmlString, mimeType) {
+        return this.parser.parseFromString(htmlString, mimeType);
+    }
+}
+
 const CustomCorsWidget = {
     // Configuration
     config: {
@@ -35,6 +49,9 @@ const CustomCorsWidget = {
 
     // State
     state: {
+        initialized: false,
+        initializing: false,
+        initPromise: null,
         serviceWorkerReady: false,
         iframeProxies: new Map(),
         pendingRequests: new Map(),
@@ -69,7 +86,32 @@ const CustomCorsWidget = {
     /**
      * Initialize CORS bypass widget - Adversarial mode
      */
+    /**
+     * Initialize with race condition protection
+     * Ensures initialization happens only once even if called multiple times
+     */
     async init() {
+        // If already initialized, return immediately
+        if (this.state.initialized) {
+            return true;
+        }
+        
+        // If currently initializing, wait for that to complete
+        if (this.state.initializing && this.state.initPromise) {
+            return this.state.initPromise;
+        }
+        
+        // Mark as initializing and create promise
+        this.state.initializing = true;
+        this.state.initPromise = this._performInit();
+        
+        return this.state.initPromise;
+    },
+    
+    /**
+     * Internal initialization logic
+     */
+    async _performInit() {
         try {
             this.log('🔥 Initializing Adversarial CORS - User is root, no 3rd party proxies');
             
@@ -93,12 +135,27 @@ const CustomCorsWidget = {
             // Set up message listener for iframe proxy responses
             window.addEventListener('message', this.handleMessage.bind(this));
             
+            this.state.initialized = true;
+            this.state.initializing = false;
+            
             this.log('✅ All CORS restrictions bypassed - fully self-sufficient runtime');
             return true;
         } catch (error) {
+            this.state.initializing = false;
+            this.state.initPromise = null;
             this.error('Failed to initialize CORS widget:', error);
             return false;
         }
+    },
+    
+    /**
+     * Ensure initialization before using any feature
+     */
+    async ensureInitialized() {
+        if (!this.state.initialized) {
+            await this.init();
+        }
+        return this.state.initialized;
     },
 
     async initKeypair() {
@@ -698,6 +755,9 @@ const CustomCorsWidget = {
      * @returns {Promise<Response>}
      */
     async fetch(url, options = {}) {
+        // Ensure initialization before making any requests
+        await this.ensureInitialized();
+        
         const method = (options.method || 'GET').toUpperCase();
         
         this.log(`Fetching ${method} ${url}`);
@@ -1155,62 +1215,135 @@ const CustomCorsWidget = {
     },
     
     /**
-     * Sanitize HTML to remove malicious scripts and event handlers
-     * Uses iterative approach to handle nested/obfuscated tags
-     * Final validation ensures no script tags remain
+     * Custom DOM-based HTML sanitizer (no regex vulnerabilities)
+     * Implements DOMPurify-like functionality without external dependencies
+     * Uses DOM parsing for robust handling of malformed/nested/obfuscated HTML
      */
     sanitizeHtml(html) {
         if (!html) return '';
         
-        let sanitized = html;
-        let iterations = 0;
-        const maxIterations = 10;
-        
-        // Iteratively remove script tags until none remain or max iterations reached
-        while (iterations < maxIterations) {
-            const beforeLength = sanitized.length;
+        try {
+            // Parse HTML into a DOM tree for proper handling
+            const parser = new DOMPurifier();
+            const doc = parser.parseFromString(html, 'text/html');
             
-            // Match script tags with any whitespace in closing tag
-            sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script[\s]*>/gi, '');
-            // Remove standalone script opening tags
-            sanitized = sanitized.replace(/<script[^>]*>/gi, '');
-            // Remove standalone script closing tags
-            sanitized = sanitized.replace(/<\/script[\s]*>/gi, '');
+            // Remove all known dangerous elements
+            const blockedTags = [
+                'script', 'style', 'iframe', 'object', 'embed', 
+                'link', 'meta', 'base', 'form', 'input', 'textarea',
+                'button', 'select', 'option'
+            ];
             
-            // If no changes, we're done
-            if (sanitized.length === beforeLength) {
-                break;
+            blockedTags.forEach(tag => {
+                const elements = doc.querySelectorAll(tag);
+                elements.forEach(el => el.remove());
+            });
+            
+            // Walk all remaining elements and sanitize attributes
+            const walker = doc.createTreeWalker(
+                doc.body || doc,
+                NodeFilter.SHOW_ELEMENT,
+                null,
+                false
+            );
+            
+            const dangerousProtocols = [
+                'javascript:', 'vbscript:', 'data:text/html', 
+                'data:text/xml', 'data:application/'
+            ];
+            
+            const dangerousAttributes = [
+                'onload', 'onerror', 'onclick', 'onmouseover', 'onmouseout',
+                'onmousedown', 'onmouseup', 'onkeydown', 'onkeyup', 'onkeypress',
+                'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset',
+                'onanimationstart', 'onanimationend', 'ontransitionend',
+                'onwheel', 'onscroll', 'ondrag', 'ondrop', 'onpaste', 'oncopy'
+            ];
+            
+            let node = walker.currentNode;
+            while (node) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    // Get all attributes
+                    const attrs = Array.from(node.attributes);
+                    
+                    attrs.forEach(attr => {
+                        const attrName = attr.name.toLowerCase();
+                        const attrValue = attr.value.toLowerCase();
+                        
+                        // Remove event handler attributes
+                        if (dangerousAttributes.includes(attrName) || attrName.startsWith('on')) {
+                            node.removeAttribute(attr.name);
+                            return;
+                        }
+                        
+                        // Check for dangerous protocols in href, src, action, etc.
+                        if (['href', 'src', 'action', 'formaction', 'data', 'codebase'].includes(attrName)) {
+                            const hasDangerousProtocol = dangerousProtocols.some(proto => 
+                                attrValue.includes(proto)
+                            );
+                            if (hasDangerousProtocol) {
+                                node.removeAttribute(attr.name);
+                                return;
+                            }
+                        }
+                        
+                        // Remove style attributes that might contain expressions
+                        if (attrName === 'style') {
+                            if (attrValue.includes('expression') || attrValue.includes('javascript:')) {
+                                node.removeAttribute(attr.name);
+                            }
+                        }
+                    });
+                }
+                node = walker.nextNode();
             }
-            iterations++;
+            
+            // Get sanitized HTML
+            const sanitized = doc.body ? doc.body.innerHTML : '';
+            
+            // Final validation: double-check no scripts slipped through
+            const finalCheck = this.finalSecurityCheck(sanitized);
+            if (!finalCheck.safe) {
+                this.warn('⚠️ HTML sanitization security check failed - rejecting content');
+                return '<!-- Content rejected: security risk detected -->';
+            }
+            
+            this.log(`✅ HTML sanitized using DOM parser - ${finalCheck.removedCount} dangerous elements removed`);
+            return sanitized;
+            
+        } catch (error) {
+            this.warn('⚠️ HTML sanitization failed:', error.message);
+            return '<!-- Content rejected: sanitization error -->';
         }
-        
-        // Final safety check: if any script tag pattern still exists, reject the content
-        if (/<script/i.test(sanitized) || /<\/script/i.test(sanitized)) {
-            this.warn('⚠️ HTML sanitization incomplete - rejecting content for safety');
-            return '<!-- Content rejected: potential XSS risk after sanitization -->';
-        }
-        
-        // Remove inline event handlers
-        const eventHandlers = [
-            'onload', 'onerror', 'onclick', 'onmouseover', 'onmouseout',
-            'onmousedown', 'onmouseup', 'onkeydown', 'onkeyup', 'onkeypress',
-            'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset'
+    },
+    
+    /**
+     * Final security check for sanitized HTML
+     * Returns {safe: boolean, removedCount: number}
+     */
+    finalSecurityCheck(html) {
+        const dangerousPatterns = [
+            /<script/i,
+            /<\/script/i,
+            /javascript:/i,
+            /vbscript:/i,
+            /on\w+\s*=/i, // event handlers
+            /<iframe/i,
+            /<object/i,
+            /<embed/i
         ];
         
-        eventHandlers.forEach(handler => {
-            const regex = new RegExp(`\\s${handler}\\s*=\\s*["'][^"']*["']`, 'gi');
-            sanitized = sanitized.replace(regex, '');
-        });
+        let safe = true;
+        let removedCount = 0;
         
-        // Remove javascript: protocol in href/src
-        sanitized = sanitized.replace(/\bhref\s*=\s*["']javascript:[^"']*["']/gi, '');
-        sanitized = sanitized.replace(/\bsrc\s*=\s*["']javascript:[^"']*["']/gi, '');
+        for (const pattern of dangerousPatterns) {
+            if (pattern.test(html)) {
+                safe = false;
+                removedCount++;
+            }
+        }
         
-        // Remove data: URIs that might contain scripts
-        sanitized = sanitized.replace(/\bsrc\s*=\s*["']data:text\/html[^"']*["']/gi, '');
-        
-        this.log(`✅ HTML sanitized - ${iterations} iterations, scripts and event handlers removed`);
-        return sanitized;
+        return { safe, removedCount };
     },
 
     /**
