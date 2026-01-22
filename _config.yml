@@ -70,5 +70,5 @@ sfti:
     
   features:
     ai_assistant: true
-    web_search: false
+    web_search: true
     offline_mode: true
