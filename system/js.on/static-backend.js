@@ -77,11 +77,13 @@ class CustomStaticBackend {
             pollingIntervals: new Map()
         };
         
-        this.init();
+        // Infrastructure loaded but NOT initialized
+        // Call init() explicitly from application code
     }
     
     /**
      * Initialize the backend server
+     * Must be called explicitly by application code
      */
     async init() {
         console.log('[CustomStaticBackend] Initializing...');

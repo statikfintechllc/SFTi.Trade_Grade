@@ -1382,14 +1382,7 @@ const CustomCorsWidget = {
     }
 };
 
-// Auto-initialize on load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        CustomCorsWidget.init();
-    });
-} else {
-    CustomCorsWidget.init();
-}
-
 // Export for use in other modules
+// Infrastructure is loaded but NOT initialized
+// Application code must call CustomCorsWidget.init() explicitly when needed
 window.CustomCorsWidget = CustomCorsWidget;
