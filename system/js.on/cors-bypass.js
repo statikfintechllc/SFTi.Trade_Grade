@@ -1156,15 +1156,39 @@ const CustomCorsWidget = {
     
     /**
      * Sanitize HTML to remove malicious scripts and event handlers
-     * Removes: <script>, inline event handlers (onclick, onerror, etc.)
+     * Uses iterative approach to handle nested/obfuscated tags
+     * Final validation ensures no script tags remain
      */
     sanitizeHtml(html) {
         if (!html) return '';
         
         let sanitized = html;
+        let iterations = 0;
+        const maxIterations = 10;
         
-        // Remove script tags
-        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        // Iteratively remove script tags until none remain or max iterations reached
+        while (iterations < maxIterations) {
+            const beforeLength = sanitized.length;
+            
+            // Match script tags with any whitespace in closing tag
+            sanitized = sanitized.replace(/<script[^>]*>[\s\S]*?<\/script[\s]*>/gi, '');
+            // Remove standalone script opening tags
+            sanitized = sanitized.replace(/<script[^>]*>/gi, '');
+            // Remove standalone script closing tags
+            sanitized = sanitized.replace(/<\/script[\s]*>/gi, '');
+            
+            // If no changes, we're done
+            if (sanitized.length === beforeLength) {
+                break;
+            }
+            iterations++;
+        }
+        
+        // Final safety check: if any script tag pattern still exists, reject the content
+        if (/<script/i.test(sanitized) || /<\/script/i.test(sanitized)) {
+            this.warn('⚠️ HTML sanitization incomplete - rejecting content for safety');
+            return '<!-- Content rejected: potential XSS risk after sanitization -->';
+        }
         
         // Remove inline event handlers
         const eventHandlers = [
@@ -1185,7 +1209,7 @@ const CustomCorsWidget = {
         // Remove data: URIs that might contain scripts
         sanitized = sanitized.replace(/\bsrc\s*=\s*["']data:text\/html[^"']*["']/gi, '');
         
-        this.log('✅ HTML sanitized - scripts and event handlers removed');
+        this.log(`✅ HTML sanitized - ${iterations} iterations, scripts and event handlers removed`);
         return sanitized;
     },
 
