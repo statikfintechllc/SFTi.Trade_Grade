@@ -158,25 +158,25 @@ const CustomCorsWidget = {
         return this.state.initialized;
     },
 
+    /**
+     * Initialize client keypair - SESSION ONLY (no localStorage)
+     * Security: Generate fresh keypair per session to minimize risk
+     * If persistence is needed in future, use encrypted vault
+     */
     async initKeypair() {
         try {
-            const stored = localStorage.getItem('sfti_keypair');
-            if (stored) {
-                const p = JSON.parse(stored);
-                this.config.keypair = {
-                    publicKey: await crypto.subtle.importKey('jwk', p.publicKey, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['verify']),
-                    privateKey: await crypto.subtle.importKey('jwk', p.privateKey, { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign'])
-                };
-            } else {
-                const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
-                localStorage.setItem('sfti_keypair', JSON.stringify({
-                    publicKey: await crypto.subtle.exportKey('jwk', kp.publicKey),
-                    privateKey: await crypto.subtle.exportKey('jwk', kp.privateKey)
-                }));
-                this.config.keypair = kp;
-            }
-            this.log('🔑 Client keypair ready');
-        } catch (e) { this.warn('Keypair init failed:', e.message); }
+            // Always generate fresh keypair per session for security
+            // No persistence in localStorage (security risk per code review)
+            const kp = await crypto.subtle.generateKey(
+                { name: 'ECDSA', namedCurve: 'P-256' }, 
+                true, 
+                ['sign', 'verify']
+            );
+            this.config.keypair = kp;
+            this.log('🔑 Client keypair generated (session-only, not persisted)');
+        } catch (e) { 
+            this.warn('Keypair init failed:', e.message); 
+        }
     },
 
     async initWebRTC() {
@@ -189,16 +189,27 @@ const CustomCorsWidget = {
         } catch (e) { this.warn('WebRTC init failed:', e.message); }
     },
 
+    /**
+     * Initialize encrypted vault with salt stored in IndexedDB (not localStorage)
+     * Security: Salt stored securely in IndexedDB, not localStorage
+     */
     async initVault() {
         try {
             const req = indexedDB.open('sfti_vault', 1);
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
+                
+                // Create tokens object store
                 if (!db.objectStoreNames.contains('tokens')) {
                     db.createObjectStore('tokens', { keyPath: 'key' });
                 }
                 
-                // Generate and store vault salt on first creation
+                // Create config object store for salt and other sensitive config
+                if (!db.objectStoreNames.contains('config')) {
+                    db.createObjectStore('config', { keyPath: 'key' });
+                }
+                
+                // Generate and store vault salt on first creation IN IndexedDB
                 const saltBytes = new Uint8Array(16); // 128-bit salt
                 if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
                     crypto.getRandomValues(saltBytes);
@@ -209,8 +220,13 @@ const CustomCorsWidget = {
                     }
                 }
                 const saltArray = Array.from(saltBytes);
-                localStorage.setItem('sfti_vault_salt', JSON.stringify(saltArray));
-                this.log('🔐 Generated vault salt on database creation');
+                
+                // Store salt in IndexedDB config store (not localStorage)
+                const transaction = e.target.transaction;
+                const configStore = transaction.objectStore('config');
+                configStore.put({ key: 'vault_salt', value: saltArray, timestamp: Date.now() });
+                
+                this.log('🔐 Generated vault salt on database creation (stored in IndexedDB)');
             };
             this.state.vaultDb = await new Promise((res, rej) => {
                 req.onsuccess = () => res(req.result);

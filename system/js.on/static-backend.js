@@ -633,6 +633,10 @@ class CustomStaticBackend {
     /**
      * Derive vault encryption key from passphrase
      */
+    /**
+     * Derive encryption key from passphrase using PBKDF2
+     * Security: Salt stored in IndexedDB (not localStorage) for better protection
+     */
     async deriveVaultKey(passphrase) {
         // Check if vault is initialized
         const hasVault = !!(window.CustomCorsWidget?.state.vaultDb);
@@ -640,33 +644,54 @@ class CustomStaticBackend {
             throw new Error('Vault not initialized');
         }
 
-        // Get or create salt
+        const db = window.CustomCorsWidget.state.vaultDb;
+
+        // Get salt from IndexedDB (not localStorage)
         let saltArray = [];
         try {
-            const storedSalt = localStorage.getItem('sfti_vault_salt');
-            if (storedSalt) {
-                saltArray = JSON.parse(storedSalt);
+            const transaction = db.transaction(['config'], 'readonly');
+            const store = transaction.objectStore('config');
+            const record = await new Promise((resolve, reject) => {
+                const req = store.get('vault_salt');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+            
+            if (record && Array.isArray(record.value)) {
+                saltArray = record.value;
             }
         } catch (e) {
-            // If parsing fails, we'll regenerate the salt below
+            console.warn('[CustomStaticBackend] Failed to read salt from vault:', e.message);
             saltArray = [];
         }
 
+        // If salt not found, generate and store new one in IndexedDB
         if (!Array.isArray(saltArray) || saltArray.length === 0) {
-            // Generate a new cryptographically secure salt and persist it
             const saltBytes = new Uint8Array(this.config.CRYPTO.SALT_BYTES);
             if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
                 crypto.getRandomValues(saltBytes);
             } else {
-                // Fallback for older browsers (less secure)
                 console.warn('[CustomStaticBackend] crypto.getRandomValues not available, using Math.random fallback for vault salt');
                 for (let i = 0; i < saltBytes.length; i++) {
                     saltBytes[i] = Math.floor(Math.random() * 256);
                 }
             }
             saltArray = Array.from(saltBytes);
-            localStorage.setItem('sfti_vault_salt', JSON.stringify(saltArray));
-            console.log('[CustomStaticBackend] Generated and stored new vault salt');
+            
+            // Store in IndexedDB config store
+            try {
+                const transaction = db.transaction(['config'], 'readwrite');
+                const store = transaction.objectStore('config');
+                await new Promise((resolve, reject) => {
+                    const req = store.put({ key: 'vault_salt', value: saltArray, timestamp: Date.now() });
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+                console.log('[CustomStaticBackend] Generated and stored new vault salt in IndexedDB');
+            } catch (e) {
+                console.error('[CustomStaticBackend] Failed to store salt:', e.message);
+                throw new Error('Cannot initialize vault salt');
+            }
         }
 
         const salt = new Uint8Array(saltArray);
