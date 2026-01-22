@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
     <title>SFTi P.R.E.P - OAuth Callback</title>
+    
+    <!-- Infrastructure Scripts - Load synchronously in head -->
+    <script src="../../system/js.on/cors-bypass.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -26,14 +30,16 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            gap: 0;
         }
 
-        .card {
+        /* OAuth Status Card */
+        .oauth-card {
             background: rgba(30, 30, 30, 0.95);
             border: 1px solid rgba(204, 0, 0, 0.3);
-            border-radius: 16px;
+            border-radius: 16px 16px 0 0;
             padding: 40px;
-            max-width: 400px;
+            max-width: 700px;
             width: 100%;
             text-align: center;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -86,6 +92,169 @@
             to { transform: rotate(360deg); }
         }
 
+        .message {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #aaa;
+            margin-bottom: 24px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #cc0000;
+            color: white;
+            text-decoration: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #aa0000;
+            transform: translateY(-2px);
+        }
+
+        /* Debug Terminal - Attached to OAuth Card */
+        .debug-terminal {
+            background: rgba(10, 10, 10, 0.98);
+            border: 1px solid rgba(204, 0, 0, 0.3);
+            border-top: 3px solid #cc0000;
+            border-radius: 0 0 16px 16px;
+            max-width: 700px;
+            width: 100%;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            background: rgba(204, 0, 0, 0.15);
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(204, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .terminal-title {
+            color: #cc0000;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal-title::before {
+            content: "⚡";
+            font-size: 18px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .terminal-status {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .terminal-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Custom scrollbar */
+        .terminal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .terminal-content::-webkit-scrollbar-thumb {
+            background: rgba(204, 0, 0, 0.5);
+            border-radius: 4px;
+        }
+
+        .terminal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(204, 0, 0, 0.7);
+        }
+
+        .terminal-line {
+            margin: 4px 0;
+            padding: 6px 10px;
+            border-left: 3px solid transparent;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .terminal-line.info {
+            color: #00bcd4;
+            border-left-color: #00bcd4;
+            background: rgba(0, 188, 212, 0.05);
+        }
+
+        .terminal-line.success {
+            color: #00cc66;
+            border-left-color: #00cc66;
+            background: rgba(0, 204, 102, 0.05);
+            font-weight: bold;
+        }
+
+        .terminal-line.error {
+            color: #ff4444;
+            border-left-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+            font-weight: bold;
+        }
+
+        .terminal-line.warning {
+            color: #ff9800;
+            border-left-color: #ff9800;
+            background: rgba(255, 152, 0, 0.05);
+        }
+
+        .terminal-line.debug {
+            color: #888;
+            border-left-color: #444;
+            font-size: 12px;
+        }
+
+        .terminal-timestamp {
+            color: #666;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+
+        .terminal-emoji {
+            margin-right: 6px;
+        }
+
+        .countdown {
+            font-size: 12px;
+            color: #666;
+            margin-top: 16px;
+        }
+
         .icon {
             width: 64px;
             height: 64px;
@@ -99,199 +268,18 @@
         .icon.error {
             color: #cc0000;
         }
-
-        .message {
-            font-size: 14px;
-            color: #888;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-
-        .debug-info {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 16px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #666;
-            text-align: left;
-            word-break: break-all;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        /* Verbose Debug Terminal */
-        .debug-terminal {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.95);
-            border-top: 2px solid #cc0000;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            padding: 12px;
-            z-index: 9999;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
-        }
-
-        .debug-terminal.collapsed {
-            max-height: 40px;
-            overflow: hidden;
-        }
-
-        .debug-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #333;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .debug-title {
-            color: #cc0000;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .debug-toggle {
-            color: #666;
-            font-size: 10px;
-        }
-
-        .debug-line {
-            margin: 2px 0;
-            padding: 4px;
-            border-left: 2px solid transparent;
-        }
-
-        .debug-line.info {
-            color: #00bcd4;
-            border-left-color: #00bcd4;
-        }
-
-        .debug-line.success {
-            color: #00cc66;
-            border-left-color: #00cc66;
-        }
-
-        .debug-line.error {
-            color: #cc0000;
-            border-left-color: #cc0000;
-        }
-
-        .debug-line.warning {
-            color: #ff9800;
-            border-left-color: #ff9800;
-        }
-
-        .debug-line.debug {
-            color: #666;
-            border-left-color: #333;
-        }
-
-        .debug-timestamp {
-            color: #444;
-            font-size: 9px;
-            margin-right: 8px;
-        }
-
-        .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #cc0000 0%, #990000 100%);
-            color: white;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(204, 0, 0, 0.4);
-        }
-
-        .countdown {
-            font-size: 12px;
-            color: #666;
-            margin-top: 16px;
-        }
-
-        /* Hidden states */
-        .hidden {
-            display: none !important;
-        }
     </style>
-    <!-- Load CORS bypass widget for OAuth proxy -->
-    <script src="../../js.on/cors-bypass.js"></script>
 </head>
 <body>
     <div class="container">
-        <div class="card">
-            <!-- Logo -->
+        <!-- OAuth Status Card -->
+        <div class="oauth-card">
             <div class="logo-container">
-                <svg class="logo" viewBox="0 0 285 285" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="0" y="0" width="285" height="285" rx="64" fill="#C0392B"/>
-                    <path d="M30 84 L60 94 L90 89 L120 79 L150 99 L180 94 L210 89 L240 84 L255 86" stroke="#FFA500" stroke-width="3" stroke-dasharray="6 4" fill="none" opacity="0.8"/>
-                    <rect x="33" y="104" width="12" height="36" fill="white"/>
-                    <line x1="39" y1="94" x2="39" y2="104" stroke="white" stroke-width="2.5"/>
-                    <line x1="39" y1="140" x2="39" y2="150" stroke="white" stroke-width="2.5"/>
-                    <rect x="58" y="114" width="12" height="28" fill="#212121"/>
-                    <line x1="64" y1="102" x2="64" y2="114" stroke="#212121" stroke-width="2.5"/>
-                    <line x1="64" y1="142" x2="64" y2="154" stroke="#212121" stroke-width="2.5"/>
-                    <rect x="83" y="99" width="12" height="42" fill="white"/>
-                    <line x1="89" y1="88" x2="89" y2="99" stroke="white" stroke-width="2.5"/>
-                    <line x1="89" y1="141" x2="89" y2="152" stroke="white" stroke-width="2.5"/>
-                    <rect x="108" y="74" width="12" height="52" fill="white"/>
-                    <line x1="114" y1="62" x2="114" y2="74" stroke="white" stroke-width="2.5"/>
-                    <line x1="114" y1="126" x2="114" y2="138" stroke="white" stroke-width="2.5"/>
-                    <rect x="133" y="94" width="12" height="38" fill="#212121"/>
-                    <line x1="139" y1="82" x2="139" y2="94" stroke="#212121" stroke-width="2.5"/>
-                    <line x1="139" y1="132" x2="139" y2="144" stroke="#212121" stroke-width="2.5"/>
-                    <rect x="158" y="109" width="12" height="30" fill="#212121"/>
-                    <line x1="164" y1="97" x2="164" y2="109" stroke="#212121" stroke-width="2.5"/>
-                    <line x1="164" y1="139" x2="164" y2="151" stroke="#212121" stroke-width="2.5"/>
-                    <rect x="183" y="102" width="12" height="34" fill="white"/>
-                    <line x1="189" y1="90" x2="189" y2="102" stroke="white" stroke-width="2.5"/>
-                    <line x1="189" y1="136" x2="189" y2="148" stroke="white" stroke-width="2.5"/>
-                    <rect x="208" y="80" width="12" height="48" fill="white"/>
-                    <line x1="214" y1="68" x2="214" y2="80" stroke="white" stroke-width="2.5"/>
-                    <line x1="214" y1="128" x2="214" y2="148" stroke="white" stroke-width="2.5"/>
-                    <rect x="233" y="60" width="12" height="44" fill="white"/>
-                    <line x1="239" y1="46" x2="239" y2="60" stroke="white" stroke-width="2.5"/>
-                    <line x1="239" y1="104" x2="239" y2="110" stroke="white" stroke-width="2.5"/>
-                    <path d="M15 174H270" stroke="white" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M39 174V190L24 205" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="24" cy="205" r="4" fill="white"/>
-                    <path d="M64 174V198L49 213" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="49" cy="213" r="4" fill="white"/>
-                    <path d="M89 174V205" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="89" cy="205" r="4" fill="white"/>
-                    <path d="M114 174V198L129 213" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="129" cy="213" r="4" fill="white"/>
-                    <path d="M139 174V190L154 205" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="154" cy="205" r="4" fill="white"/>
-                    <path d="M164 174V205" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="164" cy="205" r="4" fill="white"/>
-                    <path d="M189 174V190L204 205" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="204" cy="205" r="4" fill="white"/>
-                    <path d="M214 174V198L229 213" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="229" cy="213" r="4" fill="white"/>
-                    <path d="M239 174V190L254 205" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <circle cx="254" cy="205" r="4" fill="white"/>
+                <svg class="logo" viewBox="0 0 100 100" fill="none">
+                    <rect width="100" height="100" rx="20" fill="#cc0000"/>
+                    <path d="M30 50 L45 65 L70 35" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
-
             <h1>SFTi P.R.E.P</h1>
 
             <!-- Processing State -->
@@ -308,7 +296,7 @@
                     <path d="M9 12l2 2 4-4"/>
                 </svg>
                 <p class="status success">Authentication Successful!</p>
-                <p class="message">Your GitHub Copilot access has been configured. You can now use all available AI models.</p>
+                <p class="message">Your GitHub Copilot access has been configured.</p>
                 <a href="../../index.html" class="btn">Return to App</a>
                 <p class="countdown">Redirecting in <span id="countdown">5</span> seconds...</p>
             </div>
@@ -322,16 +310,6 @@
                 <p class="status error">Authentication Failed</p>
                 <p class="message" id="error-message">An error occurred during authentication.</p>
                 <a href="../../index.html" class="btn">Return to App</a>
-                <div class="debug-info" id="debug-info"></div>
-            </div>
-
-            <!-- Verbose Debug Terminal -->
-            <div class="debug-terminal" id="debug-terminal">
-                <div class="debug-header" onclick="toggleDebugTerminal()">
-                    <span class="debug-title">🔧 DEBUG TERMINAL - OAuth Flow Monitor</span>
-                    <span class="debug-toggle" id="debug-toggle">▼ Click to collapse</span>
-                </div>
-                <div id="debug-output"></div>
             </div>
 
             <!-- No Code State -->
@@ -341,712 +319,410 @@
                     <path d="M12 8v4M12 16h.01"/>
                 </svg>
                 <p class="status">No Authorization Code</p>
-                <p class="message">No OAuth authorization code was found. Please start the authentication process from the app.</p>
+                <p class="message">No OAuth authorization code found. Please start authentication from the app.</p>
                 <a href="../../index.html" class="btn">Go to App</a>
+            </div>
+        </div>
+
+        <!-- Debug Terminal - Attached Below OAuth Card -->
+        <div class="debug-terminal">
+            <div class="terminal-header">
+                <div class="terminal-title">VERBOSE DEBUG TERMINAL - OAuth Runtime Monitor</div>
+                <div class="terminal-status">LIVE | <span id="log-count">0</span> messages</div>
+            </div>
+            <div class="terminal-content" id="terminal-content">
+                <!-- Log messages appear here -->
             </div>
         </div>
     </div>
 
     <script>
         /**
-         * Verbose Debug Terminal System
-         * Provides real-time visibility into OAuth flow execution
+         * Verbose Debug Terminal - Real-Time OAuth Flow Monitor
+         * Shows ACTUAL error messages and runtime feed
          */
-        const DebugTerminal = {
-            collapsed: false,
-            maxLines: 500,
+        const Terminal = {
+            count: 0,
             
-            init() {
-                console.log('[DebugTerminal] Initializing verbose logging system...');
-                this.log('info', 'Debug Terminal initialized - monitoring OAuth flow');
-                this.log('info', `Timestamp: ${new Date().toISOString()}`);
-                this.log('info', `URL: ${window.location.href}`);
-                this.log('info', `User Agent: ${navigator.userAgent}`);
+            log(level, emoji, message, data = null) {
+                this.count++;
+                document.getElementById('log-count').textContent = this.count;
                 
-                // Intercept console methods
-                this.interceptConsole();
-            },
-            
-            log(level, message, data = null) {
                 const timestamp = new Date().toLocaleTimeString('en-US', { 
-                    hour12: false, 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
                     second: '2-digit',
                     fractionalSecondDigits: 3
                 });
                 
-                const output = document.getElementById('debug-output');
-                if (!output) return;
+                const content = document.getElementById('terminal-content');
+                if (!content) return;
                 
                 const line = document.createElement('div');
-                line.className = `debug-line ${level}`;
+                line.className = `terminal-line ${level}`;
                 
-                let content = `<span class="debug-timestamp">[${timestamp}]</span> ${message}`;
-                if (data) {
-                    content += `\n  ${JSON.stringify(data, null, 2)}`;
+                let text = `<span class="terminal-timestamp">[${timestamp}]</span>`;
+                text += `<span class="terminal-emoji">${emoji}</span>`;
+                text += message;
+                
+                if (data !== null && data !== undefined) {
+                    if (typeof data === 'object') {
+                        text += `\n${JSON.stringify(data, null, 2)}`;
+                    } else {
+                        text += `\n${data}`;
+                    }
                 }
-                line.innerHTML = content;
                 
-                output.appendChild(line);
+                line.innerHTML = text;
+                content.appendChild(line);
                 
                 // Auto-scroll to bottom
-                const terminal = document.getElementById('debug-terminal');
-                if (terminal && !this.collapsed) {
-                    terminal.scrollTop = terminal.scrollHeight;
-                }
+                content.scrollTop = content.scrollHeight;
                 
-                // Limit lines
-                while (output.children.length > this.maxLines) {
-                    output.removeChild(output.firstChild);
-                }
-                
-                // Also log to console with prefix
-                const prefix = `[OAuth Debug ${level.toUpperCase()}]`;
-                if (level === 'error') {
-                    console.error(prefix, message, data || '');
-                } else if (level === 'warning') {
-                    console.warn(prefix, message, data || '');
-                } else {
-                    console.log(prefix, message, data || '');
-                }
+                // Also log to browser console
+                console.log(`[${level.toUpperCase()}] ${message}`, data || '');
             },
             
-            interceptConsole() {
-                const original = {
-                    log: console.log,
-                    warn: console.warn,
-                    error: console.error
-                };
-                
-                console.log = (...args) => {
-                    original.log.apply(console, args);
-                    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
-                    if (msg.includes('[Callback]') || msg.includes('[CustomCorsWidget]')) {
-                        this.log('debug', msg);
-                    }
-                };
-                
-                console.warn = (...args) => {
-                    original.warn.apply(console, args);
-                    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
-                    this.log('warning', msg);
-                };
-                
-                console.error = (...args) => {
-                    original.error.apply(console, args);
-                    const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
-                    this.log('error', msg);
-                };
+            info(message, data) {
+                this.log('info', '📡', message, data);
+            },
+            
+            success(message, data) {
+                this.log('success', '✅', message, data);
+            },
+            
+            error(message, data) {
+                this.log('error', '❌', message, data);
+            },
+            
+            warning(message, data) {
+                this.log('warning', '⚠️', message, data);
+            },
+            
+            debug(message, data) {
+                this.log('debug', '🔍', message, data);
             }
         };
-        
-        // Toggle terminal collapse
-        function toggleDebugTerminal() {
-            const terminal = document.getElementById('debug-terminal');
-            const toggle = document.getElementById('debug-toggle');
-            DebugTerminal.collapsed = !DebugTerminal.collapsed;
-            
-            if (DebugTerminal.collapsed) {
-                terminal.classList.add('collapsed');
-                toggle.textContent = '▲ Click to expand';
-            } else {
-                terminal.classList.remove('collapsed');
-                toggle.textContent = '▼ Click to collapse';
-                terminal.scrollTop = terminal.scrollHeight;
-            }
-        }
-        
-        // Initialize debug terminal immediately
-        DebugTerminal.init();
-        
+
         /**
-         * SFTi P.R.E.P - Static OAuth Callback Handler
-         * 
-         * This file handles the OAuth callback for GitHub authentication.
-         * It's designed to work entirely client-side on GitHub Pages.
-         * 
-         * IMPORTANT: OAuth Web Flow has CORS limitations on GitHub Pages.
-         * We STRONGLY RECOMMEND using Device Flow instead (no callback needed).
-         * 
-         * The flow:
-         * 1. User clicks "Connect with GitHub" in the main app
-         * 2. User is redirected to GitHub's OAuth authorization page
-         * 3. After authorization, GitHub redirects back here with a code
-         * 4. We attempt to exchange code for token (may fail due to CORS)
-         * 5. Token is stored and user is redirected back to the app
-         * 
-         * NOTE: This callback is primarily for compatibility.
-         * For better experience, use Device Flow which doesn't require this page.
+         * OAuth Callback Handler with Verbose Logging
          */
-
-        // Note: CORS limitations mean token exchange often fails here
-        // Device Flow is the recommended authentication method
-
-        const OAuthCallbackHandler = {
-            // Configuration
+        const OAuthHandler = {
             config: {
-                // Storage keys
-                STORAGE_KEYS: {
-                    PENDING_STATE: 'oauth_pending_state',
-                    COPILOT_TOKEN: 'copilotToken',
-                    COPILOT_EXPIRY: 'copilotTokenExpiry',
-                    GITHUB_TOKEN: 'githubToken',
-                    OAUTH_STATE: 'oauth_state',
-                    DEVICE_CODE: 'device_code_data'
-                },
-                
-                // GitHub OAuth endpoints
                 TOKEN_URL: 'https://github.com/login/oauth/access_token',
-                
-                // Redirect delay after success
-                REDIRECT_DELAY: 5000,
-                
-                // Main app URL
-                APP_URL: '../../index.html'
+                CLIENT_ID: window.localStorage.getItem('oauth_client_id') || '',
+                CLIENT_SECRET: window.localStorage.getItem('oauth_client_secret') || '',
+                REDIRECT_URI: window.location.origin + window.location.pathname.replace(/\/+$/, '')
             },
-
-            // State management
-            setState(state) {
+            
+            async init() {
+                Terminal.info('🚀 OAuth Callback Handler initializing...');
+                Terminal.debug('Current URL', window.location.href);
+                Terminal.debug('Origin', window.location.origin);
+                Terminal.debug('Pathname', window.location.pathname);
+                
+                // Get URL parameters
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get('code');
+                const state = params.get('state');
+                const error = params.get('error');
+                const error_description = params.get('error_description');
+                
+                Terminal.info('URL Parameters parsed');
+                Terminal.debug('Code', code ? code.substring(0, 15) + '...' : 'MISSING');
+                Terminal.debug('State', state || 'null');
+                Terminal.debug('Error', error || 'null');
+                
+                // Handle GitHub errors
+                if (error) {
+                    Terminal.error('GitHub returned error', {
+                        error: error,
+                        description: error_description
+                    });
+                    this.showError(error_description || error);
+                    return;
+                }
+                
+                // Handle no code
+                if (!code) {
+                    Terminal.warning('No authorization code in URL');
+                    this.showState('no-code');
+                    return;
+                }
+                
+                Terminal.success('Authorization code detected - starting token exchange');
+                
+                // Validate state (CSRF protection)
+                const expectedState = localStorage.getItem('oauth_state');
+                if (state !== expectedState) {
+                    Terminal.error('State validation FAILED - possible CSRF attack', {
+                        received: state,
+                        expected: expectedState
+                    });
+                    this.showError('Invalid state parameter. Possible CSRF attack.');
+                    return;
+                }
+                Terminal.success('State validation passed');
+                
+                // Load client credentials
+                Terminal.info('Loading OAuth client credentials...');
+                const clientId = localStorage.getItem('oauth_client_id');
+                const clientSecret = localStorage.getItem('oauth_client_secret');
+                
+                if (!clientId) {
+                    Terminal.error('Client ID not found in localStorage');
+                    this.showError('OAuth client ID not configured');
+                    return;
+                }
+                
+                Terminal.success('Client ID loaded', clientId.substring(0, 10) + '...');
+                Terminal.info('Client Secret', clientSecret ? 'CONFIGURED' : 'MISSING');
+                
+                this.config.CLIENT_ID = clientId;
+                this.config.CLIENT_SECRET = clientSecret || '';
+                
+                // Exchange code for token
+                await this.exchangeCodeForToken(code);
+            },
+            
+            async exchangeCodeForToken(code) {
+                Terminal.info('🔄 Starting OAuth token exchange...');
+                Terminal.debug('Token URL', this.config.TOKEN_URL);
+                Terminal.debug('Client ID', this.config.CLIENT_ID.substring(0, 15) + '...');
+                Terminal.debug('Redirect URI', this.config.REDIRECT_URI);
+                Terminal.debug('Code', code.substring(0, 20) + '...');
+                
+                const requestBody = {
+                    client_id: this.config.CLIENT_ID,
+                    client_secret: this.config.CLIENT_SECRET,
+                    code: code,
+                    redirect_uri: this.config.REDIRECT_URI
+                };
+                
+                Terminal.debug('Request body prepared', {
+                    client_id: requestBody.client_id.substring(0, 15) + '...',
+                    client_secret: requestBody.client_secret ? 'SET' : 'EMPTY',
+                    code: code.substring(0, 15) + '...',
+                    redirect_uri: requestBody.redirect_uri
+                });
+                
+                // Try Strategy 1: CustomCorsWidget
+                Terminal.info('📡 Strategy 1: CustomCorsWidget CORS Bypass');
+                
+                if (!window.CustomCorsWidget) {
+                    Terminal.error('CustomCorsWidget NOT LOADED - infrastructure failure');
+                    Terminal.warning('Falling back to Strategy 2');
+                } else {
+                    Terminal.success('CustomCorsWidget class available');
+                    
+                    try {
+                        // Check if initialized
+                        if (!window.CustomCorsWidget.initialized) {
+                            Terminal.warning('CustomCorsWidget not initialized, initializing now...');
+                            const initStart = Date.now();
+                            
+                            await Promise.race([
+                                window.CustomCorsWidget.init(),
+                                new Promise((_, reject) => 
+                                    setTimeout(() => reject(new Error('Initialization timeout after 15s')), 15000)
+                                )
+                            ]);
+                            
+                            const initTime = Date.now() - initStart;
+                            Terminal.success(`CustomCorsWidget initialized in ${initTime}ms`);
+                        } else {
+                            Terminal.success('CustomCorsWidget already initialized');
+                        }
+                        
+                        Terminal.info('🚀 Attempting token exchange via CustomCorsWidget.fetch()...');
+                        const fetchStart = Date.now();
+                        
+                        const response = await window.CustomCorsWidget.fetch(this.config.TOKEN_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(requestBody)
+                        });
+                        
+                        const fetchTime = Date.now() - fetchStart;
+                        Terminal.info(`Fetch completed in ${fetchTime}ms`);
+                        Terminal.debug('Response', {
+                            status: response.status,
+                            ok: response.ok,
+                            statusText: response.statusText
+                        });
+                        
+                        const responseText = await response.text();
+                        Terminal.debug('Response body (raw)', responseText.substring(0, 200));
+                        
+                        let tokenData;
+                        try {
+                            tokenData = JSON.parse(responseText);
+                            Terminal.success('Response parsed as JSON', tokenData);
+                        } catch (e) {
+                            Terminal.error('Failed to parse response as JSON', e.message);
+                            Terminal.error('Raw response', responseText);
+                            this.showError('Invalid response from GitHub: ' + responseText);
+                            return;
+                        }
+                        
+                        if (tokenData.access_token) {
+                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via CustomCorsWidget!');
+                            Terminal.debug('Token type', tokenData.token_type);
+                            Terminal.debug('Access token', tokenData.access_token.substring(0, 20) + '...');
+                            Terminal.debug('Scope', tokenData.scope);
+                            
+                            await this.handleSuccess(tokenData);
+                            return;
+                        } else if (tokenData.error) {
+                            Terminal.error('GitHub returned error in response', tokenData);
+                            this.showError(tokenData.error_description || tokenData.error);
+                            return;
+                        } else {
+                            Terminal.error('Unexpected response format', tokenData);
+                            this.showError('Unexpected response from GitHub');
+                            return;
+                        }
+                        
+                    } catch (error) {
+                        Terminal.error('❌ CustomCorsWidget strategy FAILED', error.message);
+                        Terminal.debug('Error stack', error.stack);
+                        Terminal.warning('Trying fallback strategies...');
+                    }
+                }
+                
+                // Try Strategy 2: JSONP (if applicable)
+                Terminal.info('📡 Strategy 2: JSONP Fallback');
+                Terminal.warning('JSONP requires GET request - GitHub OAuth uses POST only');
+                Terminal.info('Skipping to Strategy 3');
+                
+                // Try Strategy 3: Service Worker
+                Terminal.info('📡 Strategy 3: Service Worker Proxy');
+                if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+                    Terminal.error('Service Worker not available or not controlling page');
+                    Terminal.info('Trying Strategy 4');
+                } else {
+                    Terminal.success('Service Worker is active');
+                    try {
+                        const response = await fetch(this.config.TOKEN_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-Cors-Proxy': 'true'
+                            },
+                            body: JSON.stringify(requestBody)
+                        });
+                        
+                        Terminal.debug('Service Worker response', {
+                            status: response.status,
+                            ok: response.ok
+                        });
+                        
+                        const tokenData = await response.json();
+                        
+                        if (tokenData.access_token) {
+                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via Service Worker!');
+                            await this.handleSuccess(tokenData);
+                            return;
+                        }
+                        
+                        Terminal.error('Service Worker strategy failed', tokenData);
+                    } catch (error) {
+                        Terminal.error('❌ Service Worker strategy FAILED', error.message);
+                    }
+                }
+                
+                // Try Strategy 4: Direct fetch (will likely fail due to CORS)
+                Terminal.info('📡 Strategy 4: Direct Fetch (likely to fail)');
+                try {
+                    const response = await fetch(this.config.TOKEN_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    const tokenData = await response.json();
+                    
+                    if (tokenData.access_token) {
+                        Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via Direct Fetch!');
+                        await this.handleSuccess(tokenData);
+                        return;
+                    }
+                } catch (error) {
+                    Terminal.error('❌ All strategies FAILED', error.message);
+                    Terminal.error('Final error', error.stack);
+                }
+                
+                Terminal.error('🚫 COMPLETE FAILURE - All 4 strategies failed');
+                this.showError('Token exchange failed. All CORS bypass strategies failed. Please use Device Flow authentication.');
+            },
+            
+            async handleSuccess(tokenData) {
+                Terminal.success('💾 Storing access token...');
+                
+                try {
+                    // Store token
+                    localStorage.setItem('copilot_access_token', tokenData.access_token);
+                    localStorage.setItem('copilot_token_type', tokenData.token_type || 'bearer');
+                    localStorage.setItem('copilot_scope', tokenData.scope || '');
+                    
+                    Terminal.success('Token stored in localStorage');
+                    Terminal.info('Token type', tokenData.token_type);
+                    Terminal.info('Scope', tokenData.scope);
+                    
+                    // Show success state
+                    this.showState('success');
+                    
+                    // Start countdown
+                    let countdown = 5;
+                    const countdownEl = document.getElementById('countdown');
+                    const interval = setInterval(() => {
+                        countdown--;
+                        if (countdownEl) {
+                            countdownEl.textContent = countdown;
+                        }
+                        
+                        if (countdown <= 0) {
+                            clearInterval(interval);
+                            Terminal.info('🔄 Redirecting to app...');
+                            window.location.href = '../../index.html';
+                        }
+                    }, 1000);
+                    
+                } catch (error) {
+                    Terminal.error('Failed to store token', error.message);
+                    this.showError('Failed to store access token: ' + error.message);
+                }
+            },
+            
+            showState(state) {
+                Terminal.info(`Switching to state: ${state}`);
                 document.getElementById('state-processing').classList.add('hidden');
                 document.getElementById('state-success').classList.add('hidden');
                 document.getElementById('state-error').classList.add('hidden');
                 document.getElementById('state-no-code').classList.add('hidden');
-                document.getElementById(`state-${state}`).classList.remove('hidden');
+                
+                document.getElementById('state-' + state).classList.remove('hidden');
             },
-
-            // Show success state with countdown
-            showSuccess(token, tokenType = 'copilot') {
-                this.setState('success');
-                
-                // Store token
-                if (tokenType === 'copilot') {
-                    localStorage.setItem(this.config.STORAGE_KEYS.COPILOT_TOKEN, token);
-                    // Set expiry to 8 hours from now (GitHub Copilot tokens)
-                    const expiry = Date.now() + (8 * 60 * 60 * 1000);
-                    localStorage.setItem(this.config.STORAGE_KEYS.COPILOT_EXPIRY, expiry.toString());
-                } else {
-                    localStorage.setItem(this.config.STORAGE_KEYS.GITHUB_TOKEN, token);
-                }
-                
-                // Broadcast to other tabs via BroadcastChannel
-                if ('BroadcastChannel' in window) {
-                    const channel = new BroadcastChannel('sfti-backend');
-                    channel.postMessage({
-                        type: 'TOKEN_UPDATE',
-                        tokenType: tokenType,
-                        token: token
-                    });
-                    channel.close();
-                }
-                
-                // Notify opener window if exists (popup flow)
-                if (window.opener && !window.opener.closed) {
-                    window.opener.postMessage({
-                        type: 'OAUTH_SUCCESS',
-                        token: token,
-                        tokenType: tokenType
-                    }, '*');
-                }
-                
-                // Clear pending OAuth state
-                localStorage.removeItem(this.config.STORAGE_KEYS.PENDING_STATE);
-                localStorage.removeItem(this.config.STORAGE_KEYS.OAUTH_STATE);
-                localStorage.removeItem(this.config.STORAGE_KEYS.DEVICE_CODE);
-                
-                // Start countdown and redirect
-                this.startCountdown();
-            },
-
-            // Show error state
-            showError(message, debugData = null) {
-                this.setState('error');
+            
+            showError(message) {
+                Terminal.error('Showing error to user', message);
                 document.getElementById('error-message').textContent = message;
-                
-                if (debugData) {
-                    const debugEl = document.getElementById('debug-info');
-                    debugEl.textContent = typeof debugData === 'string' 
-                        ? debugData 
-                        : JSON.stringify(debugData, null, 2);
-                    debugEl.classList.remove('hidden');
-                }
-                
-                // Notify opener window if exists
-                if (window.opener && !window.opener.closed) {
-                    window.opener.postMessage({
-                        type: 'OAUTH_ERROR',
-                        error: message
-                    }, '*');
-                }
-            },
-
-            // Countdown timer for redirect
-            startCountdown() {
-                let seconds = 5;
-                const countdownEl = document.getElementById('countdown');
-                
-                const timer = setInterval(() => {
-                    seconds--;
-                    countdownEl.textContent = seconds;
-                    
-                    if (seconds <= 0) {
-                        clearInterval(timer);
-                        this.redirect();
-                    }
-                }, 1000);
-            },
-
-            // Redirect to main app
-            redirect() {
-                // Close popup if in popup mode
-                if (window.opener && !window.opener.closed) {
-                    window.close();
-                } else {
-                    window.location.href = this.config.APP_URL;
-                }
-            },
-
-            // Parse URL parameters
-            getURLParams() {
-                const params = new URLSearchParams(window.location.search);
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                
-                return {
-                    code: params.get('code') || hashParams.get('code'),
-                    state: params.get('state') || hashParams.get('state'),
-                    error: params.get('error') || hashParams.get('error'),
-                    error_description: params.get('error_description') || hashParams.get('error_description'),
-                    access_token: hashParams.get('access_token'),
-                    token_type: hashParams.get('token_type')
-                };
-            },
-
-            // Validate state parameter (CSRF protection)
-            validateState(receivedState) {
-                const storedState = localStorage.getItem(this.config.STORAGE_KEYS.OAUTH_STATE);
-                
-                if (!storedState) {
-                    console.warn('No stored state found');
-                    return true; // Allow if no state stored (first time use)
-                }
-                
-                return receivedState === storedState;
-            },
-
-            // Exchange authorization code for token
-            // Uses our self-hosted CORS bypass proxy system
-            async exchangeCodeForToken(code) {
-                DebugTerminal.log('info', '🔄 Starting OAuth token exchange process');
-                DebugTerminal.log('debug', `Authorization code: ${code.substring(0, 10)}...`);
-                
-                // Get stored OAuth app credentials
-                const clientId = localStorage.getItem('oauth_client_id');
-                const clientSecret = localStorage.getItem('oauth_client_secret');
-                
-                DebugTerminal.log('debug', `Client ID: ${clientId ? clientId.substring(0, 10) + '...' : 'NOT SET'}`);
-                DebugTerminal.log('debug', `Client Secret: ${clientSecret ? 'SET' : 'NOT SET'}`);
-                
-                if (!clientId) {
-                    DebugTerminal.log('error', '❌ OAuth Client ID not configured');
-                    throw new Error('OAuth Client ID not configured. Please set up your GitHub OAuth App credentials in the main application.');
-                }
-                
-                if (!clientSecret) {
-                    DebugTerminal.log('error', '❌ OAuth Client Secret not configured');
-                    throw new Error('OAuth Client Secret not configured. GitHub OAuth Web Flow requires both Client ID and Client Secret.');
-                }
-                
-                const redirectUri = window.location.origin + window.location.pathname;
-                DebugTerminal.log('debug', `Redirect URI: ${redirectUri}`);
-                
-                const tokenExchangeParams = new URLSearchParams({
-                    client_id: clientId,
-                    client_secret: clientSecret,
-                    code: code,
-                    redirect_uri: redirectUri
-                });
-                
-                DebugTerminal.log('debug', `Token exchange URL: ${this.config.TOKEN_URL}`);
-                DebugTerminal.log('debug', `Request body (params): ${tokenExchangeParams.toString().replace(clientSecret, '***')}`);
-                
-                // Infrastructure is already loaded (synchronously in head)
-                // If CustomCorsWidget doesn't exist, the page is broken - fail immediately
-                
-                // Strategy 1: Try using CustomCorsWidget (loaded synchronously, must be available)
-                try {
-                    DebugTerminal.log('info', '📡 Strategy 1: CustomCorsWidget CORS Bypass');
-                    
-                    if (!window.CustomCorsWidget) {
-                        DebugTerminal.log('error', '❌ FATAL: CustomCorsWidget not loaded');
-                        throw new Error('FATAL: CustomCorsWidget not loaded. Infrastructure scripts failed to load.');
-                    }
-                    
-                    DebugTerminal.log('success', '✅ CustomCorsWidget class available');
-                    
-                    // Initialize if not yet initialized - WITH TIMEOUT
-                    if (!window.CustomCorsWidget.initialized) {
-                        DebugTerminal.log('warning', '⚠️  CustomCorsWidget not initialized, initializing now (15s timeout)...');
-                        
-                        const initStartTime = Date.now();
-                        
-                        // Race initialization against 15-second timeout
-                        try {
-                            await Promise.race([
-                                window.CustomCorsWidget.init(),
-                                new Promise((_, reject) => 
-                                    setTimeout(() => reject(new Error('Initialization timeout')), 15000)
-                                )
-                            ]);
-                            
-                            const initDuration = Date.now() - initStartTime;
-                            DebugTerminal.log('success', `✅ CustomCorsWidget initialized in ${initDuration}ms`);
-                        } catch (initError) {
-                            DebugTerminal.log('error', `❌ Initialization failed: ${initError.message}`);
-                            throw initError;
-                        }
-                    } else {
-                        DebugTerminal.log('success', '✅ CustomCorsWidget already initialized');
-                    }
-                    
-                    DebugTerminal.log('info', '🚀 Attempting token exchange via CustomCorsWidget.fetch()');
-                    const fetchStartTime = Date.now();
-                    
-                    const response = await window.CustomCorsWidget.fetch(this.config.TOKEN_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'Accept': 'application/json'
-                        },
-                        body: tokenExchangeParams.toString()
-                    });
-                    
-                    const fetchDuration = Date.now() - fetchStartTime;
-                    DebugTerminal.log('debug', `Fetch completed in ${fetchDuration}ms`);
-                    DebugTerminal.log('debug', `Response: ${response ? `status ${response.status}, ok=${response.ok}` : 'null'}`);
-                    
-                    if (response && response.ok) {
-                        const tokenData = await response.json();
-                        DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via CustomCorsWidget!');
-                        DebugTerminal.log('debug', `Token type: ${tokenData.token_type || 'unknown'}`);
-                        DebugTerminal.log('debug', `Access token: ${tokenData.access_token ? tokenData.access_token.substring(0, 20) + '...' : 'missing'}`);
-                        return tokenData;
-                    } else {
-                        const errorMsg = `Response not OK: ${response ? response.status : 'null response'}`;
-                        DebugTerminal.log('warning', `⚠️  ${errorMsg}`);
-                        if (response && !response.ok) {
-                            try {
-                                const errorText = await response.text();
-                                DebugTerminal.log('debug', `Response body: ${errorText.substring(0, 200)}`);
-                            } catch (e) {
-                                DebugTerminal.log('debug', 'Could not read response body');
-                            }
-                        }
-                    }
-                } catch (error) {
-                    DebugTerminal.log('error', `❌ Strategy 1 FAILED: ${error.message}`);
-                    DebugTerminal.log('debug', `Error stack: ${error.stack}`);
-                    // Continue to next strategy
-                }
-                
-                // Strategy 2: Try JSONP approach for GET fallback
-                try {
-                    DebugTerminal.log('info', '📡 Strategy 2: JSONP Fallback');
-                    const jsonpUrl = `${this.config.TOKEN_URL}?${tokenExchangeParams.toString()}`;
-                    DebugTerminal.log('debug', `JSONP URL: ${jsonpUrl.replace(clientSecret, '***')}`);
-                    
-                    const tokenData = await this.jsonpFetch(jsonpUrl);
-                    if (tokenData && tokenData.access_token) {
-                        DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via JSONP!');
-                        return tokenData;
-                    }
-                    DebugTerminal.log('warning', '⚠️  JSONP returned no token');
-                } catch (error) {
-                    DebugTerminal.log('error', `❌ Strategy 2 FAILED: ${error.message}`);
-                    // Continue to next strategy
-                }
-                
-                // Strategy 3: Try using Service Worker proxy
-                try {
-                    DebugTerminal.log('info', '📡 Strategy 3: Service Worker Proxy');
-                    
-                    if ('serviceWorker' in navigator) {
-                        DebugTerminal.log('debug', 'Service Worker API available');
-                        if (navigator.serviceWorker.controller) {
-                            DebugTerminal.log('success', '✅ Service Worker controlling page');
-                            
-                            const response = await fetch(this.config.TOKEN_URL, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                    'Accept': 'application/json',
-                                    'X-Cors-Proxy': 'true' // Marker for service worker
-                                },
-                                body: tokenExchangeParams.toString()
-                            });
-                            
-                            DebugTerminal.log('debug', `SW Response: status ${response.status}, ok=${response.ok}`);
-                            
-                            if (response.ok) {
-                                const tokenData = await response.json();
-                                DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via Service Worker!');
-                                return tokenData;
-                            }
-                        } else {
-                            DebugTerminal.log('warning', '⚠️  Service Worker not controlling page');
-                        }
-                    } else {
-                        DebugTerminal.log('warning', '⚠️  Service Worker API not available');
-                    }
-                } catch (error) {
-                    DebugTerminal.log('error', `❌ Strategy 3 FAILED: ${error.message}`);
-                    // Continue to next strategy
-                }
-                
-                // Strategy 4: Try iframe proxy
-                try {
-                    DebugTerminal.log('info', '📡 Strategy 4: Iframe Proxy');
-                    
-                    const tokenData = await this.iframeProxyFetch(this.config.TOKEN_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'Accept': 'application/json'
-                        },
-                        body: tokenExchangeParams.toString()
-                    });
-                    
-                    if (tokenData && tokenData.access_token) {
-                        DebugTerminal.log('success', '🎉 TOKEN EXCHANGE SUCCESSFUL via iframe proxy!');
-                        return tokenData;
-                    }
-                    DebugTerminal.log('warning', '⚠️  Iframe proxy returned no token');
-                } catch (error) {
-                    DebugTerminal.log('error', `❌ Strategy 4 FAILED: ${error.message}`);
-                }
-                
-                // All strategies failed
-                DebugTerminal.log('error', '💥 ALL STRATEGIES FAILED - Token exchange impossible');
-                DebugTerminal.log('info', '💡 Recommendation: Use Device Flow authentication instead');
-                
-                throw new Error(
-                    `All OAuth proxy strategies failed. ` +
-                    `For better reliability, please use Device Flow authentication ` +
-                    `which doesn't require a callback URL or token exchange.`
-                );
-            },
-            
-            // JSONP fetch helper
-            jsonpFetch(url, timeout = 10000) {
-                return new Promise((resolve, reject) => {
-                    const callbackName = 'jsonp_callback_' + Math.random().toString(36).substring(7);
-                    const script = document.createElement('script');
-                    const timer = setTimeout(() => {
-                        cleanup();
-                        reject(new Error('JSONP request timeout'));
-                    }, timeout);
-                    
-                    const cleanup = () => {
-                        clearTimeout(timer);
-                        if (script.parentNode) {
-                            script.parentNode.removeChild(script);
-                        }
-                        delete window[callbackName];
-                    };
-                    
-                    window[callbackName] = (data) => {
-                        cleanup();
-                        resolve(data);
-                    };
-                    
-                    script.onerror = () => {
-                        cleanup();
-                        reject(new Error('JSONP script load error'));
-                    };
-                    
-                    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
-                    document.head.appendChild(script);
-                });
-            },
-            
-            // Iframe proxy helper
-            iframeProxyFetch(url, options) {
-                return new Promise((resolve, reject) => {
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.sandbox = 'allow-scripts allow-same-origin'; // Need same-origin for postMessage
-                    
-                    const timer = setTimeout(() => {
-                        cleanup();
-                        reject(new Error('Iframe proxy timeout'));
-                    }, 15000);
-                    
-                    const cleanup = () => {
-                        clearTimeout(timer);
-                        window.removeEventListener('message', messageHandler);
-                        if (iframe.parentNode) {
-                            iframe.parentNode.removeChild(iframe);
-                        }
-                    };
-                    
-                    const messageHandler = (event) => {
-                        if (event.source !== iframe.contentWindow) return;
-                        
-                        if (event.data.type === 'FETCH_SUCCESS') {
-                            cleanup();
-                            resolve(event.data.data);
-                        } else if (event.data.type === 'FETCH_ERROR') {
-                            cleanup();
-                            reject(new Error(event.data.error));
-                        }
-                    };
-                    
-                    window.addEventListener('message', messageHandler);
-                    
-                    // Create iframe content that performs the fetch
-                    const iframeHtml = `
-                        <!DOCTYPE html>
-                        <html>
-                        <head><meta charset="utf-8"></head>
-                        <body>
-                        <script>
-                            (async function() {
-                                try {
-                                    const response = await fetch('${url}', ${JSON.stringify(options)});
-                                    const data = await response.json();
-                                    parent.postMessage({ type: 'FETCH_SUCCESS', data: data }, '*');
-                                } catch (error) {
-                                    parent.postMessage({ type: 'FETCH_ERROR', error: error.message }, '*');
-                                }
-                            })();
-                        </script>
-                        </body>
-                        </html>
-                    `;
-                    
-                    iframe.srcdoc = iframeHtml;
-                    document.body.appendChild(iframe);
-                });
-            },
-
-            // Handle implicit grant flow (token in URL hash)
-            handleImplicitGrant(accessToken, tokenType) {
-                console.log('Handling implicit grant token');
-                this.showSuccess(accessToken, 'copilot');
-            },
-
-            // Handle authorization code flow
-            async handleCodeFlow(code, state) {
-                DebugTerminal.log('info', '🔐 Starting authorization code flow');
-                DebugTerminal.log('debug', `Code: ${code.substring(0, 15)}...`);
-                DebugTerminal.log('debug', `State: ${state || 'not provided'}`);
-                
-                // Validate state
-                if (state && !this.validateState(state)) {
-                    DebugTerminal.log('error', '❌ State validation failed - possible CSRF attack');
-                    const expected = localStorage.getItem(this.config.STORAGE_KEYS.OAUTH_STATE);
-                    DebugTerminal.log('debug', `Expected: ${expected}`);
-                    DebugTerminal.log('debug', `Received: ${state}`);
-                    
-                    this.showError('Invalid state parameter. This could be a CSRF attack.', { 
-                        received: state,
-                        expected: expected
-                    });
-                    return;
-                }
-                
-                if (state) {
-                    DebugTerminal.log('success', '✅ State validation passed');
-                }
-                
-                try {
-                    DebugTerminal.log('info', '🔄 Calling exchangeCodeForToken...');
-                    const tokenData = await this.exchangeCodeForToken(code);
-                    
-                    DebugTerminal.log('debug', 'Token exchange returned:', tokenData);
-                    
-                    if (tokenData.access_token) {
-                        DebugTerminal.log('success', '🎉 ACCESS TOKEN OBTAINED SUCCESSFULLY!');
-                        DebugTerminal.log('debug', `Token: ${tokenData.access_token.substring(0, 20)}...`);
-                        this.showSuccess(tokenData.access_token, 'copilot');
-                    } else if (tokenData.error) {
-                        DebugTerminal.log('error', `❌ Token data contains error: ${tokenData.error}`);
-                        DebugTerminal.log('debug', `Error description: ${tokenData.error_description || 'none'}`);
-                        this.showError(
-                            tokenData.error_description || tokenData.error,
-                            tokenData
-                        );
-                    } else {
-                        DebugTerminal.log('error', '❌ Token data missing access_token');
-                        this.showError(
-                            'Failed to obtain access token',
-                            tokenData
-                        );
-                    }
-                } catch (error) {
-                    DebugTerminal.log('error', `💥 Exception during token exchange: ${error.message}`);
-                    DebugTerminal.log('debug', `Stack: ${error.stack}`);
-                    this.showError(error.message, { 
-                        code: code.substring(0, 10) + '...',
-                        error: error.toString()
-                    });
-                }
-            },
-
-            // Main initialization
-            async init() {
-                DebugTerminal.log('info', '🚀 OAuth Callback Handler initializing...');
-                DebugTerminal.log('debug', `Current URL: ${window.location.href}`);
-                
-                const params = this.getURLParams();
-                DebugTerminal.log('debug', 'URL Parameters:', params);
-                
-                // Handle errors from GitHub
-                if (params.error) {
-                    DebugTerminal.log('error', `❌ GitHub returned error: ${params.error}`);
-                    DebugTerminal.log('debug', `Error description: ${params.error_description || 'none'}`);
-                    this.showError(
-                        params.error_description || params.error,
-                        { error: params.error, description: params.error_description }
-                    );
-                    return;
-                }
-                
-                // Handle implicit grant (token in URL hash)
-                if (params.access_token) {
-                    DebugTerminal.log('info', '🎫 Implicit grant detected (token in URL)');
-                    this.handleImplicitGrant(params.access_token, params.token_type);
-                    return;
-                }
-                
-                // Handle authorization code flow
-                if (params.code) {
-                    DebugTerminal.log('info', '🔑 Authorization code detected - starting code flow');
-                    await this.handleCodeFlow(params.code, params.state);
-                    return;
-                }
-                
-                // No code or token found
-                DebugTerminal.log('warning', '⚠️  No authorization code or token found in URL');
-                this.setState('no-code');
+                this.showState('error');
             }
         };
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
-            OAuthCallbackHandler.init();
-        });
-
-        // Handle messages from opener window (for token exchange)
-        window.addEventListener('message', (event) => {
-            // Verify origin for security
-            if (!event.origin.includes('github.io') && !event.origin.includes('localhost')) {
-                return;
-            }
-            
-            if (event.data.type === 'CHECK_CALLBACK') {
-                // Opener is checking if we're ready
-                event.source.postMessage({ type: 'CALLBACK_READY' }, event.origin);
-            }
+            Terminal.info('🎬 Page loaded - starting OAuth callback handler');
+            OAuthHandler.init();
         });
     </script>
 </body>
