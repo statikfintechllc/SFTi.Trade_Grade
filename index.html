@@ -27,6 +27,14 @@
     <link rel="stylesheet" href="system/cs.+/models.css">
     <link rel="stylesheet" href="system/cs.+/responsive.css">
 
+    <!-- Infrastructure Scripts - Load synchronously BEFORE anything else -->
+    <!-- These are like Apache/Nginx starting with the OS - they MUST be ready before the site works -->
+    <!-- NO defer, NO async - block until loaded, execute in order, infrastructure first -->
+    <script src="system/js.on/config.js"></script>
+    <script src="system/js.on/utils.js"></script>
+    <script src="system/js.on/cors-bypass.js"></script>
+    <script src="system/js.on/static-backend.js"></script>
+    <script src="system/js.on/auth.js"></script>
 
 </head>
 <body>
@@ -965,11 +973,7 @@
     </div>
 </div>
 
-<!-- JavaScript Modules - Loaded in dependency order with defer for non-blocking -->
-<!-- 1. Core utilities and configuration -->
-<script src="system/js.on/config.js" defer></script>
-<script src="system/js.on/utils.js" defer></script>
-
+<!-- JavaScript Modules - Application layer (defer OK here, infrastructure already loaded in head) -->
 <!-- 2. UI components -->
 <script src="system/js.on/toast.js" defer></script>
 <script src="system/js.on/menu.js" defer></script>
@@ -980,8 +984,7 @@
 <script src="system/js.on/screenshot.js" defer></script>
 <script src="system/js.on/grading.js" defer></script>
 
-<!-- 4. Authentication and models -->
-<script src="system/js.on/auth.js" defer></script>
+<!-- 4. Models -->
 <script src="system/js.on/models.js" defer></script>
 
 <!-- 5. Chat and search functionality -->
