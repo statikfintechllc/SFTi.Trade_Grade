@@ -464,13 +464,22 @@
                         throw new Error('FATAL: CustomCorsWidget not loaded. Infrastructure scripts failed to load.');
                     }
                     
-                    // Initialize if not yet initialized
+                    // Initialize if not yet initialized - WITH TIMEOUT
                     if (!window.CustomCorsWidget.initialized) {
-                        console.log('[Callback] Initializing CustomCorsWidget...');
-                        await window.CustomCorsWidget.init();
+                        console.log('[Callback] Initializing CustomCorsWidget (15s timeout)...');
+                        
+                        // Race initialization against 15-second timeout
+                        await Promise.race([
+                            window.CustomCorsWidget.init(),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('CustomCorsWidget initialization timeout after 15 seconds')), 15000)
+                            )
+                        ]);
+                        
+                        console.log('[Callback] CustomCorsWidget initialized successfully');
                     }
                     
-                    console.log('[Callback] Using CustomCorsWidget proxy...');
+                    console.log('[Callback] Using CustomCorsWidget proxy for token exchange...');
                     const response = await window.CustomCorsWidget.fetch(this.config.TOKEN_URL, {
                         method: 'POST',
                         headers: {
@@ -482,31 +491,33 @@
                     
                     if (response && response.ok) {
                         const tokenData = await response.json();
-                        console.log('[Callback] Token exchange successful via CustomCorsWidget!');
+                        console.log('[Callback] ✅ Token exchange successful via CustomCorsWidget!');
                         return tokenData;
                     } else {
                         console.warn('[Callback] CustomCorsWidget fetch returned non-OK response:', response ? response.status : 'null response');
                     }
                 } catch (error) {
-                    console.warn('[Callback] CustomCorsWidget strategy failed:', error);
+                    console.warn('[Callback] ❌ CustomCorsWidget strategy failed:', error.message);
+                    // Continue to next strategy
                 }
                 
                 // Strategy 2: Try JSONP approach for GET fallback
                 try {
-                    console.log('[Callback] Trying JSONP fallback...');
+                    console.log('[Callback] Trying JSONP fallback for token exchange...');
                     const jsonpUrl = `${this.config.TOKEN_URL}?${tokenExchangeParams.toString()}`;
                     const tokenData = await this.jsonpFetch(jsonpUrl);
                     if (tokenData && tokenData.access_token) {
-                        console.log('[Callback] Token exchange successful via JSONP!');
+                        console.log('[Callback] ✅ Token exchange successful via JSONP!');
                         return tokenData;
                     }
                 } catch (error) {
-                    console.warn('[Callback] JSONP strategy failed:', error);
+                    console.warn('[Callback] ❌ JSONP strategy failed:', error.message);
+                    // Continue to next strategy
                 }
                 
                 // Strategy 3: Try using Service Worker proxy
                 try {
-                    console.log('[Callback] Trying Service Worker proxy...');
+                    console.log('[Callback] Trying Service Worker proxy for token exchange...');
                     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         const response = await fetch(this.config.TOKEN_URL, {
                             method: 'POST',
@@ -520,17 +531,20 @@
                         
                         if (response.ok) {
                             const tokenData = await response.json();
-                            console.log('[Callback] Token exchange successful via Service Worker!');
+                            console.log('[Callback] ✅ Token exchange successful via Service Worker!');
                             return tokenData;
                         }
+                    } else {
+                        console.warn('[Callback] Service Worker not available or not controlling page');
                     }
                 } catch (error) {
-                    console.warn('[Callback] Service Worker strategy failed:', error);
+                    console.warn('[Callback] ❌ Service Worker strategy failed:', error.message);
+                    // Continue to next strategy
                 }
                 
                 // Strategy 4: Try iframe proxy
                 try {
-                    console.log('[Callback] Trying iframe proxy...');
+                    console.log('[Callback] Trying iframe proxy for token exchange...');
                     const tokenData = await this.iframeProxyFetch(this.config.TOKEN_URL, {
                         method: 'POST',
                         headers: {
@@ -541,11 +555,11 @@
                     });
                     
                     if (tokenData && tokenData.access_token) {
-                        console.log('[Callback] Token exchange successful via iframe proxy!');
+                        console.log('[Callback] ✅ Token exchange successful via iframe proxy!');
                         return tokenData;
                     }
                 } catch (error) {
-                    console.warn('[Callback] Iframe proxy strategy failed:', error);
+                    console.warn('[Callback] ❌ Iframe proxy strategy failed:', error.message);
                 }
                 
                 // All strategies failed
