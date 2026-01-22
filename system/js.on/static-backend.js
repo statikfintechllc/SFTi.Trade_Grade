@@ -26,9 +26,9 @@ class CustomStaticBackend {
                 // App ID can be overridden via setAppId() method
                 APP_ID: localStorage.getItem('oauth_app_id') || '2631011',
                 CLIENT_ID: localStorage.getItem('oauth_client_id') || '',
-                // Note: Client Secret storage is a security risk on static sites
+                // Note: Client Secret now stored in IndexedDB for persistence
                 // Device Flow (recommended) doesn't require client secret
-                CLIENT_SECRET: sessionStorage.getItem('oauth_client_secret') || '', // Using sessionStorage for better security
+                CLIENT_SECRET: '', // Loaded from IndexedDB on init
                 // Construct redirect URI dynamically based on current location
                 REDIRECT_URI: window.location.origin + window.location.pathname.replace('/index.html', '') + '/system/auth/callback',
                 SCOPES: ['read:user', 'user:email'],
@@ -55,12 +55,13 @@ class CustomStaticBackend {
                 CACHE_PREFIX: 'sfti_cache_'
             },
             
-            // Rate limiting - LOCAL RESOURCE PROTECTION ONLY
-            // No artificial throttling - if API has limits, let them 429 us
-            RATE_LIMIT: {
-                enabled: false, // User is root
-                maxConcurrent: 100, // Only prevent UI freeze
-                maxQueueSize: 1000
+            // Rate limiting completely removed - user is root
+            // No client-side limitations - if API has limits, let them 429 us
+            
+            // Cryptography settings
+            CRYPTO: {
+                PBKDF2_ITERATIONS: 100000, // Security-critical: PBKDF2 iteration count
+                SALT_BYTES: 16 // 128-bit salt for key derivation
             },
             
             // Cache settings
@@ -71,7 +72,6 @@ class CustomStaticBackend {
         };
         
         this.state = {
-            rateLimitCounter: new Map(),
             cache: new Map(),
             pollingIntervals: new Map()
         };
@@ -99,7 +99,39 @@ class CustomStaticBackend {
         // Clean up expired cache entries
         this.startCacheCleanup();
         
+        // Load CLIENT_SECRET from IndexedDB
+        await this.loadClientSecretFromIndexedDB();
+        
         console.log('[CustomStaticBackend] Initialized successfully');
+    }
+    
+    /**
+     * Load CLIENT_SECRET from IndexedDB for persistence
+     */
+    async loadClientSecretFromIndexedDB() {
+        try {
+            if (!window.CustomCorsWidget?.state.vaultDb) {
+                console.log('[CustomStaticBackend] Vault not ready yet for CLIENT_SECRET load');
+                return;
+            }
+            
+            const db = window.CustomCorsWidget.state.vaultDb;
+            const transaction = db.transaction(['tokens'], 'readonly');
+            const store = transaction.objectStore('tokens');
+            const request = store.get('oauth_client_secret');
+            
+            const result = await new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            
+            if (result && result.value) {
+                this.config.OAUTH.CLIENT_SECRET = result.value;
+                console.log('[CustomStaticBackend] CLIENT_SECRET loaded from IndexedDB');
+            }
+        } catch (e) {
+            console.warn('[CustomStaticBackend] Failed to load CLIENT_SECRET from IndexedDB:', e.message);
+        }
     }
     
     /**
@@ -190,7 +222,7 @@ class CustomStaticBackend {
                         this.state.pollingIntervals.delete(deviceCode);
                         
                         // Store token (Device Flow provides GitHub token)
-                        this.storeToken(data.access_token, 'github');
+                        await this.storeToken(data.access_token, 'github');
                         
                         resolve({
                             success: true,
@@ -351,7 +383,7 @@ class CustomStaticBackend {
             localStorage.setItem(this.config.STORAGE.GITHUB_TOKEN, token);
         }
         
-        this.broadcast({ type: 'TOKEN_UPDATE', tokenType: type, token: token });
+        this.broadcast({ type: 'TOKEN_UPDATE', tokenType: type });
     },
     
     /**
@@ -431,11 +463,6 @@ class CustomStaticBackend {
      * Make API request with authentication
      */
     async apiRequest(endpoint, options = {}) {
-        // Check rate limit
-        if (!this.checkRateLimit(endpoint)) {
-            throw new Error('Rate limit exceeded. Please try again later.');
-        }
-        
         // Check cache for GET requests
         if (options.method === 'GET' || !options.method) {
             const cached = this.getFromCache(endpoint);
@@ -445,8 +472,8 @@ class CustomStaticBackend {
             }
         }
         
-        // Get appropriate token
-        const token = this.getToken('copilot') || this.getToken('github');
+        // Get appropriate token (async)
+        const token = await this.getToken('copilot') || await this.getToken('github');
         if (!token) {
             throw new Error('No authentication token available');
         }
@@ -473,30 +500,6 @@ class CustomStaticBackend {
         }
         
         return data;
-    }
-    
-    /**
-     * Rate limiting
-     */
-    checkRateLimit(key) {
-        const now = Date.now();
-        const requests = this.state.rateLimitCounter.get(key) || [];
-        
-        // Remove old requests outside the window
-        const validRequests = requests.filter(
-            timestamp => now - timestamp < this.config.RATE_LIMIT.windowMs
-        );
-        
-        // Check if limit exceeded
-        if (validRequests.length >= this.config.RATE_LIMIT.maxRequests) {
-            return false;
-        }
-        
-        // Add current request
-        validRequests.push(now);
-        this.state.rateLimitCounter.set(key, validRequests);
-        
-        return true;
     }
     
     /**
@@ -600,19 +603,76 @@ class CustomStaticBackend {
      * Derive vault encryption key from passphrase
      */
     async deriveVaultKey(passphrase) {
-        const salt = window.CustomCorsWidget?.state.vaultDb ? new Uint8Array(JSON.parse(localStorage.getItem('sfti_vault_salt') || '[]')) : null;
-        if (!salt) throw new Error('Vault salt not available');
+        // Check if vault is initialized
+        const hasVault = !!(window.CustomCorsWidget?.state.vaultDb);
+        if (!hasVault) {
+            throw new Error('Vault not initialized');
+        }
+
+        // Get or create salt
+        let saltArray = [];
+        try {
+            const storedSalt = localStorage.getItem('sfti_vault_salt');
+            if (storedSalt) {
+                saltArray = JSON.parse(storedSalt);
+            }
+        } catch (e) {
+            // If parsing fails, we'll regenerate the salt below
+            saltArray = [];
+        }
+
+        if (!Array.isArray(saltArray) || saltArray.length === 0) {
+            // Generate a new cryptographically secure salt and persist it
+            const saltBytes = new Uint8Array(this.config.CRYPTO.SALT_BYTES);
+            if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+                crypto.getRandomValues(saltBytes);
+            } else {
+                // Fallback for older browsers (less secure)
+                console.warn('[CustomStaticBackend] crypto.getRandomValues not available, using Math.random fallback for vault salt');
+                for (let i = 0; i < saltBytes.length; i++) {
+                    saltBytes[i] = Math.floor(Math.random() * 256);
+                }
+            }
+            saltArray = Array.from(saltBytes);
+            localStorage.setItem('sfti_vault_salt', JSON.stringify(saltArray));
+            console.log('[CustomStaticBackend] Generated and stored new vault salt');
+        }
+
+        const salt = new Uint8Array(saltArray);
         const passphraseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
-        return await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, passphraseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        return await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: this.config.CRYPTO.PBKDF2_ITERATIONS, hash: 'SHA-256' }, passphraseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
     }
     
     /**
      * Set client secret (SECURITY WARNING: prefer Device Flow)
+     * Stores in IndexedDB for persistence across sessions
      */
-    setClientSecret(clientSecret) {
+    async setClientSecret(clientSecret) {
         console.warn('[Backend] Client secret storage is a security risk. Use Device Flow instead.');
         this.config.OAUTH.CLIENT_SECRET = clientSecret;
-        sessionStorage.setItem(this.config.STORAGE.OAUTH_CLIENT_SECRET, clientSecret);
+        
+        // Store in IndexedDB for persistence
+        try {
+            if (!window.CustomCorsWidget?.state.vaultDb) {
+                throw new Error('Vault not initialized');
+            }
+            
+            const db = window.CustomCorsWidget.state.vaultDb;
+            const transaction = db.transaction(['tokens'], 'readwrite');
+            const store = transaction.objectStore('tokens');
+            store.put({ key: 'oauth_client_secret', value: clientSecret });
+            
+            await new Promise((resolve, reject) => {
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => reject(transaction.error);
+            });
+            
+            console.log('[Backend] CLIENT_SECRET stored in IndexedDB');
+        } catch (e) {
+            console.error('[Backend] Failed to store CLIENT_SECRET in IndexedDB:', e.message);
+            // Fallback to sessionStorage (less persistent)
+            sessionStorage.setItem(this.config.STORAGE.OAUTH_CLIENT_SECRET, clientSecret);
+        }
     }
     
     generateState() {

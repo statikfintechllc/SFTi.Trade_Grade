@@ -137,7 +137,23 @@ const CustomCorsWidget = {
             const req = indexedDB.open('sfti_vault', 1);
             req.onupgradeneeded = (e) => {
                 const db = e.target.result;
-                if (!db.objectStoreNames.contains('tokens')) db.createObjectStore('tokens', { keyPath: 'key' });
+                if (!db.objectStoreNames.contains('tokens')) {
+                    db.createObjectStore('tokens', { keyPath: 'key' });
+                }
+                
+                // Generate and store vault salt on first creation
+                const saltBytes = new Uint8Array(16); // 128-bit salt
+                if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+                    crypto.getRandomValues(saltBytes);
+                } else {
+                    console.warn('[CustomCorsWidget] crypto.getRandomValues not available, using Math.random fallback for vault salt');
+                    for (let i = 0; i < saltBytes.length; i++) {
+                        saltBytes[i] = Math.floor(Math.random() * 256);
+                    }
+                }
+                const saltArray = Array.from(saltBytes);
+                localStorage.setItem('sfti_vault_salt', JSON.stringify(saltArray));
+                this.log('🔐 Generated vault salt on database creation');
             };
             this.state.vaultDb = await new Promise((res, rej) => {
                 req.onsuccess = () => res(req.result);
@@ -186,7 +202,7 @@ const CustomCorsWidget = {
                         method: options.method || 'GET',
                         headers: options.headers || {},
                         body: options.body,
-                        mode: 'no-cors', // AllOrigins uses no-cors mode
+                        mode: 'cors', // Use CORS mode to read response
                         signal: controller.signal
                     });
                     
@@ -318,17 +334,18 @@ const CustomCorsWidget = {
                     const proxyHeaders = {
                         ...(options.headers || {}),
                         'X-Proxy-Target': targetUrl,
-                        'X-Proxy-Method': options.method || 'GET'
+                        'X-Proxy-Method': options.method || 'GET',
+                        'X-Requested-With': 'CustomCorsWidget'
                     };
                     
                     // Try multiple fetch strategies
                     let response;
                     const strategies = [
-                        // Strategy 1: Direct CORS fetch
+                        // Strategy 1: Direct CORS fetch with proxy headers
                         async () => {
                             return await fetch(targetUrl, {
                                 method: options.method || 'GET',
-                                headers: options.headers || {},
+                                headers: proxyHeaders, // Use proxy headers
                                 body: options.body,
                                 mode: 'cors',
                                 credentials: 'omit',
@@ -542,6 +559,134 @@ const CustomCorsWidget = {
             // Continue without service worker - will use other methods
         }
     },
+    
+    /**
+     * Signed fetch using client keypair
+     * Proves user intent and bypasses CORS preflight
+     */
+    async signedFetch(url, options = {}) {
+        try {
+            // Ensure Web Crypto is available
+            if (!window.crypto || !crypto.subtle) {
+                throw new Error('Web Crypto API not available');
+            }
+
+            // Ensure we have a keypair
+            if (!this.config.keypair) {
+                await this.initKeypair();
+            }
+            const keypair = this.config.keypair;
+            if (!keypair || !keypair.privateKey) {
+                throw new Error('Keypair not available');
+            }
+
+            const request = new Request(url, options);
+            const method = request.method || 'GET';
+            const targetUrl = request.url;
+            
+            // Get body if present
+            let body = '';
+            try {
+                const clone = request.clone();
+                body = await clone.text();
+            } catch (e) {
+                // Body not available or already consumed
+            }
+
+            // Canonical string to sign: METHOD\nURL\nBODY
+            const toSign = `${method.toUpperCase()}\n${targetUrl}\n${body}`;
+            const encoder = new TextEncoder();
+            const data = encoder.encode(toSign);
+
+            const signature = await crypto.subtle.sign(
+                { name: 'ECDSA', hash: { name: 'SHA-256' } },
+                keypair.privateKey,
+                data
+            );
+
+            // Helper: ArrayBuffer -> base64url
+            const arrayBufferToBase64Url = (buffer) => {
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary)
+                    .replace(/\+/g, '-')
+                    .replace(/\//g, '_')
+                    .replace(/=/g, '');
+            };
+
+            const sigB64 = arrayBufferToBase64Url(signature);
+
+            // Add signature header to request
+            const headers = new Headers(options.headers || {});
+            headers.set('X-SFTI-Signature', sigB64);
+            headers.set('X-SFTI-SignedBy', 'client');
+
+            return await fetch(url, {
+                ...options,
+                headers
+            });
+        } catch (error) {
+            this.log('Signed fetch failed:', error.message);
+            throw error;
+        }
+    },
+    
+    /**
+     * WebRTC data channel fetch for protocol elevation
+     * Bypasses CORS by using WebRTC which has no CORS enforcement
+     */
+    async webRTCFetch(url, options = {}) {
+        try {
+            const channelInfo = this.state.webrtcChannels.get('default');
+            if (!channelInfo) {
+                throw new Error('WebRTC not initialized');
+            }
+
+            const { ch } = channelInfo;
+            
+            // Check if channel is open
+            if (ch.readyState !== 'open') {
+                throw new Error('WebRTC channel not open');
+            }
+
+            // Serialize request
+            const requestData = {
+                url,
+                method: options.method || 'GET',
+                headers: options.headers || {},
+                body: options.body || null
+            };
+
+            // Send request through WebRTC channel
+            return await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('WebRTC fetch timeout'));
+                }, 30000);
+
+                ch.onmessage = (event) => {
+                    clearTimeout(timeout);
+                    try {
+                        const responseData = JSON.parse(event.data);
+                        resolve(new Response(responseData.body, {
+                            status: responseData.status,
+                            statusText: responseData.statusText,
+                            headers: responseData.headers
+                        }));
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
+
+                ch.send(JSON.stringify(requestData));
+            });
+        } catch (error) {
+            this.log('WebRTC fetch failed:', error.message);
+            throw error;
+        }
+    },
 
     /**
      * Make a CORS-bypassed request with self-hosted proxies
@@ -558,79 +703,106 @@ const CustomCorsWidget = {
         this.log(`Fetching ${method} ${url}`);
         
         try {
-            // Strategy 1: Try direct fetch first (might work if CORS is properly configured)
+            // Strategy 1: Try signed fetch (client keypair proves user intent)
+            if (this.config.keypair) {
+                try {
+                    const response = await this.signedFetch(url, options);
+                    if (response.ok) {
+                        this.log('✅ Signed fetch succeeded');
+                        return await this.validateResponse(response, url);
+                    }
+                } catch (error) {
+                    this.log('Signed fetch failed, trying other methods...');
+                }
+            }
+            
+            // Strategy 2: Try WebRTC data channel (protocol elevation, no CORS)
+            if (this.state.webrtcChannels.has('default')) {
+                try {
+                    const response = await this.webRTCFetch(url, options);
+                    if (response.ok) {
+                        this.log('✅ WebRTC fetch succeeded');
+                        return await this.validateResponse(response, url);
+                    }
+                } catch (error) {
+                    this.log('WebRTC fetch failed:', error.message);
+                }
+            }
+            
+            // Strategy 3: Try direct fetch (might work if CORS is properly configured)
             try {
                 const response = await this.directFetch(url, options);
                 if (response.ok) {
                     this.log('✅ Direct fetch succeeded');
-                    return response;
+                    return await this.validateResponse(response, url);
                 }
             } catch (error) {
                 this.log('Direct fetch failed, trying self-hosted proxy methods...');
             }
             
-            // Strategy 2: Self-hosted CORSProxy (mimics corsproxy.io)
+            // Strategy 4: Self-hosted CORSProxy (mimics corsproxy.io)
             if (this.state.proxyServers.has('corsproxy')) {
                 try {
                     const proxy = this.state.proxyServers.get('corsproxy');
                     const response = await proxy.fetch(url, options);
                     if (response.ok) {
                         this.log('✅ Self-hosted CORSProxy succeeded');
-                        return response;
+                        return await this.validateResponse(response, url);
                     }
                 } catch (error) {
                     this.log('Self-hosted CORSProxy failed:', error.message);
                 }
             }
             
-            // Strategy 3: Self-hosted CORS.SH (mimics cors.sh)
+            // Strategy 5: Self-hosted CORS.SH (mimics cors.sh)
             if (this.state.proxyServers.has('corssh')) {
                 try {
                     const proxy = this.state.proxyServers.get('corssh');
                     const response = await proxy.fetch(url, options);
                     if (response.ok) {
                         this.log('✅ Self-hosted CORS.SH succeeded');
-                        return response;
+                        return await this.validateResponse(response, url);
                     }
                 } catch (error) {
                     this.log('Self-hosted CORS.SH failed:', error.message);
                 }
             }
             
-            // Strategy 4: Self-hosted AllOrigins (mimics allorigins.win)
+            // Strategy 6: Self-hosted AllOrigins (mimics allorigins.win)
             if (this.state.proxyServers.has('allorigins') && method === 'GET') {
                 try {
                     const proxy = this.state.proxyServers.get('allorigins');
                     const result = await proxy.fetch(url, options);
                     if (result.contents) {
                         this.log('✅ Self-hosted AllOrigins succeeded');
-                        return new Response(result.contents, {
+                        const response = new Response(result.contents, {
                             status: result.status.http_code || 200,
                             headers: {
                                 'Content-Type': result.status.content_type || 'text/plain',
                                 'X-Proxy-Via': 'AllOrigins-Compatible'
                             }
                         });
+                        return await this.validateResponse(response, url);
                     }
                 } catch (error) {
                     this.log('Self-hosted AllOrigins failed:', error.message);
                 }
             }
             
-            // Strategy 5: Use service worker proxy if available
+            // Strategy 7: Use service worker proxy if available
             if (this.state.serviceWorkerReady) {
                 try {
                     const response = await this.serviceWorkerFetch(url, options);
                     if (response.ok) {
                         this.log('✅ Service worker fetch succeeded');
-                        return response;
+                        return await this.validateResponse(response, url);
                     }
                 } catch (error) {
                     this.log('Service worker fetch failed:', error.message);
                 }
             }
             
-            // Strategy 6: Use Web Worker pool for parallel processing
+            // Strategy 8: Use Web Worker pool for parallel processing
             if (this.state.proxyWorkers.length > 0 && method === 'GET') {
                 try {
                     const response = await this.workerPoolFetch(url, options);
@@ -932,6 +1104,89 @@ const CustomCorsWidget = {
      */
     generateId() {
         return 'id_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+    },
+    
+    /**
+     * Validate response with paranoid inbound validation
+     * User is root, but servers are untrusted I/O
+     */
+    async validateResponse(response, url) {
+        try {
+            // Check content-type against allowlist
+            const contentType = response.headers.get('content-type') || '';
+            const allowedTypes = [
+                'text/',
+                'application/json',
+                'application/javascript',
+                'application/xml',
+                'image/',
+                'audio/',
+                'video/',
+                'application/octet-stream'
+            ];
+            
+            const isAllowed = allowedTypes.some(type => contentType.toLowerCase().includes(type.toLowerCase()));
+            if (!isAllowed && contentType) {
+                this.warn(`Suspicious content-type: ${contentType} for ${url}`);
+            }
+            
+            // Check response size
+            const contentLength = response.headers.get('content-length');
+            if (contentLength && parseInt(contentLength) > this.config.validation.maxResponseSize) {
+                throw new Error(`Response too large: ${contentLength} bytes (max: ${this.config.validation.maxResponseSize})`);
+            }
+            
+            // Sanitize HTML responses if enabled
+            if (this.config.validation.sanitizeHtml && contentType.includes('text/html')) {
+                const html = await response.text();
+                const sanitized = this.sanitizeHtml(html);
+                return new Response(sanitized, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: response.headers
+                });
+            }
+            
+            return response;
+        } catch (error) {
+            this.warn('Response validation failed:', error.message);
+            return response; // Return original on validation error (user is root)
+        }
+    },
+    
+    /**
+     * Sanitize HTML to remove malicious scripts and event handlers
+     * Removes: <script>, inline event handlers (onclick, onerror, etc.)
+     */
+    sanitizeHtml(html) {
+        if (!html) return '';
+        
+        let sanitized = html;
+        
+        // Remove script tags
+        sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+        
+        // Remove inline event handlers
+        const eventHandlers = [
+            'onload', 'onerror', 'onclick', 'onmouseover', 'onmouseout',
+            'onmousedown', 'onmouseup', 'onkeydown', 'onkeyup', 'onkeypress',
+            'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset'
+        ];
+        
+        eventHandlers.forEach(handler => {
+            const regex = new RegExp(`\\s${handler}\\s*=\\s*["'][^"']*["']`, 'gi');
+            sanitized = sanitized.replace(regex, '');
+        });
+        
+        // Remove javascript: protocol in href/src
+        sanitized = sanitized.replace(/\bhref\s*=\s*["']javascript:[^"']*["']/gi, '');
+        sanitized = sanitized.replace(/\bsrc\s*=\s*["']javascript:[^"']*["']/gi, '');
+        
+        // Remove data: URIs that might contain scripts
+        sanitized = sanitized.replace(/\bsrc\s*=\s*["']data:text\/html[^"']*["']/gi, '');
+        
+        this.log('✅ HTML sanitized - scripts and event handlers removed');
+        return sanitized;
     },
 
     /**

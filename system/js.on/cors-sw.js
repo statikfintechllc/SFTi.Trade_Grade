@@ -180,7 +180,7 @@ async function handleCorsRequest(request) {
  */
 function stripCorsHeaders(headers) {
     const newHeaders = new Headers();
-    const skipHeaders = ['x-cors-proxy', 'origin', 'referer'];
+    const skipHeaders = ['x-cors-proxy']; // Only skip internal marker, preserve origin/referer for spoofing
     
     for (const [key, value] of headers) {
         if (!skipHeaders.includes(key.toLowerCase())) {
@@ -217,6 +217,44 @@ self.addEventListener('message', (event) => {
                 });
             });
             break;
+            
+        case 'PREFETCH':
+            // Prefetch URLs provided in data
+            if (data && Array.isArray(data.urls)) {
+                const promises = data.urls.map(url => {
+                    return fetch(url).then(response => {
+                        if (response.ok) {
+                            return caches.open(CACHE_NAME).then(cache => cache.put(url, response));
+                        }
+                    }).catch(err => log('Prefetch failed for', url, err));
+                });
+                Promise.all(promises).then(() => {
+                    log(`Prefetched ${data.urls.length} URLs`);
+                    if (event.ports && event.ports[0]) {
+                        event.ports[0].postMessage({ success: true, count: data.urls.length });
+                    }
+                });
+            }
+            break;
+        
+        case 'PING':
+            // Health check - respond with status
+            if (event.ports && event.ports[0]) {
+                event.ports[0].postMessage({ 
+                    success: true, 
+                    status: 'active',
+                    timestamp: Date.now()
+                });
+            }
+            break;
+            
+        default:
+            log('Unknown message type:', type);
+            if (event.ports && event.ports[0]) {
+                event.ports[0].postMessage({ success: false, error: 'Unknown message type' });
+            }
+    }
+});
             
         default:
             log('Unknown message type:', type);

@@ -496,11 +496,11 @@ const StaticBackend = {
         APP_ID: '2631011',
         // Client ID - provided by user from their GitHub OAuth App settings
         CLIENT_ID: localStorage.getItem('oauth_client_id') || '',
-        // Client Secret - provided by user (40-char hex string)
-        CLIENT_SECRET: localStorage.getItem('oauth_client_secret') || '',
+        // Client Secret - loaded from IndexedDB (persistent across sessions)
+        CLIENT_SECRET: '', // Loaded async from IndexedDB
         // IMPORTANT: Callback URL must match EXACTLY what's registered in GitHub OAuth App
-        // User registered: https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback
-        REDIRECT_URI: 'https://statikfintechllc.github.io/SFTi.Trade_Grade/system/auth/callback',
+        // Dynamic construction supports repository forks/renames
+        REDIRECT_URI: window.location.origin + window.location.pathname.replace('/index.html', '') + '/system/auth/callback',
         SCOPES: ['read:user', 'user:email'],
         AUTH_URL: 'https://github.com/login/oauth/authorize',
         TOKEN_URL: 'https://github.com/login/oauth/access_token',
