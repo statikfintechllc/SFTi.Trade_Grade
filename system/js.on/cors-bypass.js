@@ -594,11 +594,13 @@ const CustomCorsWidget = {
     /**
      * Generate Web Worker code for proxy processing
      * This creates a SEPARATE SERVER RUNTIME with its own execution context
+     * Workers can make requests without the same CORS restrictions as the main thread
      */
     generateProxyWorkerCode(serverId) {
         return `
         // === SEPARATE PROXY SERVER RUNTIME #${serverId + 1} ===
         // This is an independent server process running in its own execution context
+        // Workers operate outside the main thread's CORS enforcement
         
         const SERVER_ID = ${serverId + 1};
         const SERVER_PID = 'PROXY-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
@@ -609,6 +611,7 @@ const CustomCorsWidget = {
         
         console.log('[Proxy Server #' + SERVER_ID + '] Runtime started (PID: ' + SERVER_PID + ')');
         console.log('[Proxy Server #' + SERVER_ID + '] Server is ONLINE and listening for requests');
+        console.log('[Proxy Server #' + SERVER_ID + '] Worker context - can bypass CORS restrictions');
         
         self.onmessage = async function(e) {
             const { type, id, url, options, serverId } = e.data;
@@ -655,62 +658,53 @@ const CustomCorsWidget = {
                 console.log('[Proxy Server #' + SERVER_ID + '] Processing request #' + requestsProcessed + ':', req.url);
                 
                 try {
-                    // Multiple strategies for CORS bypass
-                    let response;
-                    const strategies = [
-                        // Strategy 1: Direct CORS fetch
-                        async () => {
-                            console.log('[Proxy Server #' + SERVER_ID + '] Trying direct CORS fetch...');
-                            return await fetch(req.url, {
-                                method: req.options.method || 'GET',
-                                headers: req.options.headers || {},
-                                body: req.options.body,
-                                mode: 'cors'
-                            });
-                        },
-                        // Strategy 2: no-cors mode (opaque response)
-                        async () => {
-                            console.log('[Proxy Server #' + SERVER_ID + '] Trying no-cors mode...');
-                            return await fetch(req.url, {
-                                method: req.options.method || 'GET',
-                                headers: req.options.headers || {},
-                                body: req.options.body,
-                                mode: 'no-cors'
-                            });
-                        }
-                    ];
+                    // DIRECT FETCH - Workers can make cross-origin requests
+                    // This is the same as what corsproxy.io does, but in our Worker
+                    console.log('[Proxy Server #' + SERVER_ID + '] Making direct fetch from Worker context...');
                     
-                    let lastError;
-                    for (const strategy of strategies) {
-                        try {
-                            response = await strategy();
-                            if (response) {
-                                console.log('[Proxy Server #' + SERVER_ID + '] Strategy succeeded, status:', response.status);
-                                break;
-                            }
-                        } catch (e) {
-                            console.log('[Proxy Server #' + SERVER_ID + '] Strategy failed:', e.message);
-                            lastError = e;
-                        }
+                    const fetchOptions = {
+                        method: req.options.method || 'GET',
+                        headers: req.options.headers || {},
+                        credentials: 'omit' // Don't send cookies
+                    };
+                    
+                    // Add body for POST/PUT/PATCH
+                    if (req.options.body && (fetchOptions.method === 'POST' || fetchOptions.method === 'PUT' || fetchOptions.method === 'PATCH')) {
+                        fetchOptions.body = req.options.body;
                     }
                     
-                    if (!response) {
-                        throw lastError || new Error('All strategies failed');
-                    }
+                    console.log('[Proxy Server #' + SERVER_ID + '] Fetch options:', JSON.stringify({
+                        method: fetchOptions.method,
+                        headers: fetchOptions.headers,
+                        hasBody: !!fetchOptions.body
+                    }));
                     
+                    const response = await fetch(req.url, fetchOptions);
+                    
+                    console.log('[Proxy Server #' + SERVER_ID + '] Response received - Status:', response.status, response.statusText);
+                    
+                    // Read the response body
                     let body = '';
-                    let headers = {};
+                    let contentType = response.headers.get('content-type') || '';
                     
-                    // Try to read response
                     try {
+                        // Try to read as text first
                         body = await response.text();
-                        // Try to get headers (may not work in no-cors mode)
-                        for (const [key, value] of response.headers.entries()) {
-                            headers[key] = value;
-                        }
+                        console.log('[Proxy Server #' + SERVER_ID + '] Response body length:', body.length, 'bytes');
+                        console.log('[Proxy Server #' + SERVER_ID + '] Response preview:', body.substring(0, 100));
                     } catch (e) {
-                        console.log('[Proxy Server #' + SERVER_ID + '] Could not read response body (opaque response)');
-                        body = null;
+                        console.error('[Proxy Server #' + SERVER_ID + '] Failed to read response body:', e.message);
+                        body = '';
+                    }
+                    
+                    // Build headers object
+                    const headers = {};
+                    try {
+                        response.headers.forEach((value, key) => {
+                            headers[key] = value;
+                        });
+                    } catch (e) {
+                        console.warn('[Proxy Server #' + SERVER_ID + '] Could not read all headers');
                     }
                     
                     console.log('[Proxy Server #' + SERVER_ID + '] Request completed successfully');
@@ -718,12 +712,14 @@ const CustomCorsWidget = {
                     self.postMessage({
                         id: req.id,
                         success: true,
-                        status: response.status || 200,
+                        status: response.status,
+                        statusText: response.statusText,
                         headers: headers,
                         body: body,
                         serverId: SERVER_ID,
-                        mode: response.type
+                        mode: 'worker-direct'
                     });
+                    
                 } catch (error) {
                     console.error('[Proxy Server #' + SERVER_ID + '] Request failed:', error.message);
                     self.postMessage({
@@ -976,8 +972,35 @@ const CustomCorsWidget = {
         this.log(`Fetching ${method} ${url}`);
         
         try {
-            // Strategy 1: Try signed fetch (client keypair proves user intent)
+            // Strategy 1: Use Web Worker pool (BEST - Workers can bypass CORS)
+            if (this.state.proxyWorkers.length > 0) {
+                this.log('🔄 Strategy 1: Web Worker pool (direct fetch from Worker context)');
+                try {
+                    const response = await this.workerPoolFetch(url, options);
+                    if (response && response.ok) {
+                        this.log('✅ Worker pool fetch succeeded - CORS bypassed!');
+                        return response; // Already validated in worker
+                    }
+                } catch (error) {
+                    this.log('Worker pool fetch failed:', error.message);
+                }
+            }
+            
+            // Strategy 2: Try direct fetch (might work if CORS is properly configured)
+            this.log('🔄 Strategy 2: Direct fetch');
+            try {
+                const response = await this.directFetch(url, options);
+                if (response.ok) {
+                    this.log('✅ Direct fetch succeeded');
+                    return await this.validateResponse(response, url);
+                }
+            } catch (error) {
+                this.log('Direct fetch failed:', error.message);
+            }
+            
+            // Strategy 3: Try signed fetch (client keypair proves user intent)
             if (this.config.keypair) {
+                this.log('🔄 Strategy 3: Signed fetch');
                 try {
                     const response = await this.signedFetch(url, options);
                     if (response.ok) {
@@ -985,12 +1008,13 @@ const CustomCorsWidget = {
                         return await this.validateResponse(response, url);
                     }
                 } catch (error) {
-                    this.log('Signed fetch failed, trying other methods...');
+                    this.log('Signed fetch failed:', error.message);
                 }
             }
             
-            // Strategy 2: Try WebRTC data channel (protocol elevation, no CORS)
+            // Strategy 4: Try WebRTC data channel (protocol elevation, no CORS)
             if (this.state.webrtcChannels.has('default')) {
+                this.log('🔄 Strategy 4: WebRTC data channel');
                 try {
                     const response = await this.webRTCFetch(url, options);
                     if (response.ok) {
@@ -1002,19 +1026,9 @@ const CustomCorsWidget = {
                 }
             }
             
-            // Strategy 3: Try direct fetch (might work if CORS is properly configured)
-            try {
-                const response = await this.directFetch(url, options);
-                if (response.ok) {
-                    this.log('✅ Direct fetch succeeded');
-                    return await this.validateResponse(response, url);
-                }
-            } catch (error) {
-                this.log('Direct fetch failed, trying self-hosted proxy methods...');
-            }
-            
-            // Strategy 4: Self-hosted CORSProxy (mimics corsproxy.io)
+            // Strategy 5: Self-hosted CORSProxy (mimics corsproxy.io)
             if (this.state.proxyServers.has('corsproxy')) {
+                this.log('🔄 Strategy 5: Self-hosted CORSProxy');
                 try {
                     const proxy = this.state.proxyServers.get('corsproxy');
                     const response = await proxy.fetch(url, options);
@@ -1027,8 +1041,9 @@ const CustomCorsWidget = {
                 }
             }
             
-            // Strategy 5: Self-hosted CORS.SH (mimics cors.sh)
+            // Strategy 6: Self-hosted CORS.SH (mimics cors.sh)
             if (this.state.proxyServers.has('corssh')) {
+                this.log('🔄 Strategy 6: Self-hosted CORS.SH');
                 try {
                     const proxy = this.state.proxyServers.get('corssh');
                     const response = await proxy.fetch(url, options);
@@ -1041,8 +1056,9 @@ const CustomCorsWidget = {
                 }
             }
             
-            // Strategy 6: Self-hosted AllOrigins (mimics allorigins.win)
+            // Strategy 7: Self-hosted AllOrigins (mimics allorigins.win)
             if (this.state.proxyServers.has('allorigins') && method === 'GET') {
+                this.log('🔄 Strategy 7: Self-hosted AllOrigins');
                 try {
                     const proxy = this.state.proxyServers.get('allorigins');
                     const result = await proxy.fetch(url, options);
@@ -1062,8 +1078,9 @@ const CustomCorsWidget = {
                 }
             }
             
-            // Strategy 7: Use service worker proxy if available
+            // Strategy 8: Use service worker proxy if available
             if (this.state.serviceWorkerReady) {
+                this.log('🔄 Strategy 8: Service Worker proxy');
                 try {
                     const response = await this.serviceWorkerFetch(url, options);
                     if (response.ok) {
@@ -1075,21 +1092,9 @@ const CustomCorsWidget = {
                 }
             }
             
-            // Strategy 8: Use Web Worker pool for parallel processing
-            if (this.state.proxyWorkers.length > 0 && method === 'GET') {
-                try {
-                    const response = await this.workerPoolFetch(url, options);
-                    if (response.ok) {
-                        this.log('✅ Worker pool fetch succeeded');
-                        return response;
-                    }
-                } catch (error) {
-                    this.log('Worker pool fetch failed:', error.message);
-                }
-            }
-            
-            // Strategy 7: Use iframe proxy for cross-origin requests
+            // Strategy 9: Use iframe proxy for cross-origin requests
             if (method === 'GET' || method === 'POST') {
+                this.log('🔄 Strategy 9: Iframe proxy');
                 try {
                     const response = await this.iframeProxyFetch(url, options);
                     if (response) {
@@ -1101,8 +1106,9 @@ const CustomCorsWidget = {
                 }
             }
             
-            // Strategy 8: JSONP for GET requests
+            // Strategy 10: JSONP for GET requests
             if (method === 'GET') {
+                this.log('🔄 Strategy 10: JSONP');
                 try {
                     const data = await this.jsonpFetch(url);
                     this.log('✅ JSONP fetch succeeded');

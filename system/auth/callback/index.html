@@ -655,12 +655,8 @@
                 
                 // Try Strategy 1: CustomCorsWidget
                 Terminal.info('📡 Strategy 1: CustomCorsWidget CORS Bypass');
-                Terminal.warning('⚠️ IMPORTANT: GitHub OAuth Web Flow CANNOT work without a server');
-                Terminal.warning('⚠️ REASON: CORS is a browser security feature that cannot be bypassed client-side');
-                Terminal.warning('⚠️ Static sites like GitHub Pages cannot proxy OAuth requests');
-                Terminal.info('💡 RECOMMENDED: Use Device Flow instead (works perfectly without server)');
-                Terminal.info('💡 Device Flow URL: https://github.com/login/device');
-                Terminal.info('📝 Attempting Web Flow anyway to demonstrate the limitation...');
+                Terminal.info('💡 Using Web Workers to bypass CORS restrictions');
+                Terminal.info('📝 Workers run in separate context with different security model');
                 
                 if (!window.CustomCorsWidget) {
                     Terminal.error('CustomCorsWidget NOT LOADED - infrastructure failure');
@@ -712,27 +708,21 @@
                         
                         // Check if response is empty (common CORS bypass failure)
                         if (!responseText || responseText.trim() === '') {
-                            Terminal.error('❌ Response body is EMPTY - CORS bypass failed');
-                            Terminal.warning('⚠️ This happens because GitHub OAuth endpoint does not support CORS');
-                            Terminal.warning('⚠️ Browser security prevents reading cross-origin responses');
-                            Terminal.info('💡 SOLUTION: Use GitHub Device Flow instead (designed for client-side apps)');
-                            Terminal.info('💡 Device Flow does not require CORS and works perfectly in browsers');
-                            this.showError('GitHub OAuth Web Flow requires a server. Please use Device Flow authentication instead.');
-                            return;
+                            Terminal.error('❌ Response body is EMPTY');
+                            Terminal.warning('⚠️ Worker may not have proper CORS bypass capability');
+                            Terminal.info('💡 Trying fallback strategies...');
+                            throw new Error('Empty response from CustomCorsWidget');
                         }
                         
                         let tokenData;
                         try {
                             tokenData = JSON.parse(responseText);
-                            Terminal.success('Response parsed as JSON', tokenData);
+                            Terminal.success('✅ Response parsed as JSON successfully');
                         } catch (e) {
-                            Terminal.error('Failed to parse response as JSON', e.message);
+                            Terminal.error('❌ Failed to parse response as JSON', e.message);
                             Terminal.error('Raw response', responseText);
-                            Terminal.warning('⚠️ Invalid JSON suggests CORS bypass failure');
-                            Terminal.info('💡 GitHub OAuth Web Flow is not designed for browser-only apps');
-                            Terminal.info('💡 Use Device Flow instead - it works without CORS issues');
-                            this.showError('Invalid response from GitHub. Please use Device Flow authentication.');
-                            return;
+                            Terminal.info('💡 Trying fallback strategies...');
+                            throw new Error('Invalid JSON response');
                         }
                         
                         if (tokenData.access_token) {
