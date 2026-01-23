@@ -781,6 +781,7 @@ const CustomCorsWidget = {
     async registerServiceWorker() {
         try {
             this.log('👷 Registering Service Worker proxy server...');
+            this.log('📍 Service Worker path:', this.config.serviceWorkerPath);
             
             const registration = await navigator.serviceWorker.register(
                 this.config.serviceWorkerPath,
@@ -797,12 +798,40 @@ const CustomCorsWidget = {
                 }
             });
             
-            // Wait for service worker to be ready
-            this.log('⏳ Waiting for Service Worker to activate...');
-            const activeWorker = await navigator.serviceWorker.ready;
-            this.state.serviceWorkerReady = true;
+            // Wait for service worker to be ready AND controlling this page
+            this.log('⏳ Waiting for Service Worker to activate and control page...');
             
-            this.log('✅ Service Worker is ACTIVE and ready to proxy requests');
+            // First, wait for registration to be ready
+            const activeWorker = await navigator.serviceWorker.ready;
+            this.log('✅ Service Worker registration ready');
+            
+            // Then, wait for it to actually be controlling this page
+            // This is CRITICAL - without this, the SW can't intercept fetch requests
+            if (!navigator.serviceWorker.controller) {
+                this.log('⏳ Service Worker not yet controlling page, waiting for controllerchange event...');
+                
+                // Wait for controller to be set (happens after clients.claim())
+                await new Promise((resolve) => {
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        this.log('✅ Service Worker is now controlling the page!');
+                        resolve();
+                    }, { once: true });
+                    
+                    // Also set a timeout in case controllerchange doesn't fire
+                    setTimeout(() => {
+                        if (navigator.serviceWorker.controller) {
+                            this.log('✅ Service Worker controller detected via polling');
+                            resolve();
+                        }
+                    }, 1000);
+                });
+            } else {
+                this.log('✅ Service Worker already controlling the page');
+            }
+            
+            // Now it's safe to set serviceWorkerReady
+            this.state.serviceWorkerReady = true;
+            this.log('🎉 Service Worker is ACTIVE and CONTROLLING page - ready to intercept requests');
             
             // Ping the service worker to get its status
             try {
