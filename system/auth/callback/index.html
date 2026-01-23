@@ -750,10 +750,81 @@
                     }
                 }
                 
-                // Try Strategy 2: Public CORS Proxy Fallback
-                Terminal.info('📡 Strategy 2: Public CORS Proxy (cors-anywhere)');
-                Terminal.warning('⚠️ Using third-party CORS proxy as last resort');
-                Terminal.info('💡 For production, deploy your own CORS proxy server');
+                // Try Strategy 2: Public CORS Proxy - cors.proxy.com
+                Terminal.info('📡 Strategy 2: Public CORS Proxy (corsproxy.io)');
+                Terminal.info('💡 Attempting to use public CORS proxy infrastructure');
+                
+                try {
+                    // Try corsproxy.io - a public CORS proxy
+                    const proxyUrl = 'https://corsproxy.io/?';
+                    const encodedUrl = encodeURIComponent(this.config.TOKEN_URL);
+                    Terminal.debug('Proxy URL', proxyUrl + encodedUrl);
+                    
+                    const proxiedResponse = await fetch(proxyUrl + encodedUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    Terminal.debug('Proxy response', {
+                        status: proxiedResponse.status,
+                        ok: proxiedResponse.ok
+                    });
+                    
+                    if (proxiedResponse.ok) {
+                        const tokenData = await proxiedResponse.json();
+                        
+                        if (tokenData.access_token) {
+                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via corsproxy.io!');
+                            Terminal.info('💡 Using public proxy - works but not recommended for production');
+                            await this.handleSuccess(tokenData);
+                            return;
+                        } else if (tokenData.error) {
+                            Terminal.error('GitHub returned error', tokenData);
+                            this.showError(tokenData.error_description || tokenData.error);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    Terminal.error('❌ corsproxy.io strategy FAILED', error.message);
+                    Terminal.info('Trying alternative proxies...');
+                }
+                
+                // Try Strategy 3: Alternative proxy - allorigins.win
+                Terminal.info('📡 Strategy 3: Alternative CORS Proxy (allorigins.win)');
+                
+                try {
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const encodedUrl = encodeURIComponent(this.config.TOKEN_URL);
+                    Terminal.debug('Trying AllOrigins proxy', proxyUrl + encodedUrl);
+                    
+                    const proxiedResponse = await fetch(proxyUrl + encodedUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    if (proxiedResponse.ok) {
+                        const tokenData = await proxiedResponse.json();
+                        
+                        if (tokenData.access_token) {
+                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via allorigins.win!');
+                            await this.handleSuccess(tokenData);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    Terminal.error('❌ allorigins.win strategy FAILED', error.message);
+                }
+                
+                // Try Strategy 4: cors-anywhere
+                Terminal.info('📡 Strategy 4: CORS Anywhere Proxy');
                 
                 try {
                     const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
@@ -769,49 +840,21 @@
                         body: JSON.stringify(requestBody)
                     });
                     
-                    Terminal.debug('Proxy response', {
-                        status: proxiedResponse.status,
-                        ok: proxiedResponse.ok
-                    });
-                    
                     if (proxiedResponse.ok) {
                         const tokenData = await proxiedResponse.json();
                         
                         if (tokenData.access_token) {
-                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via CORS Proxy!');
-                            Terminal.warning('⚠️ You are using a third-party proxy - consider Device Flow instead');
+                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via cors-anywhere!');
                             await this.handleSuccess(tokenData);
-                            return;
-                        } else if (tokenData.error) {
-                            Terminal.error('GitHub returned error', tokenData);
-                            this.showError(tokenData.error_description || tokenData.error);
                             return;
                         }
                     }
                 } catch (error) {
-                    Terminal.error('❌ Public CORS proxy strategy FAILED', error.message);
-                    Terminal.warning('cors-anywhere may be rate-limited or unavailable');
+                    Terminal.error('❌ cors-anywhere strategy FAILED', error.message);
                 }
                 
-                // Try Strategy 3: Alternative CORS Proxy
-                Terminal.info('📡 Strategy 3: Alternative CORS Proxy');
-                
-                try {
-                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                    const encodedUrl = encodeURIComponent(this.config.TOKEN_URL);
-                    Terminal.debug('Trying AllOrigins proxy', proxyUrl + encodedUrl);
-                    
-                    // Note: AllOrigins doesn't support POST body forwarding, so this will likely fail
-                    // but we try it anyway for completeness
-                    Terminal.warning('⚠️ AllOrigins does not support POST body forwarding');
-                    Terminal.info('💡 This demonstrates why OAuth Web Flow needs a proper server');
-                    
-                } catch (error) {
-                    Terminal.error('❌ Alternative proxy strategy FAILED', error.message);
-                }
-                
-                // Try Strategy 4: Direct Fetch (will fail but shows CORS error)
-                Terminal.info('📡 Strategy 4: Direct Fetch (will fail - demonstrates CORS)');
+                // Try Strategy 5: Direct Fetch (last resort - will likely fail)
+                Terminal.info('📡 Strategy 5: Direct Fetch');
                 
                 try {
                     const response = await fetch(this.config.TOKEN_URL, {
@@ -831,25 +874,24 @@
                         return;
                     }
                 } catch (error) {
-                    Terminal.error('❌ Direct fetch FAILED (expected - CORS blocked)', error.message);
-                    Terminal.info('💡 This is the browser saying "no CORS headers from GitHub"');
+                    Terminal.error('❌ Direct fetch FAILED', error.message);
                 }
                 
                 // All strategies failed
                 Terminal.error('🚫 ALL STRATEGIES FAILED');
                 Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                Terminal.error('📋 FUNDAMENTAL LIMITATION:');
-                Terminal.error('   OAuth Web Flow REQUIRES a backend server');
-                Terminal.error('   GitHub intentionally blocks CORS for security');
-                Terminal.error('   Static sites like GitHub Pages cannot proxy OAuth');
+                Terminal.error('💡 Attempted:');
+                Terminal.error('   1. Web Worker direct fetch');
+                Terminal.error('   2. corsproxy.io');
+                Terminal.error('   3. allorigins.win');
+                Terminal.error('   4. cors-anywhere');
+                Terminal.error('   5. Direct fetch');
                 Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                Terminal.info('💡 SOLUTION: Use GitHub Device Flow');
-                Terminal.info('   1. User visits: https://github.com/login/device');
-                Terminal.info('   2. Gets a code to enter');
-                Terminal.info('   3. Your app polls for token');
-                Terminal.info('   4. NO CORS issues, works perfectly!');
+                Terminal.error('📋 All public CORS proxies failed or are unavailable');
+                Terminal.info('💡 Alternative: Use GitHub Device Flow (no CORS issues)');
+                Terminal.info('   Visit: https://github.com/login/device');
                 Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                this.showError('OAuth Web Flow requires a backend server. Please use Device Flow authentication.');
+                this.showError('Token exchange failed. All CORS proxy strategies exhausted. Try GitHub Device Flow.');
             },
             
             async handleSuccess(tokenData) {
