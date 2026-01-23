@@ -513,20 +513,32 @@
                 if (!window.INFRASTRUCTURE_READY) {
                     Terminal.warning('Infrastructure still initializing, waiting...');
                     
-                    // Wait up to 15 seconds for infrastructure to be ready
+                    // Use Promise.race for more efficient waiting
                     const maxWait = 15000;
-                    const checkInterval = 500;
-                    let waited = 0;
+                    const waitPromise = new Promise((resolve, reject) => {
+                        const checkInterval = 500;
+                        let waited = 0;
+                        
+                        const intervalId = setInterval(() => {
+                            if (window.INFRASTRUCTURE_READY) {
+                                clearInterval(intervalId);
+                                resolve();
+                            } else {
+                                waited += checkInterval;
+                                if (waited % 2000 === 0) {
+                                    Terminal.info(`⏳ Still waiting for infrastructure... (${waited/1000}s)`);
+                                }
+                                if (waited >= maxWait) {
+                                    clearInterval(intervalId);
+                                    reject(new Error('Infrastructure initialization timeout'));
+                                }
+                            }
+                        }, checkInterval);
+                    });
                     
-                    while (!window.INFRASTRUCTURE_READY && waited < maxWait) {
-                        await new Promise(resolve => setTimeout(resolve, checkInterval));
-                        waited += checkInterval;
-                        if (waited % 2000 === 0) {
-                            Terminal.info(`⏳ Still waiting for infrastructure... (${waited/1000}s)`);
-                        }
-                    }
-                    
-                    if (!window.INFRASTRUCTURE_READY) {
+                    try {
+                        await waitPromise;
+                    } catch (error) {
                         Terminal.error('❌ Infrastructure initialization timeout after 15s');
                         this.showError('Infrastructure failed to initialize in time. Please try again.');
                         return;

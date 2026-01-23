@@ -13,7 +13,7 @@
 
 const CACHE_NAME = 'sfti-cors-cache-v2';
 const DEBUG = true;
-const SERVER_PID = 'SW-' + Date.now();
+const SERVER_PID = 'SW-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
 
 // Server statistics
 const stats = {

@@ -565,14 +565,19 @@ const CustomCorsWidget = {
                 // Initialize the worker and wait for confirmation
                 await new Promise((resolve, reject) => {
                     const timeout = setTimeout(() => reject(new Error('Worker init timeout')), 5000);
-                    worker.onmessage = (e) => {
+                    
+                    // Set up handler BEFORE posting init message to avoid race condition
+                    const initHandler = (e) => {
                         if (e.data.type === 'WORKER_READY') {
                             clearTimeout(timeout);
                             this.log(`    ✅ Proxy server #${i + 1} ONLINE (PID: ${e.data.pid})`);
+                            // Remove init handler and set up permanent handler
                             worker.onmessage = (e) => this.handleWorkerMessage(e, worker);
                             resolve();
                         }
                     };
+                    
+                    worker.onmessage = initHandler;
                     worker.postMessage({ type: 'INIT', serverId: i + 1 });
                 });
                 
@@ -596,7 +601,7 @@ const CustomCorsWidget = {
         // This is an independent server process running in its own execution context
         
         const SERVER_ID = ${serverId + 1};
-        const SERVER_PID = 'PROXY-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const SERVER_PID = 'PROXY-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
         
         let requestQueue = [];
         let processing = false;
