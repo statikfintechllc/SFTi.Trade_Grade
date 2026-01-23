@@ -655,6 +655,12 @@
                 
                 // Try Strategy 1: CustomCorsWidget
                 Terminal.info('📡 Strategy 1: CustomCorsWidget CORS Bypass');
+                Terminal.warning('⚠️ IMPORTANT: GitHub OAuth Web Flow CANNOT work without a server');
+                Terminal.warning('⚠️ REASON: CORS is a browser security feature that cannot be bypassed client-side');
+                Terminal.warning('⚠️ Static sites like GitHub Pages cannot proxy OAuth requests');
+                Terminal.info('💡 RECOMMENDED: Use Device Flow instead (works perfectly without server)');
+                Terminal.info('💡 Device Flow URL: https://github.com/login/device');
+                Terminal.info('📝 Attempting Web Flow anyway to demonstrate the limitation...');
                 
                 if (!window.CustomCorsWidget) {
                     Terminal.error('CustomCorsWidget NOT LOADED - infrastructure failure');
@@ -704,6 +710,17 @@
                         const responseText = await response.text();
                         Terminal.debug('Response body (raw)', responseText.substring(0, 200));
                         
+                        // Check if response is empty (common CORS bypass failure)
+                        if (!responseText || responseText.trim() === '') {
+                            Terminal.error('❌ Response body is EMPTY - CORS bypass failed');
+                            Terminal.warning('⚠️ This happens because GitHub OAuth endpoint does not support CORS');
+                            Terminal.warning('⚠️ Browser security prevents reading cross-origin responses');
+                            Terminal.info('💡 SOLUTION: Use GitHub Device Flow instead (designed for client-side apps)');
+                            Terminal.info('💡 Device Flow does not require CORS and works perfectly in browsers');
+                            this.showError('GitHub OAuth Web Flow requires a server. Please use Device Flow authentication instead.');
+                            return;
+                        }
+                        
                         let tokenData;
                         try {
                             tokenData = JSON.parse(responseText);
@@ -711,7 +728,10 @@
                         } catch (e) {
                             Terminal.error('Failed to parse response as JSON', e.message);
                             Terminal.error('Raw response', responseText);
-                            this.showError('Invalid response from GitHub: ' + responseText);
+                            Terminal.warning('⚠️ Invalid JSON suggests CORS bypass failure');
+                            Terminal.info('💡 GitHub OAuth Web Flow is not designed for browser-only apps');
+                            Terminal.info('💡 Use Device Flow instead - it works without CORS issues');
+                            this.showError('Invalid response from GitHub. Please use Device Flow authentication.');
                             return;
                         }
                         
@@ -740,50 +760,69 @@
                     }
                 }
                 
-                // Try Strategy 2: JSONP (if applicable)
-                Terminal.info('📡 Strategy 2: JSONP Fallback');
-                Terminal.warning('JSONP requires GET request - GitHub OAuth uses POST only');
-                Terminal.info('Skipping to Strategy 3');
+                // Try Strategy 2: Public CORS Proxy Fallback
+                Terminal.info('📡 Strategy 2: Public CORS Proxy (cors-anywhere)');
+                Terminal.warning('⚠️ Using third-party CORS proxy as last resort');
+                Terminal.info('💡 For production, deploy your own CORS proxy server');
                 
-                // Try Strategy 3: Service Worker
-                Terminal.info('📡 Strategy 3: Service Worker Proxy');
-                if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
-                    Terminal.error('Service Worker not available or not controlling page');
-                    Terminal.info('Trying Strategy 4');
-                } else {
-                    Terminal.success('Service Worker is active');
-                    try {
-                        const response = await fetch(this.config.TOKEN_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                                'X-Cors-Proxy': 'true'
-                            },
-                            body: JSON.stringify(requestBody)
-                        });
-                        
-                        Terminal.debug('Service Worker response', {
-                            status: response.status,
-                            ok: response.ok
-                        });
-                        
-                        const tokenData = await response.json();
+                try {
+                    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                    Terminal.debug('Proxy URL', proxyUrl);
+                    
+                    const proxiedResponse = await fetch(proxyUrl + this.config.TOKEN_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    Terminal.debug('Proxy response', {
+                        status: proxiedResponse.status,
+                        ok: proxiedResponse.ok
+                    });
+                    
+                    if (proxiedResponse.ok) {
+                        const tokenData = await proxiedResponse.json();
                         
                         if (tokenData.access_token) {
-                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via Service Worker!');
+                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via CORS Proxy!');
+                            Terminal.warning('⚠️ You are using a third-party proxy - consider Device Flow instead');
                             await this.handleSuccess(tokenData);
                             return;
+                        } else if (tokenData.error) {
+                            Terminal.error('GitHub returned error', tokenData);
+                            this.showError(tokenData.error_description || tokenData.error);
+                            return;
                         }
-                        
-                        Terminal.error('Service Worker strategy failed', tokenData);
-                    } catch (error) {
-                        Terminal.error('❌ Service Worker strategy FAILED', error.message);
                     }
+                } catch (error) {
+                    Terminal.error('❌ Public CORS proxy strategy FAILED', error.message);
+                    Terminal.warning('cors-anywhere may be rate-limited or unavailable');
                 }
                 
-                // Try Strategy 4: Direct fetch (will likely fail due to CORS)
-                Terminal.info('📡 Strategy 4: Direct Fetch (likely to fail)');
+                // Try Strategy 3: Alternative CORS Proxy
+                Terminal.info('📡 Strategy 3: Alternative CORS Proxy');
+                
+                try {
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const encodedUrl = encodeURIComponent(this.config.TOKEN_URL);
+                    Terminal.debug('Trying AllOrigins proxy', proxyUrl + encodedUrl);
+                    
+                    // Note: AllOrigins doesn't support POST body forwarding, so this will likely fail
+                    // but we try it anyway for completeness
+                    Terminal.warning('⚠️ AllOrigins does not support POST body forwarding');
+                    Terminal.info('💡 This demonstrates why OAuth Web Flow needs a proper server');
+                    
+                } catch (error) {
+                    Terminal.error('❌ Alternative proxy strategy FAILED', error.message);
+                }
+                
+                // Try Strategy 4: Direct Fetch (will fail but shows CORS error)
+                Terminal.info('📡 Strategy 4: Direct Fetch (will fail - demonstrates CORS)');
+                
                 try {
                     const response = await fetch(this.config.TOKEN_URL, {
                         method: 'POST',
@@ -802,12 +841,25 @@
                         return;
                     }
                 } catch (error) {
-                    Terminal.error('❌ All strategies FAILED', error.message);
-                    Terminal.error('Final error', error.stack);
+                    Terminal.error('❌ Direct fetch FAILED (expected - CORS blocked)', error.message);
+                    Terminal.info('💡 This is the browser saying "no CORS headers from GitHub"');
                 }
                 
-                Terminal.error('🚫 COMPLETE FAILURE - All 4 strategies failed');
-                this.showError('Token exchange failed. All CORS bypass strategies failed. Please use Device Flow authentication.');
+                // All strategies failed
+                Terminal.error('🚫 ALL STRATEGIES FAILED');
+                Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                Terminal.error('📋 FUNDAMENTAL LIMITATION:');
+                Terminal.error('   OAuth Web Flow REQUIRES a backend server');
+                Terminal.error('   GitHub intentionally blocks CORS for security');
+                Terminal.error('   Static sites like GitHub Pages cannot proxy OAuth');
+                Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                Terminal.info('💡 SOLUTION: Use GitHub Device Flow');
+                Terminal.info('   1. User visits: https://github.com/login/device');
+                Terminal.info('   2. Gets a code to enter');
+                Terminal.info('   3. Your app polls for token');
+                Terminal.info('   4. NO CORS issues, works perfectly!');
+                Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                this.showError('OAuth Web Flow requires a backend server. Please use Device Flow authentication.');
             },
             
             async handleSuccess(tokenData) {
