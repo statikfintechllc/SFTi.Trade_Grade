@@ -3,6 +3,9 @@
  * Origin spoofing, Host mutation, CORS injection
  * User is root - NO allowlists, fetch everything
  * 
+ * This Service Worker acts as a SEPARATE SERVER RUNTIME
+ * that intercepts and proxies all network requests
+ * 
  * @version 3.0.0 - Adversarial Edition
  * @author SFTi LLC
  * @license MIT
@@ -10,13 +13,23 @@
 
 const CACHE_NAME = 'sfti-cors-cache-v2';
 const DEBUG = true;
+const SERVER_PID = 'SW-' + Date.now();
+
+// Server statistics
+const stats = {
+    requestsHandled: 0,
+    cacheHits: 0,
+    cacheMisses: 0,
+    errors: 0,
+    startTime: Date.now()
+};
 
 /**
  * Log helper
  */
 function log(...args) {
     if (DEBUG) {
-        console.log('[CORS-SW]', ...args);
+        console.log('[CORS-SW-SERVER ' + SERVER_PID + ']', ...args);
     }
 }
 
@@ -24,14 +37,15 @@ function log(...args) {
  * Service Worker Installation
  */
 self.addEventListener('install', (event) => {
-    log('Service worker installing...');
+    log('🚀 CORS PROXY SERVER installing... (PID: ' + SERVER_PID + ')');
     
     // Skip waiting to activate immediately
     self.skipWaiting();
     
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            log('Cache opened');
+            log('✅ Cache storage initialized');
+            log('✅ CORS PROXY SERVER installed successfully');
             return cache;
         })
     );
@@ -41,12 +55,26 @@ self.addEventListener('install', (event) => {
  * Service Worker Activation
  */
 self.addEventListener('activate', (event) => {
-    log('Service worker activating...');
+    log('🔥 CORS PROXY SERVER activating...');
     
     event.waitUntil(
         // Claim clients immediately
         self.clients.claim().then(() => {
-            log('Service worker activated and claimed clients');
+            log('✅ CORS PROXY SERVER activated and claimed all clients');
+            log('🌐 Server is ONLINE and listening for requests on PID: ' + SERVER_PID);
+            log('📊 Server ready to handle CORS-proxied requests');
+            
+            // Broadcast activation to all clients
+            return self.clients.matchAll().then(clients => {
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'SW_ACTIVATED',
+                        pid: SERVER_PID,
+                        timestamp: Date.now()
+                    });
+                });
+                log('📡 Activation broadcast sent to ' + clients.length + ' client(s)');
+            });
         })
     );
 });
@@ -59,8 +87,11 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
     
+    stats.requestsHandled++;
+    
     // Handle OPTIONS preflight requests immediately
     if (request.method === 'OPTIONS') {
+        log('📡 Handling OPTIONS preflight for:', url.href);
         event.respondWith(
             new Response(null, {
                 status: 204,
@@ -81,15 +112,17 @@ self.addEventListener('fetch', (event) => {
         return; // Let browser handle normally
     }
     
-    log('Intercepting CORS request:', url.href);
+    log('🔄 Intercepting CORS request #' + stats.requestsHandled + ':', request.method, url.href);
     
     event.respondWith(
         handleCorsRequest(request)
             .catch((error) => {
-                log('CORS request failed:', error);
+                stats.errors++;
+                log('❌ CORS request failed:', error.message);
                 return new Response(JSON.stringify({
                     error: error.message,
-                    cors: true
+                    cors: true,
+                    serverId: SERVER_PID
                 }), {
                     status: 500,
                     statusText: 'CORS Proxy Error',
@@ -107,17 +140,24 @@ self.addEventListener('fetch', (event) => {
  */
 async function handleCorsRequest(request) {
     const url = new URL(request.url);
+    const startTime = Date.now();
     
     // Check cache first for GET requests
     if (request.method === 'GET') {
         const cached = await caches.match(request);
         if (cached) {
-            log('Returning cached response for:', url.href);
+            stats.cacheHits++;
+            const duration = Date.now() - startTime;
+            log('✅ Cache HIT (' + duration + 'ms):', url.href);
             return cached;
+        } else {
+            stats.cacheMisses++;
         }
     }
     
     try {
+        log('🌐 Proxying request with origin spoofing...');
+        
         // Origin spoofing - spoof Origin to match destination
         const headers = new Headers(request.headers);
         headers.set('Origin', url.origin);
@@ -132,6 +172,9 @@ async function handleCorsRequest(request) {
             credentials: 'omit'
         });
         
+        const duration = Date.now() - startTime;
+        log('✅ CORS proxy completed (' + duration + 'ms) - Status:', response.status);
+        
         // Clone response and add CORS headers
         const responseBody = await response.blob();
         const corsResponse = new Response(responseBody, {
@@ -142,7 +185,9 @@ async function handleCorsRequest(request) {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': '*',
-                'Access-Control-Expose-Headers': '*'
+                'Access-Control-Expose-Headers': '*',
+                'X-Proxy-Server': SERVER_PID,
+                'X-Proxy-Duration-Ms': duration.toString()
             })
         });
         
@@ -150,18 +195,22 @@ async function handleCorsRequest(request) {
         if (request.method === 'GET' && response.ok) {
             const cache = await caches.open(CACHE_NAME);
             cache.put(request, corsResponse.clone());
+            log('💾 Response cached');
         }
         
-        log('✅ CORS completed with origin spoofing:', url.href);
         return corsResponse;
         
     } catch (error) {
-        log('CORS fetch failed:', error);
+        stats.errors++;
+        const duration = Date.now() - startTime;
+        log('❌ CORS fetch failed (' + duration + 'ms):', error.message);
         
         // Return error response with CORS headers
         return new Response(JSON.stringify({
             error: error.message,
-            note: 'Service worker CORS proxy failed. Consider using Device Flow for GitHub authentication.'
+            note: 'Service worker CORS proxy failed. Consider using Device Flow for GitHub authentication.',
+            serverId: SERVER_PID,
+            duration: duration
         }), {
             status: 502,
             statusText: 'Bad Gateway',
@@ -266,10 +315,22 @@ self.addEventListener('message', (event) => {
                 break;
             
             case 'PING':
-                // Health check - respond with status
+                // Health check - respond with status and statistics
+                const uptime = Date.now() - stats.startTime;
                 safePostMessage(event, { 
                     success: true, 
                     status: 'active',
+                    pid: SERVER_PID,
+                    uptime: uptime,
+                    stats: {
+                        requestsHandled: stats.requestsHandled,
+                        cacheHits: stats.cacheHits,
+                        cacheMisses: stats.cacheMisses,
+                        errors: stats.errors,
+                        cacheHitRate: stats.cacheHits + stats.cacheMisses > 0 
+                            ? (stats.cacheHits / (stats.cacheHits + stats.cacheMisses) * 100).toFixed(2) + '%'
+                            : '0%'
+                    },
                     timestamp: Date.now()
                 });
                 break;
@@ -284,4 +345,4 @@ self.addEventListener('message', (event) => {
     }
 });
 
-log('CORS Service Worker loaded');
+log('🚀 CORS Service Worker loaded - Server Runtime Ready (PID: ' + SERVER_PID + ')');

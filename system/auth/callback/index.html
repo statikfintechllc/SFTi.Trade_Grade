@@ -9,6 +9,60 @@
     <!-- Infrastructure Scripts - Load synchronously in head -->
     <script src="../../system/js.on/cors-bypass.js"></script>
     
+    <!-- Pre-initialize infrastructure before DOM loads -->
+    <script>
+        // Verbose logging starts IMMEDIATELY
+        const BootLogger = {
+            logs: [],
+            log(level, emoji, message, data = null) {
+                const timestamp = new Date().toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    fractionalSecondDigits: 3
+                });
+                
+                const logEntry = {
+                    timestamp,
+                    level,
+                    emoji,
+                    message,
+                    data
+                };
+                
+                this.logs.push(logEntry);
+                console.log(`[${timestamp}] ${emoji} ${message}`, data || '');
+            }
+        };
+        
+        BootLogger.log('info', '⚡', 'BOOT SEQUENCE STARTED');
+        BootLogger.log('info', '📦', 'Loading CORS bypass infrastructure...');
+        
+        // Check if CustomCorsWidget loaded
+        if (typeof window.CustomCorsWidget !== 'undefined') {
+            BootLogger.log('success', '✅', 'CustomCorsWidget class loaded successfully');
+            
+            // Start infrastructure initialization IMMEDIATELY
+            BootLogger.log('info', '🚀', 'Starting infrastructure pre-initialization...');
+            
+            window.CustomCorsWidget.init().then(() => {
+                BootLogger.log('success', '✅', 'Infrastructure pre-initialization COMPLETE');
+                BootLogger.log('info', '📡', 'Proxy servers activated and ready');
+                window.INFRASTRUCTURE_READY = true;
+            }).catch(error => {
+                BootLogger.log('error', '❌', 'Infrastructure pre-initialization FAILED', error.message);
+                window.INFRASTRUCTURE_READY = false;
+            });
+        } else {
+            BootLogger.log('error', '❌', 'CustomCorsWidget class NOT FOUND - critical infrastructure failure');
+            window.INFRASTRUCTURE_READY = false;
+        }
+        
+        // Store boot logs for later display in terminal
+        window.BOOT_LOGS = BootLogger.logs;
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -346,7 +400,10 @@
             
             log(level, emoji, message, data = null) {
                 this.count++;
-                document.getElementById('log-count').textContent = this.count;
+                const countEl = document.getElementById('log-count');
+                if (countEl) {
+                    countEl.textContent = this.count;
+                }
                 
                 const timestamp = new Date().toLocaleTimeString('en-US', { 
                     hour12: false,
@@ -402,6 +459,19 @@
             
             debug(message, data) {
                 this.log('debug', '🔍', message, data);
+            },
+            
+            /**
+             * Display boot logs that happened before terminal was ready
+             */
+            displayBootLogs() {
+                if (window.BOOT_LOGS && Array.isArray(window.BOOT_LOGS)) {
+                    this.info('📜 Replaying boot sequence logs...');
+                    window.BOOT_LOGS.forEach(logEntry => {
+                        this.log(logEntry.level, logEntry.emoji, logEntry.message, logEntry.data);
+                    });
+                    this.info('📜 Boot sequence replay complete');
+                }
             }
         };
 
@@ -417,10 +487,74 @@
             },
             
             async init() {
+                // Display boot logs first
+                Terminal.displayBootLogs();
+                
                 Terminal.info('🚀 OAuth Callback Handler initializing...');
                 Terminal.debug('Current URL', window.location.href);
                 Terminal.debug('Origin', window.location.origin);
                 Terminal.debug('Pathname', window.location.pathname);
+                
+                // Check infrastructure status
+                Terminal.info('🔍 Checking infrastructure status...');
+                Terminal.debug('CustomCorsWidget present', !!window.CustomCorsWidget);
+                Terminal.debug('Infrastructure ready flag', !!window.INFRASTRUCTURE_READY);
+                
+                if (!window.CustomCorsWidget) {
+                    Terminal.error('🚫 CRITICAL: CustomCorsWidget not loaded');
+                    Terminal.error('Infrastructure failed to load - cannot proceed');
+                    this.showError('Infrastructure initialization failed. Please refresh the page.');
+                    return;
+                }
+                
+                Terminal.success('CustomCorsWidget loaded successfully');
+                
+                // Check if infrastructure is ready
+                if (!window.INFRASTRUCTURE_READY) {
+                    Terminal.warning('Infrastructure still initializing, waiting...');
+                    
+                    // Wait up to 15 seconds for infrastructure to be ready
+                    const maxWait = 15000;
+                    const checkInterval = 500;
+                    let waited = 0;
+                    
+                    while (!window.INFRASTRUCTURE_READY && waited < maxWait) {
+                        await new Promise(resolve => setTimeout(resolve, checkInterval));
+                        waited += checkInterval;
+                        if (waited % 2000 === 0) {
+                            Terminal.info(`⏳ Still waiting for infrastructure... (${waited/1000}s)`);
+                        }
+                    }
+                    
+                    if (!window.INFRASTRUCTURE_READY) {
+                        Terminal.error('❌ Infrastructure initialization timeout after 15s');
+                        this.showError('Infrastructure failed to initialize in time. Please try again.');
+                        return;
+                    }
+                }
+                
+                Terminal.success('✅ Infrastructure is READY and OPERATIONAL');
+                
+                // Display infrastructure details
+                if (window.CustomCorsWidget) {
+                    const widget = window.CustomCorsWidget;
+                    Terminal.info('📊 Infrastructure Status Report:');
+                    Terminal.debug('  - Initialized', widget.state.initialized);
+                    Terminal.debug('  - Service Worker', widget.state.serviceWorkerReady ? 'READY' : 'NOT READY');
+                    Terminal.debug('  - Proxy Servers', widget.state.proxyServers.size + ' loaded');
+                    Terminal.debug('  - Proxy Workers', widget.state.proxyWorkers.length + ' active');
+                    Terminal.debug('  - Vault Database', widget.state.vaultDb ? 'READY' : 'NOT READY');
+                    Terminal.debug('  - Keypair', widget.config.keypair ? 'GENERATED' : 'NOT GENERATED');
+                    Terminal.debug('  - WebRTC Channels', widget.state.webrtcChannels.size + ' active');
+                    
+                    // List available proxy servers
+                    if (widget.state.proxyServers.size > 0) {
+                        Terminal.info('🌐 Available Proxy Servers:');
+                        for (const [name, proxy] of widget.state.proxyServers) {
+                            Terminal.debug(`  - ${name}`, proxy.name || name);
+                        }
+                    }
+                }
                 
                 // Get URL parameters
                 const params = new URLSearchParams(window.location.search);
