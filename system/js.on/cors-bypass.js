@@ -36,7 +36,7 @@ const CustomCorsWidget = {
         debug: true,
         timeout: 30000,
         maxRetries: 3,
-        serviceWorkerPath: './system/js.on/cors-sw.js',
+        serviceWorkerPath: '/SFTi.Trade_Grade/system/js.on/cors-sw.js', // Absolute path from domain root
         iframeSandbox: 'allow-scripts',
         
         // Adversarial features
