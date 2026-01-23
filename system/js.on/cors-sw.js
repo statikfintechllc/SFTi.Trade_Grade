@@ -82,6 +82,7 @@ self.addEventListener('activate', (event) => {
 /**
  * Fetch Event Handler
  * Intercepts network requests and provides CORS bypass
+ * THIS IS THE KEY - Service Workers intercept BEFORE CORS checks
  */
 self.addEventListener('fetch', (event) => {
     const { request } = event;
@@ -89,7 +90,61 @@ self.addEventListener('fetch', (event) => {
     
     stats.requestsHandled++;
     
-    // Handle OPTIONS preflight requests immediately
+    // CRITICAL: Intercept GitHub OAuth token endpoint
+    // Service Workers intercept at network layer BEFORE CORS is checked
+    if (url.hostname === 'github.com' && url.pathname === '/login/oauth/access_token') {
+        log('🎯 INTERCEPTING GitHub OAuth token request!');
+        log('📡 URL:', url.href);
+        log('📡 Method:', request.method);
+        log('🔓 Service Worker will add CORS headers to response');
+        
+        event.respondWith(
+            fetch(request)
+                .then(response => {
+                    log('✅ GitHub response received - Status:', response.status);
+                    
+                    // Clone the response so we can modify headers
+                    const clonedResponse = response.clone();
+                    
+                    // Read the body
+                    return clonedResponse.text().then(body => {
+                        log('📦 Response body length:', body.length, 'bytes');
+                        log('📦 Response preview:', body.substring(0, 100));
+                        
+                        // Create new response with CORS headers added
+                        const headers = new Headers(response.headers);
+                        headers.set('Access-Control-Allow-Origin', '*');
+                        headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+                        headers.set('Access-Control-Allow-Headers', '*');
+                        headers.set('Access-Control-Expose-Headers', '*');
+                        
+                        log('✅ CORS headers added - response is now readable by page');
+                        
+                        return new Response(body, {
+                            status: response.status,
+                            statusText: response.statusText,
+                            headers: headers
+                        });
+                    });
+                })
+                .catch(error => {
+                    log('❌ Fetch failed:', error.message);
+                    stats.errors++;
+                    
+                    // Return error response with CORS headers
+                    return new Response(JSON.stringify({ error: error.message }), {
+                        status: 500,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        }
+                    });
+                })
+        );
+        return;
+    }
+    
+    // Handle OPTIONS preflight requests for any URL
     if (request.method === 'OPTIONS') {
         log('📡 Handling OPTIONS preflight for:', url.href);
         event.respondWith(

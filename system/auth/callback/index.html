@@ -746,21 +746,21 @@
                     } catch (error) {
                         Terminal.error('❌ CustomCorsWidget strategy FAILED', error.message);
                         Terminal.debug('Error stack', error.stack);
-                        Terminal.warning('Trying fallback strategies...');
+                        Terminal.warning('Falling back to Service Worker intercept...');
                     }
                 }
                 
-                // Try Strategy 2: Public CORS Proxy - cors.proxy.com
-                Terminal.info('📡 Strategy 2: Public CORS Proxy (corsproxy.io)');
-                Terminal.info('💡 Attempting to use public CORS proxy infrastructure');
+                // Try Strategy 2: Service Worker CORS Intercept
+                Terminal.info('📡 Strategy 2: Service Worker CORS Intercept');
+                Terminal.info('💡 Service Workers intercept at network layer BEFORE CORS checks');
+                Terminal.info('🔓 Service Worker adds CORS headers to GitHub response');
                 
                 try {
-                    // Try corsproxy.io - a public CORS proxy
-                    const proxyUrl = 'https://corsproxy.io/?';
-                    const encodedUrl = encodeURIComponent(this.config.TOKEN_URL);
-                    Terminal.debug('Proxy URL', proxyUrl + encodedUrl);
+                    // Make direct request - Service Worker will intercept and add CORS headers
+                    Terminal.debug('Making direct request to:', this.config.TOKEN_URL);
+                    Terminal.debug('Service Worker will intercept and inject CORS headers');
                     
-                    const proxiedResponse = await fetch(proxyUrl + encodedUrl, {
+                    const response = await fetch(this.config.TOKEN_URL, {
                         method: 'POST',
                         headers: {
                             'Accept': 'application/json',
@@ -769,17 +769,23 @@
                         body: JSON.stringify(requestBody)
                     });
                     
-                    Terminal.debug('Proxy response', {
-                        status: proxiedResponse.status,
-                        ok: proxiedResponse.ok
-                    });
+                    Terminal.debug('Response received - Status:', response.status, response.statusText);
                     
-                    if (proxiedResponse.ok) {
-                        const tokenData = await proxiedResponse.json();
+                    if (response.ok) {
+                        const responseText = await response.text();
+                        Terminal.debug('Response body length:', responseText.length, 'bytes');
+                        
+                        if (!responseText || responseText.trim() === '') {
+                            Terminal.error('❌ Response body is EMPTY');
+                            throw new Error('Empty response from Service Worker intercept');
+                        }
+                        
+                        const tokenData = JSON.parse(responseText);
+                        Terminal.success('✅ Response parsed successfully');
                         
                         if (tokenData.access_token) {
-                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via corsproxy.io!');
-                            Terminal.info('💡 Using public proxy - works but not recommended for production');
+                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via Service Worker!');
+                            Terminal.success('🔓 Service Worker added CORS headers - CORS bypassed!');
                             await this.handleSuccess(tokenData);
                             return;
                         } else if (tokenData.error) {
@@ -789,72 +795,12 @@
                         }
                     }
                 } catch (error) {
-                    Terminal.error('❌ corsproxy.io strategy FAILED', error.message);
-                    Terminal.info('Trying alternative proxies...');
+                    Terminal.error('❌ Service Worker intercept FAILED', error.message);
+                    Terminal.warning('Service Worker may not be registered or active');
                 }
                 
-                // Try Strategy 3: Alternative proxy - allorigins.win
-                Terminal.info('📡 Strategy 3: Alternative CORS Proxy (allorigins.win)');
-                
-                try {
-                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                    const encodedUrl = encodeURIComponent(this.config.TOKEN_URL);
-                    Terminal.debug('Trying AllOrigins proxy', proxyUrl + encodedUrl);
-                    
-                    const proxiedResponse = await fetch(proxyUrl + encodedUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-                    
-                    if (proxiedResponse.ok) {
-                        const tokenData = await proxiedResponse.json();
-                        
-                        if (tokenData.access_token) {
-                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via allorigins.win!');
-                            await this.handleSuccess(tokenData);
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    Terminal.error('❌ allorigins.win strategy FAILED', error.message);
-                }
-                
-                // Try Strategy 4: cors-anywhere
-                Terminal.info('📡 Strategy 4: CORS Anywhere Proxy');
-                
-                try {
-                    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                    Terminal.debug('Proxy URL', proxyUrl);
-                    
-                    const proxiedResponse = await fetch(proxyUrl + this.config.TOKEN_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-                    
-                    if (proxiedResponse.ok) {
-                        const tokenData = await proxiedResponse.json();
-                        
-                        if (tokenData.access_token) {
-                            Terminal.success('🎉 TOKEN EXCHANGE SUCCESSFUL via cors-anywhere!');
-                            await this.handleSuccess(tokenData);
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    Terminal.error('❌ cors-anywhere strategy FAILED', error.message);
-                }
-                
-                // Try Strategy 5: Direct Fetch (last resort - will likely fail)
-                Terminal.info('📡 Strategy 5: Direct Fetch');
+                // Try Strategy 3: Direct Fetch (last resort - will fail with CORS)
+                Terminal.info('📡 Strategy 3: Direct Fetch (demonstrates CORS limitation)');
                 
                 try {
                     const response = await fetch(this.config.TOKEN_URL, {
@@ -882,16 +828,15 @@
                 Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 Terminal.error('💡 Attempted:');
                 Terminal.error('   1. Web Worker direct fetch');
-                Terminal.error('   2. corsproxy.io');
-                Terminal.error('   3. allorigins.win');
-                Terminal.error('   4. cors-anywhere');
-                Terminal.error('   5. Direct fetch');
+                Terminal.error('   2. Service Worker CORS intercept');
+                Terminal.error('   3. Direct fetch');
                 Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                Terminal.error('📋 All public CORS proxies failed or are unavailable');
+                Terminal.error('📋 Service Worker may not be registered or controlling the page');
+                Terminal.info('💡 Ensure Service Worker is registered on main page before OAuth redirect');
                 Terminal.info('💡 Alternative: Use GitHub Device Flow (no CORS issues)');
                 Terminal.info('   Visit: https://github.com/login/device');
                 Terminal.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                this.showError('Token exchange failed. All CORS proxy strategies exhausted. Try GitHub Device Flow.');
+                this.showError('Token exchange failed. Service Worker CORS intercept did not work. Ensure SW is registered.');
             },
             
             async handleSuccess(tokenData) {
